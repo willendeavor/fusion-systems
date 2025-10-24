@@ -1,7 +1,7 @@
 // Functions that determine properties of a given fusion system
 
 
-
+// Duplicated in the original file
 intrinsic AutFCore(Es::SeqEnum,AutE::SeqEnum)->Grp,GrpAuto
     {calculates F core and action on it}
     F:= Es[1];
@@ -18,6 +18,7 @@ intrinsic AutFCore(Es::SeqEnum,AutE::SeqEnum)->Grp,GrpAuto
         for i := 1 to #Es do  K:=  sub<F`autogrp|K,Generators(AutE[i])>; end for;
         return F,K;
 end intrinsic;
+
 
 
 
@@ -240,4 +241,361 @@ end intrinsic;
 intrinsic  SizeFConjugacyClasses(F)-> RngElt
     {Returns Size of  FConjugacyClasses}
     return #FConjugacyClasses(F);
+end intrinsic;
+
+
+
+
+
+intrinsic MakeAllAutFCentric(FF::FusionSystem:saturationtest)->Assoc, Bool
+    {Makes all AutF for centric subgroups unless parameter saturated test eq true in which case it stops early when the system is not saturated .}
+
+    ZZ:=Integers();
+    SS:= FF`subgroups;
+    S:= FF`group; 
+    B:= FF`borel; 
+    AutF:= FF`AutF; 
+    Essentials:= FF`essentials; 
+
+    if assigned(FF`fusiongraph) eq false then FF`fusiongraph,FF`maps:= FusionGraph(FF);
+       
+    end if;
+     FF`classes:= ConnectedComponents(FF`fusiongraph);
+    if assigned(FF`centrics) eq false then FF`centrics:={x:x in FF`subgroups|IsCentric(FF,x)}; end if;
+    Maps:= FF`maps;  
+    ConComp:= FF`classes; 
+    Fac:= FactoredOrder(S);
+    ExpS:=Fac[1][2]; p:= FF`prime;
+    expP:= ExpS-1;
+
+     
+    for x in SS do   
+        if #x eq p^expP and ((x in Essentials) eq false) then
+            AutF[x]:= AutYX(Normalizer(B,x),x);
+        end if;
+    end for;
+
+      TTTn:={x:x in FF`centrics|   IsFullyNormalized(FF,x) and (x in Essentials) eq false};
+    for subexponent:=ExpS-2 to 2 by -1 do
+      
+        TTT :={x: x in TTTn|#x eq p^subexponent };
+      
+     
+        while  #TTT ne 0 do 
+            P:= Random(TTT);
+        //If P is F-conjugate to a member of Essentials, then Aut_F(P) is F-conjugate to Aut_F(E). Transfer the data and move to next P.
+
+            for E in Essentials do 
+                aa,bb:=IsConjugate(FF,P,E); 
+                aa,bbb:=IsConjugate(FF,E,P); 
+                if aa  then  //bbb:= Inverse(bb);
+                    AutF[P]:=  sub<P`autogrp|{hom<P->P|gg:->bbb(hh(bb(gg)))> :hh in Generators(AutF[E])}>;
+                    TTT:= TTT diff {P};continue; 
+                end if; 
+            end for; //E
+            
+        ///Now P is not F-conjugate to E.
+
+               NBP:=Normalizer(B,P);
+               AutF[P] :=  AutYX(NBP,P); 
+           AFSP:=AutF[P];
+              
+           NBPoverP, a := NBP/P;
+            ///TTTS contains representative of all non-trivial $p$-subgroups in N_S(P)/P
+     
+                TTTS:= [sub<NBP|SubInvMap(a, NBP, x`subgroup),P>:x in Subgroups(NBPoverP:OrderDividing:=#S)|x`order ne 1];
+                    for ccc:= 1 to #TTTS do
+                     x := TTTS[ccc]; 
+                        MakeAutos(x);
+
+                        if x in SS then
+                            AutFx := AutF[x];
+                            j:= x`autopermmap;  Ap:=x`autoperm;
+                        else  
+                               Ax:=x`autogrp;
+                                for ww in SS do
+                                aa, bb := IsConjugate(B,ww,x);
+                                    if aa then
+                                        bbb:= ConjtoHom(ww,x,bb);  bbb1:= ConjtoHom(x,ww,bb^-1);
+                                        AutFx:= sub<Ax|{bbb1*gen*bbb : gen in Generators(AutF[ww])}>; break ww;
+                                    end if;
+                                 end for;//for ww
+                        j:=x`autopermmap; Ap:= x`autoperm; 
+                        end if;// if x in ss, then, else, end if
+                    AFp:= sub<Ap|{j(pp):pp in Generators(AutFx)}>;
+                    jinverse:=Inverse(j);
+                    AA, NN, Elt:= AutOrbit(x,P,AutFx);
+                    MM:= sub<Ap|{j(n):n in Generators(NN)}>;
+                    Trp := Transversal(AFp,MM);
+                    Tr:= {jinverse(t):t in Trp};
+                    ////////////////////////////////
+                    //We look at maps between TTTS[ccc] and TTTS[ddd] that are extensions of maps in AutF[P].  
+                    ///We don't need to do it both ways around as adding an element is the same as adding its inverse.
+                    //////////////////////////////////////////////////
+                        for ddd:= ccc to #TTTS do  
+                            y := TTTS[ddd]; W:={};
+                            if x eq y then 
+                                    for nn in Generators(NN) do  mmP:= iso<P->P| w:->nn(w)>; 
+                                    W:= W join {mmP};
+                                end for;
+                                AutF[P]:=sub<P`autogrp|AutF[P],W>;
+                            else
+                            aa, bb:= IsConjugate(FF,x,y);
+                                if aa then 
+                                W:={alpha*bb:alpha in Tr |(alpha*bb)(P) eq P}; 
+                                AutF[P]:=sub<P`autogrp|AutF[P],W>;
+                                end if;
+                            end if;
+                        end for;//ddd
+                         if saturationtest then 
+                            if ZZ!(#AutF[P]/#AFSP) mod p eq 0 then  
+                            return AutF, false;
+                            end if;  
+                         end if; 
+                    end for; //ccc
+                    
+                  isp:=Index(SS,P);
+
+                    for C in FF`classes do
+                        if isp  in C then D:= C; break; end if;
+                    end for;
+                    //Check that calculated data coincides with information from essentials. 
+                    //I.e if P if F-conjugate to some F`essential, then auto groups should be the same.
+                    
+                     for iiii in [1..#Essentials] do E:= Essentials[iiii];
+                        mm:= Index(SS,E); 
+                        if mm in D then
+                         TransP:=TransportAutomorphismsYtoX(FF,AutF,P,E);
+                         if TransP ne FF`essentialautos[iiii] then 
+                         if saturationtest then
+                            return AutF, false; 
+                          else print "the automiser sequence is not consistent in this system"; return AutF,_;
+                          end if;
+                          end if;
+                         end if;
+                    end for;
+                     //we now can define AutF for  all the F-conjugates of P
+                     for kk in D do jj:= Index(kk); 
+                        if jj eq isp then  TTT:= TTT diff {P};   continue; end if;
+                        AutF[SS[jj]]:= TransportAutomorphismsYtoX(FF,AutF,P,SS[jj]);  
+                        TTT:= TTT diff {SS[jj]};
+                    end for;  //
+                    
+               end while; //TTT
+         end for;//subexponent
+    delete TTT; delete TTTS;
+
+    return AutF, _;
+
+end intrinsic;
+
+
+
+
+
+intrinsic IsSaturated(F::FusionSystem)-> Bool
+    {Determines if F is saturated}
+
+    if assigned(F`saturated) then return F`saturated; end if;
+     
+    SS:= F`subgroups; 
+    S:= F`group; 
+    B:= F`borel; 
+    Essentials:= F`essentials;
+     
+
+    if assigned(F`fusiongraph) eq false then  
+    F`fusiongraph,F`maps:= FusionGraphSCentrics(F);
+    end if;
+    F`classes:= ConnectedComponents(F`fusiongraph);
+
+    Maps:= F`maps; 
+    AutF:= F`AutF;
+
+    ConComp:= F`classes; 
+     
+     
+    for x in F`essentials do 
+        if IsCentric(F,x) eq false then 
+        F`saturated := false; return F`saturated; 
+        end if; 
+         if IsFullyNormalized(F,x) eq false then 
+        F`saturated := false; return F`saturated; 
+        end if; 
+    end for;
+
+     
+
+    if assigned(F`centrics) eq false then F`centrics:={x:x in F`subgroups|IsCentric(F,x)}; end if;
+      
+        W:= {x: x in F`centrics|IsDefined(F`AutF,x) };
+        i:=0;
+         for x in Reverse(Setseq(F`centrics)) do  
+            if x in W then continue; end if; 
+            for w in W do
+                a,b:=IsConjugate(F,x,w);
+                if a then    aa,cc:=IsConjugate(F,w,x);    
+                F`AutF[x] := sub<x`autogrp| {b*gamma*cc: gamma in Generators(F`AutF[w])} >; 
+                 W:= W join{x}; continue x; 
+            end if;
+            end for;
+            
+           F`AutF[x]:= AutomorphismGroup(F,x);  
+           if IsFullyNormalized(F,x) then 
+                if not IsFullyAutomised(F,x) then return false; end if;
+           end if; 
+           W:= W join{x};
+         end for;
+     
+
+    Saturated:= true;
+    for C in ConComp do
+        for vv in C do
+            PP:= SS[Index(vv)];
+                if PP eq S then continue C; end if;
+                if IsCentric(F,PP) eq false then continue C; end if;
+                if IsFullyNormalized(F,PP) eq false then continue vv; end if;
+                if RadicalTest(S,PP) eq false then   continue vv; end if;
+                if IsFullyAutomised(F,PP) eq false then return false; end if;
+            Saturated, sat := SurjectivityProperty(F,PP:saturationtest:=true);
+            if  assigned(sat) then  return sat; end if;
+                if Saturated then continue C; end if;
+        end for;
+        if Saturated eq false then break C; end if;
+    end for; 
+    delete F`fusiongraph;//This is a fix to make sure that IsConjugate works for non-centric subgroups
+
+
+
+    F`saturated := Saturated;
+    return Saturated;
+end intrinsic;
+
+
+
+intrinsic IsGroupFusionSystem(F::FusionSystem)->Bool
+    {Return true if F is constructed from G }
+    if assigned(F`grpsystem) then return true; end if;
+    return false; 
+end intrinsic;
+
+
+
+
+intrinsic IsIsomorphic(B::Grp,Autos::SeqEnum,F2::FusionSystem)->Bool{}
+    a, theta := IsIsomorphic(B,F2`borel);
+    if a eq false then return false; end if; 
+    p:= F2`prime;
+    bounds:=[8,8,6,6];
+    primes:=[2,3,4,4];
+
+
+
+    /////////////////////////////////////////////////////////
+    ///F2 has its automiser sequence in the canonical order.
+    ///We should reorder Autos.
+    //////////////////////////////////////////////////////////
+    if p in primes and #F2`group le p^bounds[Index(primes,p)]  then  
+    RO:=[IdentifyGroup( Group(x)):x in Autos];
+    ParallelSort(~RO,~Autos);
+    Reverse(~Autos);
+    else
+    RO:=[#Group(x):x in Autos];
+    ParallelSort(~RO,~Autos);
+    Reverse(~Autos); 
+    end if; 
+      
+      
+      
+    F1essentials := [Group(x):x in Autos];
+
+    if p in primes and #F2`group le p^bounds[Index(primes,p)]  then
+    RO1:=[IdentifyGroup( x):x in F1essentials];
+    RO2:=[IdentifyGroup(x):x in F2`essentials];
+    else
+    RO1:=[#x:x in F1essentials];
+    RO2:=[#x:x in F2`essentials];
+    end if; 
+    if  RO1 ne RO2 then return false; end if; 
+
+    //The automisers should have the same orders.
+    RO1:=[#x :x in Autos];
+    RO2:=[#x :x in F2`essentialautos];
+    Sort(~RO1);
+    Sort(~RO2);
+    if RO1 ne RO2 then return false; end if; 
+     
+     
+     
+        
+
+
+    AutBp:= (F2`essentials[1])`autoperm;
+
+    alpha:= (F2`essentials[1])`autopermmap;
+
+    NAutBp:= Normalizer(AutBp, SubMap(alpha,AutBp,F2`essentialautos[1]));
+    NAutB:= SubInvMap(alpha,F2`essentials[1]`autogrp,NAutBp); 
+    TNB:= Transversal(NAutBp,SubMap(alpha,AutBp,F2`essentialautos[1]));
+    Trans:=[Inverse(alpha)(xxx):xxx in TNB];
+     
+
+    //transfer to same group. And make an image for each transversal map.
+    ImEssentials:=[];
+
+    for mu in Trans do
+    ImEssentials:= Append(ImEssentials,[mu(theta(x)):x in F1essentials] ); 
+    end for;
+
+    ImAutEssentials:= AssociativeArray({1..#Trans});
+
+    for zz in [1..#ImEssentials] do 
+        ImEssentialsCalc:= ImEssentials[zz]; 
+        mu:= Trans[zz];// theta. mu maps x in F1essentials to a subgroup of F2`group
+           //Initialize the automorphism group of the images
+            for ii in [1..#ImEssentialsCalc] do  
+                x:= ImEssentialsCalc[ii];
+                MakeAutos(x); 
+            end for;     
+        ImAutEssentialsCalc:=[];
+        for x in ImEssentialsCalc do 
+                AutF1:= Autos[Index(ImEssentialsCalc,x)];
+                XX:=[Inverse(mu)*Inverse(theta)*gen*theta*mu:gen in Generators(AutF1)];
+                ImAutEssentialsCalc:=Append(ImAutEssentialsCalc, sub<x`autogrp| XX>); 
+        end for;
+         
+    ImAutEssentials[zz]:=ImAutEssentialsCalc;
+     
+    end for;
+
+    for XXct in [1..#ImEssentials] do 
+        XX:=ImEssentials[XXct];
+        for ii in [1..#XX] do 
+        e:= XX[ii]; 
+         if e in F2`subgroups then continue; end if;
+            jj:= IdentifyBClass(F2,e);
+            P:= F2`subgroups[jj];
+            MakeAutos(P);
+            a,b :=IsConjugate(F2`borel,e,P);
+            bb:= ConjtoHom(e,P,b); 
+            bbb:= ConjtoHom(P,e,b^-1);    
+            XX[ii]:=P;
+            ImAutEssentials[XXct][ii]:= sub<P`autogrp|
+                {hom<P->P|gg:-> bb(gen(bbb(gg)))>:
+                gen in  Generators(ImAutEssentials[XXct][ii])}>;
+    end for;
+    end for;
+                
+     
+            jj:= {1..#F2`essentials};
+            for ii in [1..#ImAutEssentials] do 
+                kk:= jj;
+                for mm in ImAutEssentials[ii] do
+                    for aa in jj do
+                        if mm eq F2`essentialautos[aa] then kk:= kk diff {aa}; end if;
+                    end for; 
+                 if #kk eq 0 then return true;end if;
+                end for;
+            end for; 
+     return false;
 end intrinsic;
