@@ -4,31 +4,31 @@ Contains all the general group functions that are used elsewhere in the code, fo
 
 ### SubInvMap
 
-    `SubInvMap(j::Map, K::Grp, W::Grp)-> Grp`
+`SubInvMap(j::Map, K::Grp, W::Grp)-> Grp`
 
 For $j: K \to K$ and $W \leq K$ returns $j^{-1}(W)$. 
     
     
 ### SubMap
 
-    `SubMap(j::Map,K::Grp,W::Grp)-> Grp`
+`SubMap(j::Map,K::Grp,W::Grp)-> Grp`
 
 For $j: K \to K$ and $W \leq K$ returns $j(W)$. 
 
 ### ConjtoHom
 
-    `ConjtoHom(X::Grp, Y::Grp, g::GrpElt)->GrpHom`
+`ConjtoHom(X::Grp, Y::Grp, g::GrpElt)->GrpHom`
 
 Given $X^g \leq Y$ return the homomorphism $c_g:X \to Y$ 
     
 ### ConjtoAuto
 
-    `ConjtoAuto(X::Grp, g::GrpElt, AA::GrpAuto)->GrpAutoElt`
+`ConjtoAuto(X::Grp, g::GrpElt, AA::GrpAuto)->GrpAutoElt`
 
 Given $X^g = X$ return the automorphism $c_g \in \mathrm{Aut}(X)$. First uses MakeAutos on $X$.
  
 ### MakeAutos
 
-    `MakeAutos(x::Grp)`
+`MakeAutos(x::Grp)`
 
 Given a group $x$ assigns the attributes [[autogrp]], [[autopermmap]], and [[autoperm]]
