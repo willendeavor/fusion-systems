@@ -32,7 +32,6 @@ intrinsic 'eq'(F1::FusionSystem, F2::FusionSystem) -> Bool
         Eq:= false;
         if Eq eq false then break x; end if;
     end for;
-    
     return Eq;
 end intrinsic;
 

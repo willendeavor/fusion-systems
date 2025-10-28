@@ -115,3 +115,15 @@ intrinsic SaveFS(FileName::MonStgElt, FF::SeqEnum)
 	end for;
 	PrintFile(FileName,"FFS;");
 end intrinsic;
+
+
+
+
+intrinsic SaveAsGo(  count::RngIntElt, F::FusionSystem)
+	{}
+	grp:= #F`group;
+	bor:= #F`borel;
+	FileName:="F" cat IntegerToString(grp) cat "-" cat IntegerToString(bor) cat "-" 
+	cat IntegerToString(count);
+	              SaveFS(FileName, [F]);
+end intrinsic;

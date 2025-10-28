@@ -599,3 +599,29 @@ intrinsic IsIsomorphic(B::Grp,Autos::SeqEnum,F2::FusionSystem)->Bool{}
             end for; 
      return false;
 end intrinsic;
+
+
+
+intrinsic CharSbgrpTest(ProtoEssentials::SeqEnum,S::Grp)->Bool                     
+    {Checks if theres a characteristic subgroups of all essentials 
+    and S contained in the intersection of protop essentials}
+
+    Q:= S; 
+    for xx in ProtoEssentials do 
+        Q := Q meet xx; 
+    end for;
+
+    QQ:= NormalSubgroups(Q);
+    SProtoEssentials := Append(ProtoEssentials,S);
+    for w in QQ do 
+        ww:= w`subgroup;
+        if #ww ne 1 then 
+            for xx in SProtoEssentials do 
+            wwChar := IsCharacteristic (xx,ww);
+                if wwChar eq false then  continue w; end if; 
+            end for;
+            if wwChar eq true  then return true;end if;
+        end if; 
+    end for;
+    return false;
+end intrinsic; 
