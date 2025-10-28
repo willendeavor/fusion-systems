@@ -77,7 +77,7 @@ Given $H \leq G$ and $A \leq \mathrm{Aut}(G)$, determine if $H$ is $A$-invariant
 
 Given ($N = ker$)  $N \trianglelefteq G$ and $p$ determine if $G/N$ contains a strongly $p$-embedded subgroup
 
-Does this differently than `IsStronglypEmbedded`#user-content-isstronglypembedded for some reason and does not just call it on $G/N$? Must be more to what ker is supposed to represent?
+Does this differently than `IsStronglypEmbedded` for some reason and does not just call it on $G/N$? Must be more to what ker is supposed to represent?
 
 ### IsStronglypEmbedded
 
