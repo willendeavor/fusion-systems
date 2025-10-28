@@ -9,9 +9,9 @@ declare attributes GrpMat: autogrp,  autoperm, autopermmap,autF;
 declare attributes GrpPerm: autogrp, autoperm, autopermmap, autF;
 declare attributes GrpPC: autogrp, autoperm, autopermmap, autF;
 
-Attach("general-group.m");
-Attach("general-fusion-system.m");
-Attach("properties-fusion-systems.m");
-Attach("group-properties-fusion-system.m");
-Attach("generating-fusion-systems.m");
-Attach("saving-fusion-system.m");
+Attach("src/general-group.m");
+Attach("src/general-fusion-system.m");
+Attach("src/properties-fusion-systems.m");
+Attach("src/group-properties-fusion-system.m");
+Attach("src/generating-fusion-systems.m");
+Attach("src/saving-fusion-system.m");
