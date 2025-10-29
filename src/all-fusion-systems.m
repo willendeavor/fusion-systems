@@ -1,3 +1,104 @@
+
+
+// Given S and x \leq S check if Aut_S(x) \cap O_p(Aut(x)) = Inn(x)
+function RadTest(S,x)
+    p:= FactoredOrder(S)[1][1]; 
+    Nx:=Normalizer(S,x);
+    A:=AutYX(Nx,x);
+    Ap:= SubMap(x`autopermmap,x`autoperm ,A);
+    Innerp:= SubMap(x`autopermmap,x`autoperm , Inn(x));
+    return #(Ap meet pCore(x`autoperm, p)) eq  #Innerp;
+end function;
+
+
+
+
+// Procedure that obtains some protoessentials depending on whether S is max class or not
+procedure MaxClassTest(S,S_centrics, ~ProtoEssentials)
+    p:= FactoredOrder(S)[1][1]; 
+    nn:= Valuation(#S,p);
+    if IsMaximalClass(S) and #S ge p^5 then 
+        LL:= LowerCentralSeries(S);  
+        // T will be the set of protoessentials that are pearls and the two step centralisers of index p
+        T:=[];
+        // Calculate the two step centralisers C_S(Z_2(S)) and \gamma_1(S)
+        C_1 := Centralizer(S, LL[2],LL[4]);
+        C_2 := Centralizer(S, LL[nn-2]);
+        Append(~T, C_1);
+        if not C_1 eq C_2 then 
+            Append(~T,C_2); 
+        end if; 
+        // By Grazian and Parker a pearl is not contained in C_1 or C_2 but does contain Z(S) or Z_2(S)
+        T:= T cat [x:x in S_centrics| #x eq p^2 and LL[nn-1] subset x and not x subset C_1 and not x subset C_2] 
+            cat 
+            [x:x in S_centrics| #x eq p^3 and LL[nn-2] subset x and not x subset C_1 and not x subset C_2]; 
+        TT:=[];
+        // For each element of T check if it is radical
+        for x in T do 
+            if not RadTest(S,x) then 
+                continue x; 
+            end if;
+            Append(~TT,x);
+        end for;         
+        ProtoEssentials := TT;
+    end if; 
+
+            
+    if not IsMaximalClass(S) or #S le p^4 then  
+        for x in S_centrics do   
+            if x eq S then 
+                continue x; 
+            end if; 
+            if IsCyclic(x) then  
+                continue x; 
+            end if;
+            if not RadTest(S,x) then 
+                continue x; 
+            end if;
+            Nx:=Normalizer(S,x);
+            A:=AutYX(Nx,x);
+            Ap:= SubMap(x`autopermmap,x`autoperm ,A);
+            Innerp:= SubMap(x`autopermmap,x`autoperm , Inn(x));
+            P:= Index(Ap,Innerp);
+            Frat:=FrattiniSubgroup(x);
+            FQTest := Index(x,Frat) ge P^2;
+            //This is a bound obtained by saying that $\Out_\F(x)$ acts faithfully on $x/\Phi(x)$.  
+            //The order of such faithful modules is at least $|\Out_S(x)|^2$.
+            if not FQTest then 
+                continue x; 
+            end if; 
+            SylTest, QC:=IsStronglypSylow(Ap/Innerp);
+            //If $x$ is essential, then $\Out_F(x)$ should have a strongly $p$-embedded. 
+            //Here we check that the Sylow $p$-subgroup is compatible with this.
+            if not SylTest then 
+                continue x; 
+            end if; 
+            if not QC and IsSoluble(x`autoperm)  then   
+                continue x; 
+            end if; 
+            ProtoEssentials:= Append(ProtoEssentials,x); 
+        end for;
+    end if;
+end procedure;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[],OpTriv:=true,pPerfect:= true)-> SeqEnum
     {Makes all fusion systems with O_p(F)=1 and O^p(\F)= \F}
      
@@ -8,23 +109,26 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     FF:=[]; //We will put the possible systems in here  
 
     p:= FactoredOrder(S)[1][1]; 
-     nn:= Valuation(#S,p);
+    nn:= Valuation(#S,p);
 
 
 
     //Use that we know fusion systems with an abelian subgroup
 
-    if IsAbelian(S) then return FF; end if;
+    if IsAbelian(S) then 
+        return FF; 
+    end if;
 
     ///Lemma~7.1 shows that $S:Z(S) \gt p^2 or |S|\le p^3
 
-    if Index(S,Centre(S)) le p^2 and #S ge p^4  then return FF; end if; 
+    if Index(S,Centre(S)) le p^2 and #S ge p^4 then 
+        return FF; 
+    end if; 
      
      
 
     //Here are automorphisms of S and centric subgroups of S
     S:= PCGroup(S);
-
     MakeAutos(S);
     InnS:=Inn(S);
     AutS:= S`autogrp;
@@ -32,14 +136,20 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     AutSp:= S`autoperm;
     InnSp:= SubMap(map,AutSp, InnS);
 
+
     //We use Cor 6.2 from ANTONIO Diaz, ADAM GLESSER, NADIA MAZZA, AND SEJONG PARK
-    if p ge 5 and #FactoredOrder(S`autogrp) eq 1 then return []; end if; 
+    if p ge 5 and #FactoredOrder(S`autogrp) eq 1 then 
+        return []; 
+    end if; 
 
-
+    // Create a list of S-centric subgroups
     Sbar, bar:= S/Centre(S);
     TT:= Subgroups(Sbar);
-    SS:= [Inverse(bar)(x`subgroup):x in TT|IsSCentric(S,Inverse(bar)(x`subgroup))];
-    if Printing eq true then print "the group has", #SS, "centric subgroups"; end if;
+    S_centrics:= [Inverse(bar)(x`subgroup):x in TT|IsSCentric(S,Inverse(bar)(x`subgroup))];
+
+    if Printing eq true then 
+        print "the group has", #S_centrics, "centric subgroups"; 
+    end if;
      
      
      
@@ -52,79 +162,25 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     ///to calculate in some circumstances.
     /////////////////////////////////////
 
-    ProtoEssentials:=[];// This sequence will contain the ProtoEssential subgroups
-    //
-    if IsMaximalClass(S) and #S ge p^5 then 
-        LL:= LowerCentralSeries(S);  
-        T:=[];
-         Append(~T,Centralizer(S, LL[2],LL[4]));
-         C:= Centralizer(S, LL[nn-2]);
-         if C in T eq false then 
-            Append(~T,C); end if; 
-         T:= T cat [x:x in SS| #x eq p^2 and LL[nn-1] subset x and not x subset  T[1]  and not x subset C ] 
-         cat 
-         [x:x in SS| #x eq p^3 and LL[nn-2] subset x  and not x subset  T[1]  and not x subset C ]; 
-          TT:=[];
-         for x in T do 
-                Nx:=Normalizer(S,x);
-                A:=AutYX(Nx,x);
-                Ap:= SubMap(x`autopermmap,x`autoperm ,A);
-                Innerp:= SubMap(x`autopermmap,x`autoperm , Inn(x));
-                RadTest:=#(Ap meet pCore(x`autoperm, p)) eq  #Innerp;
-                if not RadTest then continue x; end if;
-                Append(~TT,x);
-         end for;         
-           ProtoEssentials:=   TT;
-    end if; 
-
-            
-    if IsMaximalClass(S) eq false  or #S le p^4 then  
-    for x in SS do   
-        if x eq S then continue x; end if; 
-        if IsCyclic(x) then  continue x; end if;
-        Nx:=Normalizer(S,x);
-        A:=AutYX(Nx,x);
-        Ap:= SubMap(x`autopermmap,x`autoperm ,A);
-        Inner:= Inn(x);
-        Innerp:= SubMap(x`autopermmap,x`autoperm ,Inner);
-        RadTest:=#(Ap meet pCore(x`autoperm, p)) eq  #Innerp;
-        if not RadTest then continue x; end if;
-        P:= Index(Ap,Innerp);
-        Frat:=FrattiniSubgroup(x);
-        FQTest := Index(x,Frat) ge P^2;
-            //This is a bound obtained by saying that $\Out_\F(x)$ acts faithfully on $x/\Phi(x)$.  
-            //The order of such faithful modules is at least $|\Out_S(x)|^2$.
-        if FQTest eq false then continue x; end if; 
-        SylTest, QC:=IsStronglypSylow(Ap/Innerp);
-            //If $x$ is essential, then $\Out_F(x)$ should have a strongly $p$-embedded. 
-            //Here we check that the Sylow $p$-subgroup is compatible with this.
-        if SylTest eq false   then continue x; end if; 
-        if QC eq false and IsSoluble(x`autoperm)  then   continue x; end if; 
-        ProtoEssentials:= Append(ProtoEssentials,x); 
-    end for;
-    end if;
-    ////////////////////////////////
-    ///We need some subgroups in ProtoEssentials;
-    ///////////////////////////////////
-     
-     
-
-
+    ProtoEssentials:=[]; // This sequence will contain the ProtoEssential subgroups
+    // If S has max class we can be more efficient obtaining protoessentials
+    MaxClassTest(S,S_centrics, ~ProtoEssentials);
     ///Notice that if E is protoessential, then so is E\alpha for alpha in AutS
     ProtoEssentialAutClasses:= Setseq({Set(AutOrbit(S,PE,S`autogrp)):PE in ProtoEssentials});
     ProtoEssentialAutClasses:= [Rep(x):x in ProtoEssentialAutClasses];
      
-      
-    if OpTriv and  CharSbgrpTest(ProtoEssentials,S)   then return FF; end if;  
-       
-     
-        ///This test takes Q as the intersection of all the members of the members 
-        //of ProtoEssentials and checks if any of them are characteristic in all members 
-        //of ProtoEssentials and S. If some non-trivial subgroup is then O_p(\F)\ne 1.
+    // CharSbgrpTest
+    if OpTriv and CharSbgrpTest(ProtoEssentials,S) then 
+        return FF; 
+    end if;  
 
        
-    if pPerfect then H:= sub<S|ProtoEssentials,{x^-1*a(x):a in Generators(S`autogrp), x in S}>; 
-    if  H ne S then return []; end if; end if;
+    if pPerfect then 
+        H:= sub<S|ProtoEssentials,{x^-1*a(x):a in Generators(S`autogrp), x in S}>; 
+        if  H ne S then 
+            return []; 
+        end if; 
+    end if;
      //This tests is with this set of protoessentials that O^p(\F) <F. 
          
     /////////////////////
@@ -321,7 +377,7 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
             Bbar, bar:= B/Centre(S);
         subsBS:= Subgroups(Bbar:OrderDividing:=#bar(S));
         subsBS:= [Inverse(bar)(x`subgroup):x in subsBS];
-        SS:= [x:x in subsBS|IsSCentric(S,x)]; 
+        S_centrics:= [x:x in subsBS|IsSCentric(S,x)]; 
         AutFS:=AutYX(B,S);
         InnS:=Inn(S);
         AutS:= S`autogrp;
@@ -340,7 +396,7 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     for x in ProtoEssentialAutClasses do
         Xx, Stx, Rx := AutOrbit(S,x,S`autogrp); 
         PNew := [];
-        for y in SS do
+        for y in S_centrics do
             if y in Xx then 
                 MakeAutos(y); 
                 Append(~ProtoEssentials,y); 
@@ -764,7 +820,7 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
 
       //    This next test checks that if P is normal in S that its "obvious" automiser has $\Aut_S(P) as a Sylow.
         
-        for xx in SS do 
+        for xx in S_centrics do 
             if IsNormal(S,xx) eq false or #xx eq 1 then continue xx; end if;
             Exx:={w:w in Essentials|xx subset w};
             if #Exx ne 0 then 
