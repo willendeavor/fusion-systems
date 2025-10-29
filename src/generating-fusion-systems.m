@@ -39,7 +39,7 @@ intrinsic AutFPCandidates(B::Grp,S::Grp,P::Grp,ProtoEssentials::SeqEnum,Cand::As
 
 p:= FactoredOrder(S)[1][1];
 ZZ:= Integers();
-NSP:= Normalizer(S,P);\\\\\\\\\\\\
+NSP:= Normalizer(S,P);
 
  ///////////////////////////////////////////////////////
  /////This checks if the automiser of N_S(P) comes from B.

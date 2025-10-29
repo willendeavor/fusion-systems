@@ -86,3 +86,19 @@ Does this differently than `IsStronglypEmbedded` for some reason and does not ju
 Given $G$ and $p$ determine if $G$ contains a strongly $p$-embedded subgroup
 Uses properties of groups containing a strongly $p$-embedded subgroup to save some calculations.
 
+
+### RandomAuto
+
+`RandomAuto(A::GrpAuto)->Map`
+
+Given an automorphism group picks a random element.
+
+### AutOrbit
+
+`AutOrbit(P::Grp,Q::Grp,AFP::GrpAuto:Printing:=false)->SeqEnum,Grp,SeqEnum`
+
+Given $Q \leq P$ and $AFP \leq \mathrm{Aut}(P)$ determines the orbits of AFP on $Q$, also returns the stabiliser and a set of representatives.
+
+The first return value is an array of subgroups of $P$ representing the orbits `Orb` and has as its first element $Q$, followed by $Q^n$ for representatives of $n \in N_P(Q)$ and then the other orbits.
+
+The second return value is 
