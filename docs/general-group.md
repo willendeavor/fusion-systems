@@ -101,4 +101,27 @@ Given $Q \leq P$ and $AFP \leq \mathrm{Aut}(P)$ determines the orbits of AFP on 
 
 The first return value is an array of subgroups of $P$ representing the orbits `Orb` and has as its first element $Q$, followed by $Q^n$ for representatives of $n \in N_P(Q)$ and then the other orbits.
 
-The second return value is 
+
+The second return value `StB` is the stabiliser $N_{AFP}(Q)$.
+
+The third return value is an array `Elt` of elements in `AFP` representative of each orbit i.e. `Orb[i]` is the image of $Q$ under `Elt[i]`.
+
+`AutOrbit(P::Grp,Q::GrpElt,AFP::GrpAuto)->SeqEnum,Grp,SeqEnum`
+
+As above but for a single element $Q \in P$.
+
+
+### IsSCentric
+
+`IsSCentric(S::Grp,P::Grp)->Bool`
+
+Given $P \leq Q$ returns true if $C_S(P) \leq P$, false otherwise.
+
+
+### IsStronglypSylow
+
+`IsStronglypSylow(Q::Grp)->Bool, Bool`
+
+Given a $p$-group $Q$ determines if $Q$ can be the Sylow $p$-subgroup of a group that contains a strongly $p$-embedded subgroup. 
+
+###
