@@ -1,27 +1,43 @@
 
+
+// Given S and x \leq S check if Aut_S(x) \cap O_p(Aut(x)) = Inn(x)
+function RadTest(S,x)
+    Nx:=Normalizer(S,x);
+    A:=AutYX(Nx,x);
+    Ap:= SubMap(x`autopermmap,x`autoperm ,A);
+    Innerp:= SubMap(x`autopermmap,x`autoperm , Inn(x));
+    return #(Ap meet pCore(x`autoperm, p)) eq  #Innerp;
+end function
+
+
+
+
 // Procedure that obtains some protoessentials depending on whether S is max class or not
 procedure MaxClassTest(S,S_centrics, ~ProtoEssentials)
     p:= FactoredOrder(S)[1][1]; 
     nn:= Valuation(#S,p);
     if IsMaximalClass(S) and #S ge p^5 then 
         LL:= LowerCentralSeries(S);  
+        // T will be the set of protoessentials that are pearls and the two step centralisers of index p
         T:=[];
-        Append(~T,Centralizer(S, LL[2],LL[4]));
-        C:= Centralizer(S, LL[nn-2]);
-        if C in T eq false then 
-            Append(~T,C); end if; 
-        T:= T cat [x:x in S_centrics| #x eq p^2 and LL[nn-1] subset x and not x subset  T[1]  and not x subset C] 
+        // Calculate the two step centralisers C_S(Z_2(S)) and \gamma_1(S)
+        C_1 := Centralizer(S, LL[2],LL[4]);
+        C_2 := Centralizer(S, LL[nn-2]);
+        Append(~T, C_1);
+        if not C_1 eq C_2 then 
+            Append(~T,C_2); 
+        end if; 
+        // By Grazian and Parker a pearl is not contained in C_1 or C_2 but does contain Z(S) or Z_2(S)
+        T:= T cat [x:x in S_centrics| #x eq p^2 and LL[nn-1] subset x and not x subset C_1 and not x subset C_2] 
             cat 
-            [x:x in S_centrics| #x eq p^3 and LL[nn-2] subset x  and not x subset  T[1]  and not x subset C]; 
+            [x:x in S_centrics| #x eq p^3 and LL[nn-2] subset x and not x subset C_1 and not x subset C_2]; 
         TT:=[];
+        // For each element of T check if it is radical
         for x in T do 
-                Nx:=Normalizer(S,x);
-                A:=AutYX(Nx,x);
-                Ap:= SubMap(x`autopermmap,x`autoperm ,A);
-                Innerp:= SubMap(x`autopermmap,x`autoperm , Inn(x));
-                RadTest:=#(Ap meet pCore(x`autoperm, p)) eq  #Innerp;
-                if not RadTest then continue x; end if;
-                Append(~TT,x);
+            if not RadTest(S,x) then 
+                continue x; 
+            end if;
+            Append(~TT,x);
         end for;         
         ProtoEssentials := TT;
     end if; 
@@ -35,13 +51,7 @@ procedure MaxClassTest(S,S_centrics, ~ProtoEssentials)
             if IsCyclic(x) then  
                 continue x; 
             end if;
-            Nx:=Normalizer(S,x);
-            A:=AutYX(Nx,x);
-            Ap:= SubMap(x`autopermmap,x`autoperm ,A);
-            Inner:= Inn(x);
-            Innerp:= SubMap(x`autopermmap,x`autoperm ,Inner);
-            RadTest:=#(Ap meet pCore(x`autoperm, p)) eq  #Innerp;
-            if not RadTest then 
+            if not RadTest(S,x) then 
                 continue x; 
             end if;
             P:= Index(Ap,Innerp);
@@ -100,17 +110,20 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
 
     //Use that we know fusion systems with an abelian subgroup
 
-    if IsAbelian(S) then return FF; end if;
+    if IsAbelian(S) then 
+        return FF; 
+    end if;
 
     ///Lemma~7.1 shows that $S:Z(S) \gt p^2 or |S|\le p^3
 
-    if Index(S,Centre(S)) le p^2 and #S ge p^4  then return FF; end if; 
+    if Index(S,Centre(S)) le p^2 and #S ge p^4 then 
+        return FF; 
+    end if; 
      
      
 
     //Here are automorphisms of S and centric subgroups of S
     S:= PCGroup(S);
-
     MakeAutos(S);
     InnS:=Inn(S);
     AutS:= S`autogrp;
@@ -118,14 +131,20 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     AutSp:= S`autoperm;
     InnSp:= SubMap(map,AutSp, InnS);
 
+
     //We use Cor 6.2 from ANTONIO Diaz, ADAM GLESSER, NADIA MAZZA, AND SEJONG PARK
-    if p ge 5 and #FactoredOrder(S`autogrp) eq 1 then return []; end if; 
+    if p ge 5 and #FactoredOrder(S`autogrp) eq 1 then 
+        return []; 
+    end if; 
 
-
+    // Create a list of S-centric subgroups
     Sbar, bar:= S/Centre(S);
     TT:= Subgroups(Sbar);
     S_centrics:= [Inverse(bar)(x`subgroup):x in TT|IsSCentric(S,Inverse(bar)(x`subgroup))];
-    if Printing eq true then print "the group has", #S_centrics, "centric subgroups"; end if;
+
+    if Printing eq true then 
+        print "the group has", #S_centrics, "centric subgroups"; 
+    end if;
      
      
      
@@ -138,32 +157,25 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     ///to calculate in some circumstances.
     /////////////////////////////////////
 
-    ProtoEssentials:=[];// This sequence will contain the ProtoEssential subgroups
+    ProtoEssentials:=[]; // This sequence will contain the ProtoEssential subgroups
+    // If S has max class we can be more efficient obtaining protoessentials
     MaxClassTest(S,S_centrics, ~ProtoEssentials);
-
-    
-    ////////////////////////////////
-    ///We need some subgroups in ProtoEssentials;
-    ///////////////////////////////////
-     
-     
-
-
     ///Notice that if E is protoessential, then so is E\alpha for alpha in AutS
     ProtoEssentialAutClasses:= Setseq({Set(AutOrbit(S,PE,S`autogrp)):PE in ProtoEssentials});
     ProtoEssentialAutClasses:= [Rep(x):x in ProtoEssentialAutClasses];
      
-      
-    if OpTriv and  CharSbgrpTest(ProtoEssentials,S)   then return FF; end if;  
-       
-     
-        ///This test takes Q as the intersection of all the members of the members 
-        //of ProtoEssentials and checks if any of them are characteristic in all members 
-        //of ProtoEssentials and S. If some non-trivial subgroup is then O_p(\F)\ne 1.
+    // CharSbgrpTest
+    if OpTriv and CharSbgrpTest(ProtoEssentials,S) then 
+        return FF; 
+    end if;  
 
        
-    if pPerfect then H:= sub<S|ProtoEssentials,{x^-1*a(x):a in Generators(S`autogrp), x in S}>; 
-    if  H ne S then return []; end if; end if;
+    if pPerfect then 
+        H:= sub<S|ProtoEssentials,{x^-1*a(x):a in Generators(S`autogrp), x in S}>; 
+        if  H ne S then 
+            return []; 
+        end if; 
+    end if;
      //This tests is with this set of protoessentials that O^p(\F) <F. 
          
     /////////////////////
