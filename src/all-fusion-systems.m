@@ -2,12 +2,13 @@
 
 // Given S and x \leq S check if Aut_S(x) \cap O_p(Aut(x)) = Inn(x)
 function RadTest(S,x)
+    p:= FactoredOrder(S)[1][1]; 
     Nx:=Normalizer(S,x);
     A:=AutYX(Nx,x);
     Ap:= SubMap(x`autopermmap,x`autoperm ,A);
     Innerp:= SubMap(x`autopermmap,x`autoperm , Inn(x));
     return #(Ap meet pCore(x`autoperm, p)) eq  #Innerp;
-end function
+end function;
 
 
 
@@ -54,6 +55,10 @@ procedure MaxClassTest(S,S_centrics, ~ProtoEssentials)
             if not RadTest(S,x) then 
                 continue x; 
             end if;
+            Nx:=Normalizer(S,x);
+            A:=AutYX(Nx,x);
+            Ap:= SubMap(x`autopermmap,x`autoperm ,A);
+            Innerp:= SubMap(x`autopermmap,x`autoperm , Inn(x));
             P:= Index(Ap,Innerp);
             Frat:=FrattiniSubgroup(x);
             FQTest := Index(x,Frat) ge P^2;
