@@ -691,7 +691,7 @@ end intrinsic;
 
 
 
-intrinsic  MaximalAbelian(G::Grp)-> Bool
+intrinsic MaximalAbelian(G::Grp)-> Bool
 	{Check if G gas a maximal abelian subgroup}
 	f:= FactoredOrder(G);
 	require #f eq 1:"the group  is not a p-group"; 
