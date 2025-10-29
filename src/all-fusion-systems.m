@@ -1,3 +1,5 @@
+
+// Procedure that obtains some protoessentials depending on whether S is max class or not
 procedure MaxClassTest(S,S_centrics, ~ProtoEssentials)
     p:= FactoredOrder(S)[1][1]; 
     nn:= Valuation(#S,p);
