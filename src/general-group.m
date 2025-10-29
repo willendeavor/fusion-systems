@@ -40,10 +40,11 @@ end intrinsic;
 
 intrinsic MakeAutos(x::Grp)
 	{Makes an automorphism group and its permutation representation}
-	if assigned(x`autogrp) then return; end if;
-	 x`autogrp := AutomorphismGroup(x);
-	    x`autopermmap, x`autoperm:= PermutationRepresentation(x`autogrp); 
-	   // return x`autogrp;
+	if assigned(x`autogrp) then 
+		return; 
+	end if;
+	x`autogrp := AutomorphismGroup(x);
+	x`autopermmap, x`autoperm:= PermutationRepresentation(x`autogrp);
 end intrinsic;
 
 
@@ -95,7 +96,9 @@ intrinsic IsCharacteristic(G::Grp,H::Grp)->Bool
 	require H subset G:"second term is not a subgroup of first";
 	MakeAutos(G);
 	for a in Generators(G`autogrp) do
-	if (a(H) eq H) eq false then return false; end if;
+		if (a(H) eq H) eq false then 
+			return false; 
+		end if;
 	end for;
 	return true;
 end intrinsic;
@@ -107,7 +110,9 @@ intrinsic IsInvariant(A::GrpAuto,G::Grp,H::Grp)->Bool
 	require H subset G:"second term is not a subgroup of first";
 	MakeAutos(G);
 	for a in Generators(A) do
-	if (a(H) eq H) eq false then return false; end if;
+		if (a(H) eq H) eq false then 
+			return false; 
+		end if;
 	end for;
 	return true;
 end intrinsic;
@@ -115,11 +120,15 @@ end intrinsic;
 intrinsic IsStronglypEmbeddedMod(G::Grp,ker::Grp,p::RngIntElt)->Bool
 	{Determines whether G/ker has a strongly p-embedded subgroup}
 	Sylow:=sub<G|SylowSubgroup(G,p),ker>; 
-	  if IsNormal(G,Sylow) then return false; end if;
-	        SSylow:= {sub<G|x`subgroup,ker>:x in Subgroups(Sylow:OrderEqual:=p*#ker)}; 
-	        HS:= sub<G|{Normalizer(G,x):x in SSylow}>;
-	        HS:= sub<G|HS,Normalizer(G,Sylow)>;
-	       if #HS eq #G then return false; end if;
+	if IsNormal(G,Sylow) then 
+		return false; 
+	end if;
+	SSylow:= {sub<G|x`subgroup,ker>:x in Subgroups(Sylow:OrderEqual:=p*#ker)}; 
+	HS:= sub<G|{Normalizer(G,x):x in SSylow}>;
+	HS:= sub<G|HS,Normalizer(G,Sylow)>;
+	if #HS eq #G then 
+		return false; 
+	end if;
 	return true;
 end intrinsic;
 
@@ -128,22 +137,26 @@ end intrinsic;
 intrinsic IsStronglypEmbedded(G::Grp,p::RngIntElt)->Bool
 	{returns true if G has a strongly p-embedded subgroup}
 	require #G mod p eq 0:"the group has trivial Sylow p-subgroup";
-
 	Sylow:=SylowSubgroup(G,p);
-
-	 if #pCore(G,p) ne 1 then return false; end if;
-	 CCl:= ConjugacyClasses(Sylow); 
-	 XX:={x[3]: x in CCl|x[1] eq p}; 
-	 if #XX ne p-1 and  IsSoluble(G) then return false; end if; 
-	   RR:=[];
-	   HS:= Normalizer(G,Sylow);
-	   F:= ConjugacyClasses(HS); 
-	   for x in F do 
-		   if x[1] eq p then 
-		    	HS:=sub<G|HS, Normalizer(G,sub<G|x[3]>)>; 
-		   end if;
-	       if HS eq G then return false; end if;
-	   end for; 
+	if #pCore(G,p) ne 1 then 
+		return false; 
+	end if;
+	CCl:= ConjugacyClasses(Sylow); 
+	XX:={x[3]: x in CCl|x[1] eq p}; 
+	if #XX ne p-1 and IsSoluble(G) then 
+		return false; 
+	end if; 
+	RR:=[];
+	HS:= Normalizer(G,Sylow);
+	F:= ConjugacyClasses(HS); 
+	for x in F do 
+		if x[1] eq p then 
+			HS:=sub<G|HS, Normalizer(G,sub<G|x[3]>)>; 
+		end if;
+	    if HS eq G then 
+	    	return false; 
+	    end if;
+	end for; 
 	return true;
 end intrinsic;
 
@@ -505,10 +518,21 @@ intrinsic SubgroupsAutClasses(S::PCGrp)-> SeqEnum
 	A,beta:= Holomorph(S);
 	SSb :=[SubMap(beta,A,x):x in SS];
 	TT:=[];K:={1};k:=1;
-	for i := 1 to #SSb do T:= SSb[i]; if #K ne 0 then k:= Min(K); end if; K:={};
-	    for j := k to i-1 do print i,j;
-	        if #T ne #SSb[j] then continue j; else K:= K join {j};end if;
-	        if IsConjugate(A, T,SSb[j]) eq true then continue i; end if;
+	for i := 1 to #SSb do 
+		T:= SSb[i]; 
+		if #K ne 0 then 
+			k:= Min(K); 
+		end if; 
+		K:={};
+	    for j := k to i-1 do 
+	    	print i,j;
+	        if #T ne #SSb[j] then 
+	        	continue j; 
+	        else K:= K join {j};
+	        end if;
+	        if IsConjugate(A, T,SSb[j]) eq true then 
+	        	continue i; 
+	        end if;
 	    end for;
 	    Append(~TT,SS[i]);
 	end for;
@@ -527,12 +551,16 @@ intrinsic SemiDirectProduct(V::ModGrp:Perm:= false)-> Grp
 	n:= Dimension(W);
 	H:= GL(n,F);
 	K:= sub<H|G1>;
-
-	for k in [1..n-1] do J:= Identity(H);J:= Eltseq(J);
-	J[k*n+1]:= Identity(F);J:= H!J;  
-	K:= sub<H|J,K>;
-
-	end for;if Perm then K:= CosetImage(K,G1); end if;
+	for k in [1..n-1] do 
+		J:= Identity(H);
+		J:= Eltseq(J);
+		J[k*n+1]:= Identity(F);
+		J:= H!J;  
+		K:= sub<H|J,K>;
+	end for;
+	if Perm then 
+		K:= CosetImage(K,G1); 
+	end if;
 	return K;
 end intrinsic;
 
@@ -577,24 +605,34 @@ intrinsic Blackburn(p::RngIntElt,n::RngIntElt,alpha::RngIntElt,beta::RngIntElt,g
 
 
  intrinsic homeq(x::Map,y::Map)->Bool{checks if two maps are equal}
-	 X:=Domain(x); X1:= Image(x);
-	Y:=Domain(y); Y1 := Image(y);
-	    if X ne Y  or X1 ne Y1 then return false; end if;
+	X:=Domain(x); 
+	X1:= Image(x);
+	Y:=Domain(y); 
+	Y1 := Image(y);
+	if X ne Y  or X1 ne Y1 then 
+	    return false; 
+	end if;
 	gens:=Generators(X);
-	     for gg in gens do
-	        if x(gg) ne y(gg) then return false; end if;
-	     end for;
-	 return true;
+    for gg in gens do
+    	if x(gg) ne y(gg) then 
+        	return false; 
+        end if;
+    end for;
+	return true;
  end intrinsic;
 
 
 
   intrinsic IsQuaternionOrCyclic(G::Grp)->Bool
 	 {Is a quaternion or a cyclic group}
-	 if #G eq 1 then return true;end if; 
+	 if #G eq 1 then 
+	 	return true;
+	 end if; 
 	 p:= FactoredOrder(G)[1][1];
 	 C:= ConjugacyClasses(G);
-	 if # {x: x in C|x[1] eq p} eq p-1 then return true; end if;
+	 if # {x: x in C|x[1] eq p} eq p-1 then 
+	 	return true; 
+	 end if;
 	 return false;
  end intrinsic;
 
@@ -605,7 +643,9 @@ intrinsic piResidual(G::Grp, pi::SeqEnum)-> Grp
 	JJ:= PrimeFactors(#G);
 	Resid:=sub<G|>;
 	for x in JJ do 	
-		if x in pi then continue x; end if;
+		if x in pi then 
+			continue x; 
+		end if;
 		P:= Sylow(G,x);
 		N:= NormalClosure(G,P);
 		Resid:= sub<G|Resid,N>;
@@ -658,7 +698,9 @@ intrinsic  MaximalAbelian(G::Grp)-> Bool
 	M:= MaximalSubgroups(G);
 	for x in M do 
 	    y:= x`subgroup; 
-	    if IsAbelian(y) then return true; end if; 
+	    if IsAbelian(y) then 
+	    	return true; 
+	    end if; 
 	end for;
 	return  false;
 end intrinsic;
@@ -670,8 +712,8 @@ intrinsic SubnormalClosure(G::Grp,T::Grp)-> Grp
 	SNew:= NormalClosure(G,T);
 	SN:= G;
 	while SN ne SNew do
-	SN:= SNew;
-	SNew:= NormalClosure(SN,T);
+		SN:= SNew;
+		SNew:= NormalClosure(SN,T);
 	end while;
 	return SN;
 end intrinsic;
@@ -682,8 +724,8 @@ intrinsic Centralizer(G::Grp,A::Grp,B:Grp)->Grp
 	{Return the centralizer in G of the the quotient A/B}
 	require IsNormal(G,B): "B is not normalized by G"; 
 	K:= Normalizer(G,A);
-	 Q,a:= K/B;
-	C:= Centralizer(Q,a(A));
-	C:= SubInvMap(a,K,C); 
+	Q,a:= K/B;
+	C := Centralizer(Q,a(A));
+	C := SubInvMap(a,K,C); 
 	return C;
 end intrinsic;
