@@ -3,13 +3,13 @@
 
 
 intrinsic CentreTest(B::Grp,S::Grp, Essentials::SeqEnum,AutF::Assoc)->Bool
-    {Tests is action on Z(S) by B and that induced by memebers of AutF is consistent};
+    {Tests if action on Z(S) by B and that induced by memebers of AutF is consistent};
     Z:= Centre(S);
     ZB:=  AutYX(B,Z);
     ZA:= sub<Z`autogrp|>;
     for e in Essentials do 
-    Orb, NN:=  AutOrbit(e,Z,AutF[e]);
-    ZA := sub<Z`autogrp|ZA,Generators(NN)>;
+        Orb, NN:=  AutOrbit(e,Z,AutF[e]);
+        ZA := sub<Z`autogrp|ZA,Generators(NN)>;
     end for;
     TT:={x in ZB: x in Generators(ZA)};
     return TT eq {true};
@@ -18,16 +18,21 @@ end intrinsic;
 ///////////////////////////////
 
 intrinsic CentreTest(B::Grp,S::Grp,P::Grp,A::GrpAuto)->Bool
-    {Tests is action on Z(S) by B and that induced by members of A is consistent};
+    {Tests if action on Z(S) by B and that induced by members of A is consistent};
     ZS:= Centre(S);
     SubZ:= Subgroups(ZS);
     for zz in SubZ do 
-        Z:= zz`subgroup; if #Z eq 1 then continue; end if;
+        Z:= zz`subgroup; 
+        if #Z eq 1 then 
+            continue; 
+        end if;
         ZB:=  AutYX(Normalizer(B,Z),Z);
         Orb, NN:=  AutOrbit(P,Z,A);
         ZA:= sub<Z`autogrp|Generators(NN)>;
         TT:={x in ZB: x in Generators(ZA)};
-        if TT ne {true} then return false; end if; 
+        if TT ne {true} then 
+            return false; 
+        end if; 
     end for;
     return true;
 end intrinsic;
@@ -188,6 +193,23 @@ end intrinsic;
 
 
 
+// Puts the essentials in order according to Group Names
+procedure OrderEssentials(S, ~Autos)
+    p := FactoredOrder(S)[1][1];
+    // Group names only exist for relatively small orders
+    bounds:=[8,6,6,6];
+    primes:=[2,3,4,4]; 
+    if p in primes and #S le p^bounds[Index(primes,p)] then  
+        RO:=[IdentifyGroup( Group(x)):x in Autos];
+        ParallelSort(~RO,~Autos);
+        Reverse(~Autos);
+    else
+        RO:=[#Group(x):x in Autos];
+        ParallelSort(~RO,~Autos);
+        Reverse(~Autos); 
+    end if; 
+end procedure;
+
 
 
 
@@ -206,22 +228,7 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
     F`prime:=p;
 
 
-    bounds:=[8,6,6,6];
-    primes:=[2,3,4,4];
-    ///Puts the essentials in the standard order using group names.  
-    //This will break if order of S is too big. Hence the else below
-     
-    if p in primes and #S1 le p^bounds[Index(primes,p)]  then  
-    RO:=[IdentifyGroup( Group(x)):x in Autos];
-    ParallelSort(~RO,~Autos);
-    Reverse(~Autos);
-    else
-    RO:=[#Group(x):x in Autos];
-    ParallelSort(~RO,~Autos);
-    Reverse(~Autos); 
-    end if; 
-        
-      
+    
     InnS1:=AutYX(S1,S1);   
     AutS1:=S1`autogrp;
     map:=S1`autopermmap;
@@ -303,10 +310,11 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
     //We make all autos of S-centric subgroups. Perhaps this is a place we can save
     //memory
     for ii in [1..#F`subgroups] do 
-    x:= F`subgroups[ii]; 
-    if IsSCentric(S,x) then 
-    MakeAutos(x);end if; end for;
-     
+        x:= F`subgroups[ii]; 
+        if IsSCentric(S,x) then 
+            MakeAutos(x);
+        end if; 
+    end for;
     return F;
 end intrinsic;
 
@@ -321,7 +329,7 @@ intrinsic  GroupFusionSystem(G::Grp,T::Grp)->FusionSystem
     ZZ:= Integers();
     B1:= Normalizer(G,T); T1:= Sylow(B1,p);
     require  T1 eq sub<G|T,Centralizer(T1,T)>:"system cannot be saturated";   
-     Testers:= {Sylow(SL(2,p^2), p),Sylow(SL(2,p^3), p),Sylow(SL(2,p^4), p),Sylow(SL(2,p^5), p),
+    Testers:= {Sylow(SL(2,p^2), p),Sylow(SL(2,p^3), p),Sylow(SL(2,p^4), p),Sylow(SL(2,p^5), p),
     Sylow(SL(2,p^6), p), Sylow(SU(3,p), p),Sylow(SU(3,p^2), p)};// Add more?
             
 

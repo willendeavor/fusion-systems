@@ -1,7 +1,4 @@
 
-
-
-
 intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[],OpTriv:=true,pPerfect:= true)-> SeqEnum
     {Makes all fusion systems with O_p(F)=1 and O^p(\F)= \F}  
     FNumber:=0; //This is to help when saving fusion systems
@@ -639,24 +636,7 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
                
                
     //We now create the fusion system. We don't use the standard call as we have already done most of the calculation
-
-
-
-    bounds:=[8,6,6,6];
-    primes:=[2,3,4,4]; 
-    ///Puts the essentials in the standard order using group names.  
-    //This will break if order of S is too big. Hence the else below
-     
-    if p in primes and #S le p^bounds[Index(primes,p)]  then  
-    RO:=[IdentifyGroup( Group(x)):x in Autos];
-    ParallelSort(~RO,~Autos);
-    Reverse(~Autos);
-    else
-    RO:=[#Group(x):x in Autos];
-    ParallelSort(~RO,~Autos);
-    Reverse(~Autos); 
-    end if; 
-        
+    OrderEssentials(S ~Autos);
     F:= New(FusionSystem);
     F`prime:=p;
     F`group:= S;    
@@ -665,13 +645,14 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     F`essentialautos:= Autos;
     F`essentials := [];
     for x in Autos do
-    Append(~F`essentials, Group(x)); end for;
+        Append(~F`essentials, Group(x)); 
+    end for;
     F`AutF:= AssociativeArray(F`subgroups);
     for x in F`essentials do 
-    F`AutF[x] := F`essentialautos[Index(F`essentials,x)]; 
+        F`AutF[x] := F`essentialautos[Index(F`essentials,x)]; 
     end for; 
-           //We only need  to check saturation on centrics. So we make a partial fusion graph.       
-    if assigned(F`fusiongraph) eq false then  
+    //We only need  to check saturation on centrics. So we make a partial fusion graph.       
+    if not assigned(F`fusiongraph) then  
         F`fusiongraph,F`maps:= FusionGraphSCentrics(F);
     end if;
     F`classes:= ConnectedComponents(F`fusiongraph);
