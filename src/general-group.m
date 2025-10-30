@@ -348,7 +348,8 @@ end intrinsic;
 
 
 
-intrinsic RadicalTest(S::Grp,P::Grp)->Boolean{Checks if P could be a radical subgroup}
+intrinsic IsRadical(S::Grp,P::Grp)->Boolean
+	{Checks if P is a radical subgroup of S}
 	A:=AutYX(Normalizer(S,P),P);
 	Ap:= SubMap(P`autopermmap,P`autoperm ,A);
 	Inner:= Inn(P);

@@ -455,7 +455,7 @@ intrinsic IsSaturated(F::FusionSystem)-> Bool
                 if PP eq S then continue C; end if;
                 if IsCentric(F,PP) eq false then continue C; end if;
                 if IsFullyNormalized(F,PP) eq false then continue vv; end if;
-                if RadicalTest(S,PP) eq false then   continue vv; end if;
+                if IsRadical(S,PP) eq false then   continue vv; end if;
                 if IsFullyAutomised(F,PP) eq false then return false; end if;
             Saturated, sat := SurjectivityProperty(F,PP:saturationtest:=true);
             if  assigned(sat) then  return sat; end if;
