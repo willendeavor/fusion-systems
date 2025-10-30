@@ -117,6 +117,8 @@ intrinsic IsInvariant(A::GrpAuto,G::Grp,H::Grp)->Bool
 	return true;
 end intrinsic;
 
+
+
 intrinsic IsStronglypEmbeddedMod(G::Grp,ker::Grp,p::RngIntElt)->Bool
 	{Determines whether G/ker has a strongly p-embedded subgroup}
 	Sylow:=sub<G|SylowSubgroup(G,p),ker>; 
@@ -294,8 +296,10 @@ end intrinsic;
 intrinsic IsSCentric(S::Grp,P::Grp)->Bool
 	{Is the subgroup P of S  S-centric?}
 	require P subset S:" the second term is not a subgroup of the first";
-	 if Centralizer(S,P) subset P then return true; end if;
-	 return false;
+	if Centralizer(S,P) subset P then 
+	 	return true; 
+	end if;
+	return false;
 end intrinsic;
 
 
