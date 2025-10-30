@@ -193,22 +193,9 @@ end intrinsic;
 
 
 
-// Puts the essentials in order according to Group Names
-procedure OrderEssentials(S, ~Autos)
-    p := FactoredOrder(S)[1][1];
-    // Group names only exist for relatively small orders
-    bounds:=[8,6,6,6];
-    primes:=[2,3,4,4]; 
-    if p in primes and #S le p^bounds[Index(primes,p)] then  
-        RO:=[IdentifyGroup( Group(x)):x in Autos];
-        ParallelSort(~RO,~Autos);
-        Reverse(~Autos);
-    else
-        RO:=[#Group(x):x in Autos];
-        ParallelSort(~RO,~Autos);
-        Reverse(~Autos); 
-    end if; 
-end procedure;
+
+
+
 
 
 
@@ -444,19 +431,6 @@ end intrinsic;
 
 
 
-// Given S and x \leq S check if Aut_S(x) \cap O_p(Aut(x)) = Inn(x)
-function RadTest(S,x)
-    p:= FactoredOrder(S)[1][1]; 
-    Nx:=Normalizer(S,x);
-    A:=AutYX(Nx,x);
-    Ap:= SubMap(x`autopermmap,x`autoperm ,A);
-    Innerp:= SubMap(x`autopermmap,x`autoperm , Inn(x));
-    return #(Ap meet pCore(x`autoperm, p)) eq  #Innerp;
-end function;
-
-
-
-
 // Procedure that obtains some protoessentials depending on whether S is max class or not
 procedure MaxClassTest(S,S_centrics, ~ProtoEssentials)
     p:= FactoredOrder(S)[1][1]; 
@@ -479,7 +453,7 @@ procedure MaxClassTest(S,S_centrics, ~ProtoEssentials)
         TT:=[];
         // For each element of T check if it is radical
         for x in T do 
-            if not RadTest(S,x) then 
+            if not IsRadical(S,x) then 
                 continue x; 
             end if;
             Append(~TT,x);
@@ -496,7 +470,7 @@ procedure MaxClassTest(S,S_centrics, ~ProtoEssentials)
             if IsCyclic(x) then  
                 continue x; 
             end if;
-            if not RadTest(S,x) then 
+            if not IsRadical(S,x) then 
                 continue x; 
             end if;
             Nx:=Normalizer(S,x);

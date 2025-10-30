@@ -1,3 +1,20 @@
+// Puts the essentials in order according to Group Name
+procedure OrderEssentials(S, ~Autos)
+    p := FactoredOrder(S)[1][1];
+    // Group names only exist for relatively small orders
+    bounds:=[8,6,6,6];
+    primes:=[2,3,4,4]; 
+    if p in primes and #S le p^bounds[Index(primes,p)] then  
+        RO:=[IdentifyGroup( Group(x)):x in Autos];
+        ParallelSort(~RO,~Autos);
+        Reverse(~Autos);
+    else
+        RO:=[#Group(x):x in Autos];
+        ParallelSort(~RO,~Autos);
+        Reverse(~Autos); 
+    end if; 
+end procedure;
+
 
 intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[],OpTriv:=true,pPerfect:= true)-> SeqEnum
     {Makes all fusion systems with O_p(F)=1 and O^p(\F)= \F}  
@@ -636,7 +653,7 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
                
                
     //We now create the fusion system. We don't use the standard call as we have already done most of the calculation
-    OrderEssentials(S ~Autos);
+    OrderEssentials(S, ~Autos);
     F:= New(FusionSystem);
     F`prime:=p;
     F`group:= S;    
