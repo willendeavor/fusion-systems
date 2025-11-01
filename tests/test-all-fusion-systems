@@ -1,0 +1,14 @@
+// Example that does pass MaxClassTest
+AllFusionSystems(ExtraSpecialGroup(3,1));
+// Example that is maximal class
+AllFusionSystems(ExtraSpecialGroup(5,1));
+
+
+
+
+// IsRadical
+S := ExtraSpecialGroup(5,1);
+P := AllSubgroups(S)[2];
+if IsRadical(S,P) then
+	print "IsRadical test passed";
+end if;
