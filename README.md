@@ -7,7 +7,7 @@ A refactoring of the MAGMA package written by Chris Parker and Jason Semeraro, w
 Run `load "fusion-systems.m"` from the root directory
 
 
-### Usage and an example
+### Usage and an example (v.1.0.0)
 
 The main functionality of this package is to create fusion systems, to this end a `FusionSystem` type is defined and various attributes along with it. By Alperin's fusion theorem a fusion system is determined by its essential subgroups and their automorphism groups along with the automorphism group of the underlying $p$-group, indeed this is how the fusion systems are created. 
 #### The `FusionSystem` type
@@ -77,6 +77,53 @@ true
 > FF`saturated;
 true
 ```
+####  All fusion systems over a $p$-group
+The most significant function in the package is the `AllFusionSystems` command, given a $p$-group $S$ this returns all possible saturated fusion systems on $S$. Unless specified otherwise it actually returns all fusion systems with $O_p(\mathcal{F}) = 1$ and $O^p(\mathcal{F}) = \mathcal{F}$. 
+```
+> FS := AllFusionSystems(ExtraSpecialGroup(3,1));
+> FS;
+[
+    Fusion System with 2 F-classes of essential subgroups
+    They have orders: [ 9, 9 ]Out_F(E)  have orders: [ 48, 48 ]
+    Out_F(S) has order  4,
+    Fusion System with 2 F-classes of essential subgroups
+    They have orders: [ 9, 9 ]Out_F(E)  have orders: [ 48, 48 ]
+    Out_F(S) has order  8,
+    Fusion System with 1 F-classes of essential subgroups
+    They have orders: [ 9 ]Out_F(E)  have orders: [ 48 ]
+    Out_F(S) has order  8,
+    Fusion System with 1 F-classes of essential subgroups
+    They have orders: [ 9 ]Out_F(E)  have orders: [ 48 ]
+    Out_F(S) has order  16
+]
+> IsIsomorphic(FS[1],F);
+true
+```
+In order to produce the list including those with $O_p(\mathcal{F}) \neq 1$ or $O^p(\mathcal{F}) \neq \mathcal{F}$ we specify the optional parameters `OpTriv` and `pPerfect`:
+```
+> FSS := AllFusionSystems(ExtraSpecialGroup(3,1):OpTriv:=false, pPerfect := false);
+> #FS,#FSS;
+4 6
+``` 
+
+
+####  Saving fusion systems
+It is possible to save a fusion system or even a sequence of fusion systems to a file that can be loaded as needed. This is done using the `SaveFS` command which given a file name and a fusion system (or sequence of them) will output a file in the directory containing a sequence of commands that can be loaded. 
+```
+> SaveFS("examplefs", F);
+> load "examplefs";
+Loading "examplefs"
+Fusion System with 2 F-classes of essential subgroups
+They have orders: [ 9, 9 ]Out_F(E)  have orders: [ 48, 48 ]
+Out_F(S) has order  4
+> FS;
+Fusion System with 2 F-classes of essential subgroups
+They have orders: [ 9, 9 ]Out_F(E)  have orders: [ 48, 48 ]
+Out_F(S) has order  4
+```
+There are some caveats here, one is that the file runs a series of commands and will set `FS` to be the fusion system saved in the file rather than _returning_ a fusion system type. Secondly the command for saving is not currently robust, it does not check if any such file already exists and as such will write multiple times.
+ 
+The repository https://github.com/chris1961parker/Fusion-Systems includes a folder AllFusionSystemsFound containing many already computed fusion systems.
 
 ####  Properties of a fusion system
 The package provides functionality for computing various properties of a fusion system, for example the core and focal subgroups can be generated, in our particular case we have $O_p(\mathcal{F}) = 1$ and $\mathfrak{foc}(\mathcal{F}) = S$.
@@ -97,5 +144,6 @@ There is functionality for computing properties of a subgroup $P \leq S$ in rela
 > GroupName(AutomorphismGroup(F,Z));
 C2
 ```
-####  All fusion systems over a $p$-group
+
+
 
