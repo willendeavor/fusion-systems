@@ -99,8 +99,7 @@ Given an automorphism group picks a random element.
 
 Given $Q \leq P$ and $AFP \leq \mathrm{Aut}(P)$ determines the orbits of AFP on $Q$, also returns the stabiliser and a set of representatives.
 
-The first return value is an array of subgroups of $P$ representing the orbits `Orb` and has as its first element $Q$, followed by $Q^n$ for representatives of $n \in N_P(Q)$ and then the other orbits.
-
+The first return value is an array `Orb` of subgroups of $P$ representing the orbits and has as its first element $Q$, followed by $Q^n$ for representatives of $n \in N_P(Q)$ and then the other orbits.
 
 The second return value `StB` is the stabiliser $N_{AFP}(Q)$.
 
@@ -122,6 +121,4 @@ Given $P \leq Q$ returns true if $C_S(P) \leq P$, false otherwise.
 
 `IsStronglypSylow(Q::Grp)->Bool, Bool`
 
-Given a $p$-group $Q$ determines if $Q$ can be the Sylow $p$-subgroup of a group that contains a strongly $p$-embedded subgroup. 
-
-###
+Given a $p$-group $Q$ determines if $Q$ can be the Sylow $p$-subgroup of a group that contains a strongly $p$-embedded subgroup.
