@@ -505,7 +505,7 @@ end procedure;
 
 
 
-intrinsic AllProtoEssentials(S::Grp:OpTriv:=false, pPerfect:= false,Printing:= false)-> SeqEnum
+intrinsic AllProtoEssentials(S::Grp:OpTriv:=false, pPerfect:= false, Printing:= false)-> SeqEnum
     {Makes all protosessentials up to automorphisms of S the parameters ask for  O_p(F)=1 and O^p(\F)= \F}
     ZZ:= Integers(); //Integer Ring
     p:= FactoredOrder(S)[1][1]; 
