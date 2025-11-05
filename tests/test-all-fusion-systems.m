@@ -1,8 +1,25 @@
+// AllFusionSystems
 // Example that does pass MaxClassTest
-AllFusionSystems(ExtraSpecialGroup(3,1));
+F := AllFusionSystems(ExtraSpecialGroup(3,1));
+assert #F eq 4; // Check correct number of fusion systems
+assert IsIsomorphic(F[1]`group, ExtraSpecialGroup(3,1)); // Check group set correctly
+print "AllFusionSystems test 1 passed";
+FG := GroupFusionSystem(SL(3,3), 3); // Dependancy
+flag := false;
+for FS in F do 
+	if IsIsomorphic(FS,FG) then // Dependancy
+		flag := true;
+	end if;
+end for;
+assert flag; // Check that the group fusion system was in there
+print "AllFusionSystems test 2 passed"
+
+
+
 
 
 // Legacy output
+/*
 **********************************************
  Borel 1 of 9 [ <3, 3> ]
 **********************************************
@@ -44,15 +61,21 @@ AllFusionSystems(ExtraSpecialGroup(3,1));
     They have orders: [ 9 ]Out_F(E)  have orders: [ 48 ]
     Out_F(S) has order  16
 ]
+*/
 
 
 
 
+// Example that triggers maximal class check
+F := AllFusionSystems(ExtraSpecialGroup(5,1));
+// We expect 3 fusion systems, all group fusion systems
+// F_S(SL(3,5)), F_S(SL(3,5):2) and F_S(Th)
+// All automisers are GL_2(5)
+assert #F eq 3; // Check correct number of fusion systems
 
-// Example that is maximal class
-AllFusionSystems(ExtraSpecialGroup(5,1));
 
 // Legacy output
+/*
 **********************************************
  Borel 1 of 30 [ <5, 3> ]
 **********************************************
@@ -154,7 +177,7 @@ AllFusionSystems(ExtraSpecialGroup(5,1));
     They have orders: [ 25 ]Out_F(E)  have orders: [ 480 ]
     Out_F(S) has order  96
 ]
-
+*/
 
 
 
@@ -163,6 +186,7 @@ AllFusionSystems(ExtraSpecialGroup(5,1));
 
 
 // GroupFusionSystem
+// Trivial example
 F := GroupFusionSystem(Sym(6), 3);
 F;
 // Legacy output
@@ -174,6 +198,7 @@ This is a group fusion system
 
 
 // GroupFusionSystem
+// More complicated example
 F := GroupFusionSystem(SL(3,3), 3);
 F;
 // Legacy output
