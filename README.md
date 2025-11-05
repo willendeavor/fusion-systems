@@ -1,16 +1,18 @@
-## Fusion Systems
+# Fusion Systems
 
-A refactoring of the MAGMA package written by Chris Parker and Jason Semeraro, with the aim of making the code more readable and with relatively in-depth documentation and usage. 
+A modest refactoring of the MAGMA package written by Chris Parker and Jason Semeraro and detailed in the paper "Algorithms for fusion systems with applications to $p$-groups of small order", with the aim of making the code more readable and with relatively in-depth documentation and usage. 
+I have no plans currently to extend or seriously modify the functionality and with some perhaps small exceptions there shouldn't be any compatibility issues between this package and https://github.com/chris1961parker/Fusion-Systems
+This is mostly a project to bring myself up to speed with Git and writing documentation etc.
 
-### Installation and execution
+## Installation and execution
 
 Run `load "fusion-systems.m"` from the root directory
 
 
-### Usage and an example (v.1.0.0)
+## Usage and an example (v.1.0.0)
 
 The main functionality of this package is to create fusion systems, to this end a `FusionSystem` type is defined and various attributes along with it. By Alperin's fusion theorem a fusion system is determined by its essential subgroups and their automorphism groups along with the automorphism group of the underlying $p$-group, indeed this is how the fusion systems are created. 
-#### The `FusionSystem` type
+### The `FusionSystem` type
 To demonstrate the `FusionSystem` type we can look at the easiest fusion systems to create, group fusion systems. The following code creates the group fusion system of $`\mathcal{F}_S(G) = \mathcal{F}_{3^{1+2}_+}(\mathrm{SL}(3,3))`$ (i.e. $p = 3$) and saves it as `F`.
 ```
 F := GroupFusionSystem(SL(3,3),3);
@@ -51,7 +53,7 @@ GL(2,3)
 ```
 Lastly notice that printing `F` also showed that it is a group fusion system $`\mathcal{F}_S(G)`$, there is an attribute `grpsystem` that stores the group $G$.
 
-#### Creating fusion systems
+### Creating fusion systems
 In order to create a fusion system we need an _automiser sequence_, this is a list of automorphism groups, the first must be $\mathrm{Aut}_\mathcal{F}(S)$. Let us use `F` to create the fusion system again and check it is isomorphic to the one we created using the `GroupFusionSystem` function.
 ```
 > FF := CreateFusionSystem(EA);
@@ -79,7 +81,7 @@ true
 > FF`saturated;
 true
 ```
-####  All fusion systems over a $p$-group
+###  All fusion systems over a $p$-group
 The most significant function in the package is the `AllFusionSystems` command, given a $p$-group $S$ this returns all possible saturated fusion systems on $S$. Unless specified otherwise it actually returns all fusion systems with $`O_p(\mathcal{F}) = 1`$ and $`O^p(\mathcal{F}) = \mathcal{F}`$. 
 ```
 > FS := AllFusionSystems(ExtraSpecialGroup(3,1));
@@ -109,7 +111,7 @@ In order to produce the list including those with $O_p(\mathcal{F}) \neq 1$ or $
 ``` 
 
 
-####  Saving fusion systems
+### Saving fusion systems
 It is possible to save a fusion system or even a sequence of fusion systems to a file that can be loaded as needed. This is done using the `SaveFS` command which given a file name and a fusion system (or sequence of them) will output a file in the directory containing a sequence of commands that can be loaded. 
 ```
 > SaveFS("examplefs", F);
@@ -127,7 +129,7 @@ There are some caveats here, one is that the file runs a series of commands and 
  
 The repository https://github.com/chris1961parker/Fusion-Systems includes a folder AllFusionSystemsFound containing many already computed fusion systems.
 
-####  Properties of a fusion system
+###  Properties of a fusion system
 The package provides functionality for computing various properties of a fusion system, for example the core and focal subgroups can be generated, in our particular case we have $O_p(\mathcal{F}) = 1$ and $\mathfrak{foc}(\mathcal{F}) = S$.
 ```
 > Core(F);
@@ -139,7 +141,7 @@ GrpPC of order 27 = 3^3
 PC-Relations:
     $.2^$.1 = $.2 * $.3
 ```
-####  Subgroups in a fusion system
+###  Subgroups in a fusion system
 There is functionality for computing properties of a subgroup $P \leq S$ in relation to a fusion system, such as tests for if $P$ is fully centralised/normalised/automised,  strongly/weakly closed etc. Importantly we can also calculate $\mathrm{Aut}_\mathcal{F}(P)$.
 ```
 > Z := Center(F`group);
@@ -147,5 +149,8 @@ There is functionality for computing properties of a subgroup $P \leq S$ in rela
 C2
 ```
 
+
+## Further details
+Documentation for each intrinsic defined by the package can be found in the docs folder, currently a work-in-progress. 
 
 
