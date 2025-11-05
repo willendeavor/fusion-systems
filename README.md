@@ -11,9 +11,11 @@ Run `load "fusion-systems.m"` from the root directory
 
 The main functionality of this package is to create fusion systems, to this end a `FusionSystem` type is defined and various attributes along with it. By Alperin's fusion theorem a fusion system is determined by its essential subgroups and their automorphism groups along with the automorphism group of the underlying $p$-group, indeed this is how the fusion systems are created. 
 #### The `FusionSystem` type
-To demonstrate the `FusionSystem` type we can look at the easiest fusion systems to create, group fusion systems. The following code creates the group fusion system of $\mathcal{F}_S(G) = \mathcal{F}_{3^{1+2}_+}(\mathrm{SL}(3,3))$ (i.e. $p = 3$) and saves it as `F`.
-`F := GroupFusionSystem(SL(3,3),3);`
-We expect $\mathcal{F}$ to have 2 classes of essential subgroups, all of the form $3 \times 3$ and the automiser of each essential subgroup should be $\mathrm{GL}_{2}(3)$. We also should have that $\mathrm{Out}_\mathcal{F}(S) \cong (p-1)^2$ and indeed by calling the implicit printing function we find
+To demonstrate the `FusionSystem` type we can look at the easiest fusion systems to create, group fusion systems. The following code creates the group fusion system of $`\mathcal{F}_S(G) = \mathcal{F}_{3^{1+2}_+}(\mathrm{SL}(3,3))`$ (i.e. $p = 3$) and saves it as `F`.
+```
+F := GroupFusionSystem(SL(3,3),3);
+```
+We expect $\mathcal{F}$ to have 2 classes of essential subgroups, all of the form $3 \times 3$ and the automiser of each essential subgroup should be $`\mathrm{GL}_{2}(3)`$. We also should have that $`\mathrm{Out}_\mathcal{F}(S) \cong (p-1)^2`$ and indeed by calling the implicit printing function we find
 ```
 > F;
 Fusion System with 2 F-classes of essential subgroups
@@ -47,7 +49,7 @@ Now let us look at their automorphisms, these are stored in the attribute `essen
 > GroupName(EA[2]);
 GL(2,3)
 ```
-Lastly notice that printing `F` also showed that it is a group fusion system $\mathcal{F}_S(G)$, there is an attribute `grpsystem` that stores the group $G$.
+Lastly notice that printing `F` also showed that it is a group fusion system $`\mathcal{F}_S(G)`$, there is an attribute `grpsystem` that stores the group $G$.
 
 #### Creating fusion systems
 In order to create a fusion system we need an _automiser sequence_, this is a list of automorphism groups, the first must be $\mathrm{Aut}_\mathcal{F}(S)$. Let us use `F` to create the fusion system again and check it is isomorphic to the one we created using the `GroupFusionSystem` function.
@@ -78,7 +80,7 @@ true
 true
 ```
 ####  All fusion systems over a $p$-group
-The most significant function in the package is the `AllFusionSystems` command, given a $p$-group $S$ this returns all possible saturated fusion systems on $S$. Unless specified otherwise it actually returns all fusion systems with $O_p(\mathcal{F}) = 1$ and $O^p(\mathcal{F}) = \mathcal{F}$. 
+The most significant function in the package is the `AllFusionSystems` command, given a $p$-group $S$ this returns all possible saturated fusion systems on $S$. Unless specified otherwise it actually returns all fusion systems with $`O_p(\mathcal{F}) = 1`$ and $`O^p(\mathcal{F}) = \mathcal{F}`$. 
 ```
 > FS := AllFusionSystems(ExtraSpecialGroup(3,1));
 > FS;
