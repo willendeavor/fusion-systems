@@ -3,6 +3,13 @@
 
 
 
+intrinsic GetPrime(P::Grp)->RngIntElt
+	{Get the prime of a p-group}
+    F := FactoredOrder(P);
+    return F[1][1];
+end intrinsic;
+
+
 
 
 intrinsic SubInvMap(j::Map,K::Grp,W::Grp)-> Grp
@@ -176,43 +183,55 @@ end intrinsic;
 intrinsic AutOrbit(P::Grp,Q::Grp,AFP::GrpAuto:Printing:=false)->SeqEnum,Grp,SeqEnum
 	{Determines the orbits of a subgroup Q under the automorphism group AFPQ of 
 	of P}
-   require Q subset P:"the second term in not a subgroup of the first";
+    require Q subset P:"the second term in not a subgroup of the first";
     MakeAutos(P);
     N:= Normalizer(P,Q);
     gamma:= P`autopermmap;
     Pp:=P`autoperm;
+    // Start with Aut_P(Q), StB will be the normaliser in AFP of Q
     StB:= sub<AFP|{ ConjtoAuto(P,n,AFP):n in Generators(N)}>; 
     StBp:= sub<Pp| {gamma(ConjtoAuto(P,n,P`autogrp)):n in Generators(N)}>;
+    // Obtain representatives of Aut_P(Q)
     T:= Transversal(P,N); 
     Elt:= [ConjtoAuto(P,n,AFP):n in T];
     EltOrig:=Elt;
+    // Calculate orbits under Aut_P(Q)
     Orb:= [Q^n:n in T];
-
     afp:= #AFP;
-    while afp ne #StB*#Orb do  if Printing then  afp,  #StB*#Orb; end if; 
-        alpha:= RandomAuto(AFP);  
-    
-            Q:= Orb[1];
-            Qwalpha :=  SubMap(alpha, P, Q);
-             y:= Index(Orb,Qwalpha);
-             //if y ne 0, then Qwalpha is in the orbit and we add a generator to StB. 
-             if y ne 0 then
-                alphanew :=   alpha*Elt[y]^-1; 
-                alphanewp:=gamma(P`autogrp!alphanew); 
-                if alphanewp in StBp eq false then
-                    StB:= sub<AFP|StB,alphanew>; 
-              StBp:= sub<P`autoperm|StBp,alphanewp>;
-                    if  afp eq #StB*#Orb then  return Orb, StB, Elt; end if;
-              end if;  
-             end if;
-             //if y eq 0, then we have a new element for the orbit.
-             if y eq 0 then
-                    Eltw:= [AFP!(e*alpha):e in EltOrig];
-                    Orbw:= [e(Q): e in Eltw];       
-                    Orb:= Orb cat Orbw;
-                    Elt := Elt cat Eltw; 
-                    if  afp eq #StB*#Orb then   return Orb, StB, Elt ;end if;
-             end if;
+    // By Orbit-Stabiliser |AFP| = |StB||Orb| so we add orbits/stabilisers until true
+    while afp ne #StB*#Orb do  
+    	if Printing then  
+    		afp,  #StB*#Orb; 
+    	end if; 
+        alpha:= RandomAuto(AFP);
+        Q:= Orb[1];
+        Qwalpha :=  SubMap(alpha, P, Q);
+        // Is Qwalpha in Orb?
+        y:= Index(Orb,Qwalpha);
+        //if y ne 0, then Qwalpha is in the orbit and we add a generator to StB. 
+        if y ne 0 then
+        	// Qwalpha = alpha(Q) = Elt[y](Q) so alphanew normalises Q
+            alphanew := alpha*Elt[y]^-1; 
+            alphanewp := gamma(P`autogrp!alphanew); 
+            // Add to StB if not already there
+            if alphanewp in StBp eq false then
+                StB:= sub<AFP|StB,alphanew>; 
+          		StBp:= sub<P`autoperm|StBp,alphanewp>;
+                if  afp eq #StB*#Orb then 
+                	return Orb, StB, Elt; 
+                end if;
+          	end if;  
+         end if;
+         //if y eq 0, then we have a new element for the orbit.
+         if y eq 0 then
+            Eltw:= [AFP!(e*alpha):e in EltOrig];
+            Orbw:= [e(Q): e in Eltw];       
+            Orb:= Orb cat Orbw;
+            Elt := Elt cat Eltw; 
+            if  afp eq #StB*#Orb then 
+            	return Orb, StB, Elt;
+            end if;
+         end if;
     end while;    
     return Orb, StB, Elt;
 end intrinsic;
@@ -220,72 +239,29 @@ end intrinsic;
 
 
 
-intrinsic AutOrbitOld(P::Grp,Q::Grp,AFP::GrpAuto)->SeqEnum,Grp,SeqEnum
-	{Determines the orbits of a subgroup Q under the automorphism group A of of P}
-    require Q subset P:"the second term in not a subgroup of the first";
-    MakeAutos(P); 
-    N:= Normalizer(P,Q);
-    gamma:= P`autopermmap;
-    Pp:=P`autoperm;
-    StB:= sub<AFP|{ ConjtoHom(P, P,n):n in Generators(N)}>; 
-    StBp:= sub<Pp| {gamma(P`autogrp!ConjtoHom(P, P,n)):n in Generators(N)}>;
-    T:= Transversal(P,N); 
-    Elt:= [AFP!ConjtoHom(P, P,n):n in T];
-    Orb:= [Q^n:n in T];
-
-    afp:= #AFP;
-    while afp ne #StB*#Orb do  
-        alpha:= RandomAuto(AFP); 
-        for w in [1..#Orb] do
-            W:= Orb[w];
-            Qwalpha :=  SubMap(alpha, P, W);
-             y:= Index(Orb,Qwalpha);
-             //if y ne 0, then Qwalpha is in the orbit and we add a generator to StB. 
-             if y ne 0 then
-                alphanew :=   Elt[w]*alpha*Elt[y]^-1; 
-                alphanewp:=gamma(P`autogrp!alphanew); 
-                 if alphanewp in StBp eq false then
-                    StB:= sub<AFP|StB,alphanew>; 
-               StBp:= sub<P`autoperm|StBp,alphanewp>;
-                    if  afp eq #StB*#Orb then    return Orb, StB, Elt; end if;
-              end if; 
-             end if;
-             //if y eq 0, then we have a new element for the orbit.
-             if y eq 0 then 
-                    Nwalpha:= Normalizer(P,Qwalpha); 
-                    Tw:= Transversal(P,Nwalpha);
-                    Eltw:= [AFP!(Elt[w]*alpha*ConjtoHom(P, P,n)):n in Tw];
-                    Orbw:= [Qwalpha^n:n in Tw];
-                    Orb:= Orb cat Orbw;
-                    Elt := Elt cat Eltw; 
-                    if  afp eq #StB*#Orb then   return Orb, StB, Elt; end if;
-             end if;
-        end for;  
-
-    end while;
-    
-    return Orb, StB, Elt;
-end intrinsic;
-
-
-
+// Same as the above but for elements, it also works slightly differently
 intrinsic AutOrbit(P::Grp,Q::GrpElt,AFP::GrpAuto)->SeqEnum,Grp,SeqEnum
 	{Determines the orbits of an element Q under the automorphism group A of 
 	of Aut(P)}
-    require Q in P:"the second term in not a subgroup of the first";
+    require Q in P:"the second term in not an element of the first";
     Orb:= [Q];
     Elt:= [Identity(AFP)];
     NN:= sub<AFP| >;
     while #AFP ne #NN*#Orb do
         xx:= RandomAuto(AFP);
+    	// For each orbit we have
         for W in Orb do
             Qwx :=  xx(W);
             w:= Index(Orb,W);
-                if Qwx in Orb then y:= Index(Orb,Qwx);
-                    NN:= sub<AFP|NN,Elt[w]*xx*Elt[y]^-1>;
-                else
-                    Orb := Append(Orb,Qwx);   Elt := Append(Elt,Elt[w]*xx); 
-                end if;
+            if Qwx in Orb then 
+            	// If Qwx in Orb then we potentially have a new stabiliser element
+            	y:= Index(Orb,Qwx);
+                NN:= sub<AFP|NN,Elt[w]*xx*Elt[y]^-1>;
+            else
+            	// Otherwise we have a new orbit
+                Orb := Append(Orb,Qwx);   
+            	Elt := Append(Elt,Elt[w]*xx); 
+            end if;
         end for; 
     end while;
     return Orb, NN, Elt;
@@ -296,65 +272,70 @@ end intrinsic;
 intrinsic IsSCentric(S::Grp,P::Grp)->Bool
 	{Is the subgroup P of S  S-centric?}
 	require P subset S:" the second term is not a subgroup of the first";
-	if Centralizer(S,P) subset P then 
-	 	return true; 
-	end if;
-	return false;
+	return Centralizer(S,P) subset P;
 end intrinsic;
 
 
 
 intrinsic IsStronglypSylow(Q::Grp)->Bool, Bool
 	{Can Q be the Sylow subgroup of a group with a strongly p-embedded Sylow p? Also returns whether cyclic or quaternion}
-
-	p:= FactoredOrder(Q)[1][1];
-
+	p:= GetPrime(Q);
 	QC:=IsQuaternionOrCyclic(Q);
-	    if QC eq false then
-	   
-	X:=PCGroup(CyclicGroup(p));
-	Y:=X;
-	Testers:={};
-	for i := 1 to 7 do 
-	Y:= DirectProduct(Y,X); Testers:= Testers join{Y};
-	end for;
-
-	Testers:= Testers join{
-	PCGroup(ClassicalSylow(SU(3,p), p)),
-	PCGroup(ClassicalSylow(SU(3,p^2), p))};
-	if p eq 3 then Testers:= Testers join {PCGroup(Sylow(PGammaL(2,8),3))}; end if;
-	if p eq 2   then Testers:= Testers join {PCGroup(Sylow(ChevalleyGroup("2B",2,8),2))}; end if;
-	if p eq 5   then Y:= sub<Sym(25)|
-	   (6, 10, 9, 8, 7)(11, 14, 12, 15, 13)(16, 18, 20, 17, 19)(21, 22, 23, 24, 25),
-	    (1, 11, 23, 10, 19, 2, 12, 24, 6, 20, 3, 13, 25, 7, 16, 4, 14, 21, 8, 17, 5,
-	        15, 22, 9, 18)>; 
-	Testers:= Testers join {PCGroup(Y)}; end if;
-
-	 
-	        ///If QC is not quaternion or cyclic, then Out_F(P) cannot be soluble. 
-	        //So there should be 3 or more prime factors by ///Burnside#s p^aq^b theorem. 
-	        //Next we know that if not quaternion or cyclic, then Q should be isomorphic to one of 
-	        //the Sylow's listed above. Because we are assuming that $|S|$ is small, testers suffices. Can easily add more.
-	        //// We check that |Q|\le p^7 just in case.
-	        if #Q le p^7 then TesT:= false;
-	            for SP in Testers do 
-	             if    IsIsomorphic(Q,SP) then TesT := true; break; end if;
-	            end for;
-	         if TesT eq false  then return false,_; end if;
-	        end if;
-	    end if;
+	if QC eq false then
+		X:=PCGroup(CyclicGroup(p));
+		Y:=X;
+		Testers:={};
+		for i := 1 to 7 do 
+			Y:= DirectProduct(Y,X); 
+			Testers:= Testers join{Y};
+		end for;
+		Testers:= Testers join{
+		PCGroup(ClassicalSylow(SU(3,p), p)),
+		PCGroup(ClassicalSylow(SU(3,p^2), p))};
+		if p eq 3 then 
+			Testers:= Testers join {PCGroup(Sylow(PGammaL(2,8),3))}; 
+		end if;
+		if p eq 2 then 
+			Testers:= Testers join {PCGroup(Sylow(ChevalleyGroup("2B",2,8),2))}; 
+		end if;
+		if p eq 5 then 
+			Y:= sub<Sym(25)|
+		    	(6, 10, 9, 8, 7)(11, 14, 12, 15, 13)(16, 18, 20, 17, 19)(21, 22, 23, 24, 25),
+		    	(1, 11, 23, 10, 19, 2, 12, 24, 6, 20, 3, 13, 25, 7, 16, 4, 14, 21, 8, 17, 5,
+		        15, 22, 9, 18)>; 
+			Testers:= Testers join {PCGroup(Y)}; 
+		end if;
+		///If QC is not quaternion or cyclic, then Out_F(P) cannot be soluble. 
+		//So there should be 3 or more prime factors by ///Burnside#s p^aq^b theorem. 
+		//Next we know that if not quaternion or cyclic, then Q should be isomorphic to one of 
+		//the Sylow's listed above. Because we are assuming that $|S|$ is small, testers suffices. Can easily add more.
+		//// We check that |Q|\le p^7 just in case.
+		if #Q le p^7 then 
+			TesT:= false;
+		    for SP in Testers do 
+		        if IsIsomorphic(Q,SP) then 
+		        	TesT := true; 
+		        	break; 
+		        end if;
+		    end for;
+		    if TesT eq false  
+		    	then return false,_; 
+		    end if;
+		end if;
+	end if;
 	return true, QC;
 end intrinsic;
 
 
 
-intrinsic IsRadical(S::Grp,P::Grp)->Boolean
+intrinsic IsRadical(S::Grp,P::Grp)->Bool
 	{Checks if P is a radical subgroup of S}
+	p := GetPrime(S);
 	A:=AutYX(Normalizer(S,P),P);
 	Ap:= SubMap(P`autopermmap,P`autoperm ,A);
 	Inner:= Inn(P);
 	Innerp:= SubMap(P`autopermmap,P`autoperm ,Inner);
-	RadTest:=#(Ap meet pCore(P`autoperm, FactoredOrder(S)[1][1])) eq  #Innerp;
+	RadTest:=#(Ap meet pCore(P`autoperm, p)) eq  #Innerp;
 	return RadTest;
 end intrinsic;
 
@@ -362,9 +343,10 @@ end intrinsic;
 
 intrinsic NormalizerTower(S::Grp,E::Grp)->SeqEnum
 	{Creates a normalizer tower}
-
 	NT:= [Normalizer(S,E)];
-	while NT[#NT] ne S do Append(~NT,Normalizer(S,NT[#NT])); end while;
+	while NT[#NT] ne S do 
+		Append(~NT,Normalizer(S,NT[#NT])); 
+	end while;
 	return NT;
 end intrinsic; 
 
@@ -372,147 +354,69 @@ end intrinsic;
 
 intrinsic AllMaximalSubgroups(G)-> SeqEnum
 	{Creates all maximal subgroups of G}
-	 
 	M:= MaximalSubgroups(G);
 	AM:=[];
+	// MaximalSubgroups returns a representative from each conjugacy class so
+	// we recover the full class now
 	for x in M do 
-		m:= x`subgroup;Index(G,m); t:= Transversal(G,m); 
-		for y in t do Append(~AM,m^y); end for;
+		m:= x`subgroup;
+		Index(G,m); 
+		t:= Transversal(G,m); 
+		for y in t do 
+			Append(~AM,m^y); 
+		end for;
 	end for; 
 	return AM;
 end intrinsic;
 
 
 
-intrinsic MaximalOverGroups(G::Grp,H::Grp, p::RngIntElt)-> SeqEnum
-	{Creates overgrps of H in G up to G conjugacy which have H as a sylow p-sugroup}
+intrinsic MaximalOvergroups(G::Grp,H::Grp, p::RngIntElt)-> SeqEnum
+	{Creates overgroups of H in G up to G conjugacy which have H as a Sylow p-sugroup}
 	M:= MaximalSubgroups(G);
 	AM:=[];
 	for x in M do 
-		m:= x`subgroup; Cm:= ConjugacyClasses(Sylow(m,p)); J:= Sylow(H,p);
-		
-		if #m mod #H eq 0 then  W:={xx[3]:xx in Cm|IsConjugate(G,xx[3],J.1)}; if #W ne 0 then
-			t:= Transversal(G,m); 
-			for y in t do Append(~AM,m^y); end for;
-		end if; end if;
+		m:= x`subgroup; 
+		Cm:= ConjugacyClasses(Sylow(m,p)); 
+		J:= Sylow(H,p);
+		if #m mod #H eq 0 then  
+			W:={xx[3]:xx in Cm|IsConjugate(G,xx[3],J.1)}; 
+			if #W ne 0 then
+				t:= Transversal(G,m); 
+				for y in t do 
+					Append(~AM,m^y); 
+				end for;
+			end if; 
+		end if;
 	end for; 
 	AMH:=[];
 	for x in AM do
-		if H subset x then Append(~AMH, x);end if;
+		if H subset x then 
+			Append(~AMH, x);
+		end if;
 	end for;
 	return Set(AMH);
 end intrinsic;
 
 
 
-intrinsic OverGroups(G::Grp,H::Grp)-> SeqEnum
-	{Creates overgrps of H in G up to G conjugacy which have H as a sylow p-sugroup}
+intrinsic Overgroups(G::Grp,H::Grp)-> SeqEnum
+	{Creates overgroups of H in G up to G conjugacy which have H as a sylow p-sugroup}
 	AllOvers:={};
 	ONew:={G};
 	while ONew ne {H} do 
-		AllOvers := AllOvers join ONew;#AllOvers;
+		AllOvers := AllOvers join ONew;
+		#AllOvers;
 		Overs := ONew; 
 		ONew:={H};
 			for x in Overs do
-				ONew:= ONew join MaximalOverGroups(x,H); 
+				ONew:= ONew join MaximalOvergroups(x,H); 
 			end for;
 	end while;
 	return AllOvers;
 end intrinsic;
 
 
-
-intrinsic OverGroupsSylowEmbedded(G::Grp,H::Grp,INN::Grp,p::RngIntElt)-> SeqEnum
-	{Creates overgrps of H in G which have H as a sylow p-subgroup and such that they are generated by conjugates of H. To get the full list we will use the Fratinni argument}
-
-	require IsPrime(p):"p is not a prime";
-	require #H mod p eq 0 :"H does not have order divisible by p";
-	require IsNormal(G,INN) :"Inn not normal in G";
-
-	J:= Sylow(H,p);
-	JJ, mp:= J/INN;
-
-	require IsCyclic(JJ) :"H/Inn does not have cyclic sylow subgroups";
-
-	NGH:= Normalizer(G,J);
-
-
-	JJJ:= Generators(JJ); JJJ:= {j: j in JJJ|Order(j) eq #JJ};
-	J1:= Inverse(mp)(Rep(JJJ)); // So J1 generates J mod INN and it is an element
-
-
-
-	AllOvers:={};
-	ONew:={SubnormalClosure(G,H)};
-	while ONew ne {H} do 
-	    Overs := ONew diff AllOvers;  j:= 0;
-		AllOvers := AllOvers join ONew; 
-		ONew:={H};
-			for x in Overs do  j:= j+1;  
-				  y:=SubnormalClosure(x,H); 
-				M:= MaximalSubgroups(y);
-				AM:=[];
-				for mm in M do 
-					m:= mm`subgroup; 
-					if INN subset m then 
-					    if #m mod #H eq 0 then  
-						Cm:= ConjugacyClasses(m);
-						for cc in Cm do  
-							aa, bb := IsConjugate(y,cc[3],J1); 
-							
-							if aa then  mbb:= m^bb;  
-								for am in AM do 
-	                                aaa, bbb := IsConjugate(NGH,am,mbb); 
-	                                if aaa then continue cc;  end if;
-								end for;  
-								AM:= AM cat [SubnormalClosure(mbb,H)]; 
-							end if; 
-						end for;//cc		 
-					    end if;//#m mod #H
-					end if;//II subset m
-				end for; //mm in M
-
-			 
-		AM:= Seqset(AM);
-				 
-			for xx in AM do 
-				xxin := false;
-				for yy in ONew do 
-					if xx subset yy then 
-						xxin := true; 
-						continue xx; 
-					end if; 
-				end for;
-				if xxin eq false then
-					ONew := ONew join {xx}; end if;
-			end for; 
-
-			ONew1 :={Rep(ONew)};
-				for on in ONew do OUT := true;
-					for on1 in ONew1 do  if IsConjugate(NGH,on,on1) then OUT := false; continue on; end if; end for;
-				if OUT then ONew1 := ONew1 join{on}; end if;
-				end for;
-	ONew :=ONew1;
-	 
-			end for;
-	end while;
-	 
-
-
-
-
-	AllOvers1:= {Rep(AllOvers)};
-
-
-	for on in AllOvers do OUT := true;
-					for on1 in AllOvers1 do  if IsConjugate(NGH,on,on1) then OUT := false; continue on; end if; end for;
-				if OUT then AllOvers1 := AllOvers1 join{on}; end if;
-				end for;
-	AllOvers:= AllOvers1;
-
-	AAM:=[x: x in AllOvers|Index(x,H) mod p ne 0];
-	return AAM;
-end intrinsic;
 
 
 
@@ -633,7 +537,7 @@ intrinsic Blackburn(p::RngIntElt,n::RngIntElt,alpha::RngIntElt,beta::RngIntElt,g
 	 if #G eq 1 then 
 	 	return true;
 	 end if; 
-	 p:= FactoredOrder(G)[1][1];
+	 p:= GetPrime(G);
 	 C:= ConjugacyClasses(G);
 	 if # {x: x in C|x[1] eq p} eq p-1 then 
 	 	return true; 
