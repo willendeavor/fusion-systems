@@ -6,3 +6,4 @@ Attach("src/group-properties-fusion-system.m");
 Attach("src/generating-fusion-systems.m");
 Attach("src/saving-fusion-systems.m");
 Attach("src/all-fusion-systems.m");
+Attach("src/index-prime-to-p.m");
