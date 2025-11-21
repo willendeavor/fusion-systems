@@ -312,12 +312,12 @@ end intrinsic;
 
 
 
-intrinsic  GroupFusionSystem(G::Grp,T::Grp)->FusionSystem
+intrinsic  GroupFusionSystem(G::Grp,S::Grp)->FusionSystem
     {Creates the fusion system on the p-subgroup S of G}
-    p:= FactoredOrder(T)[1][1];
+    p:= GetPrime(S);
     ZZ:= Integers();
-    B1:= Normalizer(G,T); T1:= Sylow(B1,p);
-    require  T1 eq sub<G|T,Centralizer(T1,T)>:"system cannot be saturated";   
+    B1:= Normalizer(G,S); T1:= Sylow(B1,p);
+    require  T1 eq sub<G|S,Centralizer(T1,S)>:"system cannot be saturated";   
     Testers:= {Sylow(SL(2,p^2), p),Sylow(SL(2,p^3), p),Sylow(SL(2,p^4), p),Sylow(SL(2,p^5), p),
     Sylow(SL(2,p^6), p), Sylow(SU(3,p), p),Sylow(SU(3,p^2), p)};// Add more?
             
@@ -326,19 +326,19 @@ intrinsic  GroupFusionSystem(G::Grp,T::Grp)->FusionSystem
 
     B2, PhiB:= PCGroup(B1);
 
-    SST:= [SubInvMap(PhiB,B1,x`subgroup):x in Subgroups(B2:OrderDividing:=#T)];
+    SST:= [SubInvMap(PhiB,B1,x`subgroup):x in Subgroups(B2:OrderDividing:=#S)];
      
-    SS:= [x:x in SST|IsSCentric(T,x)];
+    SS:= [x:x in SST|IsSCentric(S,x)];
 
-    EE:=[T];
+    EE:=[S];
     GrpEssentialAutos:=AssociativeArray(SS);
-    GrpEssentialAutos[T]:=AutomiserGens(B1,T);
+    GrpEssentialAutos[S]:=AutomiserGens(B1,S);
 
     for x in SS do 
 
-    if x eq T then continue; end if;
+    if x eq S then continue; end if;
 
-    NTx:= Normalizer(T,x);
+    NTx:= Normalizer(S,x);
     Q:=NTx/x;
     QC:= IsQuaternionOrCyclic(Q);
         if QC eq false then 
@@ -382,7 +382,7 @@ intrinsic  GroupFusionSystem(G::Grp,T::Grp)->FusionSystem
     F:=CreateFusionSystem(EEAA);
      
     F`grpsystem:=G;
-    F`grppgrp:=T;
+    F`group:=S;
     F`saturated := true;
     return F;
 end intrinsic
@@ -391,7 +391,7 @@ end intrinsic
 
 intrinsic  GroupFusionSystem(G::Grp, p::RngIntElt)->FusionSystem
     {Makes the group fusion system on the Sylow p-subgroup}
-    T:= Sylow(G,p);F:= GroupFusionSystem(G,T);F`saturated:= true;
+    S:= Sylow(G,p);F:= GroupFusionSystem(G,S);F`saturated:= true;
 
     return F;
 end intrinsic;
