@@ -2,7 +2,6 @@
 
 
 
-
 intrinsic GetPrime(P::Grp)->RngIntElt
 	{Get the prime of a p-group}
     F := FactoredOrder(P);
@@ -642,9 +641,3 @@ intrinsic Centralizer(G::Grp,A::Grp,B:Grp)->Grp
 	return C;
 end intrinsic;
 
-
-
-intrinsic Centraliser(G::Grp, A::Grp, B::Grp) -> Grp
-	{Return the centralizer in G of the the quotient A/B}
-	return Centralizer(G,A,B);
-end intrinsic;
