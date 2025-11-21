@@ -2,11 +2,13 @@
 
 A modest refactoring of the MAGMA package written by Chris Parker and Jason Semeraro and detailed in the paper "Algorithms for fusion systems with applications to $p$-groups of small order", with the aim of making the code more readable and with relatively in-depth documentation and usage. 
 I have no plans currently to extend or seriously modify the functionality and with some perhaps small exceptions there shouldn't be any compatibility issues between this package and https://github.com/chris1961parker/Fusion-Systems
+
 This is mostly a project to bring myself up to speed with Git and writing documentation etc.
 
 ## Installation and execution
 
-Run `load "fusion-systems.m"` from the root directory
+For the most recent code clone the main branch and run `AttachSpec("spec")` from the root directory
+For v.1.0.0 run `load "fusion-systems.m"` from the root directory
 
 
 ## Usage and an example (v.1.0.0)
