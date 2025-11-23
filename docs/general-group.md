@@ -122,3 +122,129 @@ Given $P \leq Q$ returns true if $C_S(P) \leq P$, false otherwise.
 `IsStronglypSylow(Q::Grp)->Bool, Bool`
 
 Given a $p$-group $Q$ determines if $Q$ can be the Sylow $p$-subgroup of a group that contains a strongly $p$-embedded subgroup.
+
+
+### IsRadical
+
+`IsRadical(S::Grp, P::Grp) -> Bool`
+
+Given $P \leq S$ determine if $P$ is radical i.e. if $O_p(N_S(P)/P) = 1$.
+
+
+### NormalizerTower
+
+`NormalizerTower(S::Grp, E::Grp) -> SeqEnum`
+
+Given $E \leq S$ return the sequence defined by $N_S^i(E) = N_S(N_S^{i-1}(E))$.
+
+
+### AllMaximalSubgroups
+
+`AllMaximalSubgroups(G) -> SeqEnum`
+
+Create the entire list of maximal subgroups of $G$, not just the classes.
+
+
+### MaximalOvergroups
+
+`MaximalOvergroups(G::Grp, H::Grp, p::RngIntElt) -> SeqEnum`
+
+Given a $p$-group $H \leq G$ return up to $G$-conjugacy all overgroups of $H$ that contain $H$ as a Sylow $p$-subgroup.
+
+
+### Overgroups
+
+`Overgroups(G::Grp, H::Grp) -> SeqEnum`
+
+Given $H \leq G$ return up to $G$-conjugacy all overgroups of $H$.
+
+
+### SubgroupsAutClasses
+
+`SubgroupsAutClasses(S::PCGrp) -> SeqEnum`
+
+Given a group $S$ calculate all centric subgroups up to $\mathrm{Aut}(S)$-conjugacy.
+
+
+### SemiDirectProduct
+
+`SemiDirectProduct(V::ModGrp : Perm := false) -> Grp`
+
+Given a $G$-module $V$ return the group $K = V \rtimes G$. The optional parameter `Perm` determines if $K$ is returned as a subgroup of $\mathrm{GL}_n(F)$ (the default option) or is returned as a permutation group as the image in $\mathrm{GL}_n(F)$ given by the action of $\mathrm{GL}_n(F)$ on $K$. 
+
+
+### Blackburn
+
+`Blackburn(p::RngIntElt, n::RngIntElt, alpha::RngIntElt, beta::RngIntElt, gamma::RngIntElt, delta::RngIntElt) -> Grp`
+
+Constructs the Blackburn group denoted $B(p,n; \alpha, \beta, \gamma, \delta)$, see Appendix A of Parker + Semeraro for details.
+
+
+### homeq
+
+`homeq(x::Map, y::Map) -> Bool`
+
+Determine if two homomorphisms are equal.
+
+
+### IsQuaternionOrCyclic
+
+`IsQuaternionOrCyclic(G::Grp) -> Bool`
+
+Return true if $G$ is a quaternion or cyclic group.
+
+
+### piResidual
+
+`piResidual(G::Grp, pi::SeqEnum) -> Grp`
+
+Calculate $O^\pi(G)$
+
+
+### pResidual
+
+`pResidual(G::Grp, p::RngIntElt) -> Grp`
+
+Calculate $O^p(G)$
+
+
+### piprimeResidual
+
+`piprimeResidual(G::Grp, pi::SeqEnum) -> Grp`
+
+Calculate $O^{\pi'}(G)$
+
+
+### pprimeResidual
+
+`pprimeResidual(G::Grp, p::RngIntElt) -> Grp`
+
+Calculate $O^{p'}(G)$
+
+
+### IsMaximalClass
+
+`IsMaximalClass(G::Grp) -> Bool`
+
+Return if $G$ is a maximal class $p$-group.
+
+
+### MaximalAbelian
+
+`MaximalAbelian(G::Grp) -> Bool`
+
+Determine if $G$ possesses a maximal subgroup that is abelian.
+
+
+### SubnormalClosure
+
+`SubnormalClosure(G::Grp, T::Grp) -> Grp`
+
+Given $T \leq G$ return the smallest subnormal subgroup of $G$ containing $T$.
+
+
+### Centralizer
+
+`Centralizer(G::Grp,A::Grp,B:Grp)->Grp`
+
+Given $B \normal G$ and $B \leq A$ return $C_G(A/B)$.

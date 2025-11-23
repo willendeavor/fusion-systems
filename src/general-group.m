@@ -2,7 +2,6 @@
 
 
 
-
 intrinsic GetPrime(P::Grp)->RngIntElt
 	{Get the prime of a p-group}
     F := FactoredOrder(P);
@@ -372,7 +371,7 @@ end intrinsic;
 
 
 intrinsic MaximalOvergroups(G::Grp,H::Grp, p::RngIntElt)-> SeqEnum
-	{Creates overgroups of H in G up to G conjugacy which have H as a Sylow p-sugroup}
+	{Creates overgroups of H in G up to G-conjugacy which have H as a Sylow p-subgroup}
 	M:= MaximalSubgroups(G);
 	AM:=[];
 	for x in M do 
@@ -401,7 +400,7 @@ end intrinsic;
 
 
 intrinsic Overgroups(G::Grp,H::Grp)-> SeqEnum
-	{Creates overgroups of H in G up to G conjugacy which have H as a sylow p-sugroup}
+	{Creates overgroups of H in G up to G-conjugacy}
 	AllOvers:={};
 	ONew:={G};
 	while ONew ne {H} do 
@@ -573,9 +572,12 @@ end intrinsic;
 
 
 intrinsic piprimeResidual(G::Grp, pi :: SeqEnum)-> Grp
-	{Determine O^p(G)}
+	{Determine O^\pi-prime(G)}
 	JJ:= PrimeFactors(#G);
 	pistar:= {w: w in JJ| (w in pi) eq false};
+	if IsEmpty(pistar) then 
+		return G;
+	end if; 
 	R:=piResidual(G,pistar);
 	return R;
 end intrinsic;
@@ -583,7 +585,7 @@ end intrinsic;
 
 
 intrinsic pprimeResidual(G::Grp, p::RngIntElt)-> Grp
-	{Determine O^p(G)}
+	{Determine O^pprime(G)}
 	P:= Sylow(G,p);
 	return NormalClosure(G,P);
 end intrinsic;
@@ -593,7 +595,7 @@ end intrinsic;
 intrinsic IsMaximalClass(G::Grp)-> Bool
 	{Check if G is maximal class}
 	f:= FactoredOrder(G);
-	require #f eq 1 : "the group  is not a p-group"; 
+	require #f eq 1 : "The group is not a p-group"; 
 	n:= NilpotencyClass(G);
 	return n eq (f[1][2]-1);
 end intrinsic;
@@ -601,9 +603,9 @@ end intrinsic;
 
 
 intrinsic MaximalAbelian(G::Grp)-> Bool
-	{Check if G gas a maximal abelian subgroup}
+	{Check if G has a maximal abelian subgroup}
 	f:= FactoredOrder(G);
-	require #f eq 1:"the group  is not a p-group"; 
+	require #f eq 1:"The group is not a p-group"; 
 	M:= MaximalSubgroups(G);
 	for x in M do 
 	    y:= x`subgroup; 
@@ -617,7 +619,7 @@ end intrinsic;
 
 
 intrinsic SubnormalClosure(G::Grp,T::Grp)-> Grp
-	{Determines the subnormal closure of $T$ in G}
+	{Determines the subnormal closure of T in G}
 	SNew:= NormalClosure(G,T);
 	SN:= G;
 	while SN ne SNew do
@@ -638,3 +640,4 @@ intrinsic Centralizer(G::Grp,A::Grp,B:Grp)->Grp
 	C := SubInvMap(a,K,C); 
 	return C;
 end intrinsic;
+
