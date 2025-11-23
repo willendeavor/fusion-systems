@@ -10,7 +10,6 @@ end intrinsic;
 
 
 
-
 intrinsic SubInvMap(j::Map,K::Grp,W::Grp)-> Grp
 	{applies inverse of a map to a subgroup}
 	k:= Inverse(j);
@@ -82,7 +81,8 @@ end intrinsic;
 
 
 
-intrinsic Automizer(G::Grp,P::Grp)->GrpAuto{Just another name for Automiser}
+intrinsic Automizer(G::Grp,P::Grp)->GrpAuto
+	{Just another name for Automiser}
 	return Automiser(G,P);
 end intrinsic;
 
@@ -113,15 +113,33 @@ end intrinsic;
 
 intrinsic IsInvariant(A::GrpAuto,G::Grp,H::Grp)->Bool
 	{Checks if subgroup H is invariant under the automorphisms A of G }
-	require H subset G:"second term is not a subgroup of first";
-	MakeAutos(G);
+	require H subset G: "Third argument is not subgroup of second";
+	// MakeAutos(G); // Is this needed?
 	for a in Generators(A) do
-		if (a(H) eq H) eq false then 
+		if not a(H) eq H then 
 			return false; 
 		end if;
 	end for;
 	return true;
 end intrinsic;
+
+
+
+intrinsic IsTrivial(A::GrpAuto, G::Grp, H::Grp) -> Bool
+	{Checks if A < Aut(G) acts trivially on H < G}
+	require H subset G: "Third argument is not subgroup of second";
+	// Nested loop so breaks as soon as we find non-trivial action
+	for a in Generators(A) do 
+		for h in Generators(H) do 
+			if not a(h) eq h then 
+				return false;
+			end if;
+		end for;
+	end for;
+	return true;
+end intrinsic;
+
+
 
 
 
@@ -417,9 +435,6 @@ end intrinsic;
 
 
 
-
-
-
 intrinsic SubgroupsAutClasses(S::PCGrp)-> SeqEnum
 	{Calculates centric subgroups of S up to Aut(S) conjugacy}
 	SS:= [x`subgroup:x in Subgroups(S)|IsSCentric(S,x`subgroup)];
@@ -471,7 +486,6 @@ intrinsic SemiDirectProduct(V::ModGrp:Perm:= false)-> Grp
 	end if;
 	return K;
 end intrinsic;
-
 
 
 
@@ -641,3 +655,20 @@ intrinsic Centralizer(G::Grp,A::Grp,B:Grp)->Grp
 	return C;
 end intrinsic;
 
+
+
+intrinsic AutomorphismNormalizer(A::GrpAuto, H::Grp) -> GrpAuto
+	{Calculate N_A(H) where A < Aut(G)}
+	NAH := sub<A | {alpha : alpha in Generators(A) | alpha(H) eq H}>;
+	return NAH;
+end intrinsic;
+
+
+
+intrinsic AutomorphismCentralizer(A::GrpAuto, H::Grp) -> GrpAuto 
+	{Calculate C_A(H) where A < Aut(G)}
+	require H subset A`Group:"Argument is not a subgroup of underlying group";
+	CAH := sub< A | { a : a in Generators(A) |
+                forall{ h : h in Generators(H) | a(h) eq h } } >;
+    return CAH;
+end intrinsic;

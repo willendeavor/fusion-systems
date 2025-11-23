@@ -1,3 +1,29 @@
+// Functions that calculate certain subsystems of a given fusion system.
+
+
+// Calculate quotient subsystem for a strongly closed subgroup
+
+
+
+// Calculating restriction to a strongly closed subgroup
+
+
+intrinsic RestrictionSubsystem(F::FusionSystem, T::Grp) -> FusionSystem
+	{Given T strongly closed in F return F restricted to T}
+
+end intrinsic;
+
+// Calculating O^p(F)
+
+intrinsic HyperFocalSystem(F::FusionSystem) -> FusionSystem
+	{Calculates the hyperfocal system O^p(F)}
+	hyp := HyperFocalSubgroup(F);
+	EA := [Inn(hyp)];
+end intrinsic;
+
+// Calculating residual subsystem O^{p'}(F)
+
+
 function CalculateAutFES(S,E, AutFS, AutFE)
 	p := GetPrime(S);
 	permmap := E`autopermmap;
@@ -57,6 +83,9 @@ intrinsic CalculateSubResidual(F::FusionSystem) -> FusionSystem
 	F0 := CreateFusionSystem(automisers);
 	return F0;
 end intrinsic;
+
+
+
 
 
 

@@ -95,69 +95,83 @@ intrinsic FocalSubgroup(F::FusionSystem)->Grp
     {Creates the focal subgroup of the fusion system}
     S:= F`group;  
     Foc:=sub<S| >;
-    for e in F`essentials do 
-        i:= Index(F`essentials,e);
+    for E in F`essentials do 
+        i:= Index(F`essentials,E);
         AutFE:= F`essentialautos[i];
-        Foc:= sub<S|Foc, {x^-1*aa(x): x in e, aa in Generators(AutFE)}>;
+        Foc:= sub<S|Foc, {x^-1*alpha(x): x in E, alpha in Generators(AutFE)}>;
     end for;
     return Foc;
-end  intrinsic;
+end intrinsic;
 
+
+intrinsic HyperFocalSubgroup(F::FusionSystem) -> Grp 
+    {Creates the hyperfocal subgroup of the fusion system}
+    hyp := sub<F`group| >;
+    p := GetPrime(F`group);
+    for i in [1..#F`essentials] do 
+        E := F`essentials[i];
+        permmap := E`autopermmap;
+        AutFE := F`essentialautos[i];
+        OpAutFE := pResidual(permmap(AutFE), p);
+        hyp := sub<F`group| hyp, {x^-1*Inverse(permmap)(alpha)(x) : x in E, alpha in Generators(OpAutFE)}>;
+    end for;
+    return hyp;
+end intrinsic;
 
 
 intrinsic FusionGraph(F::FusionSystem)->GrphUnd, Assoc
-{Returns the labeled fusion graph}
+    {Returns the labeled fusion graph}
 
-if assigned(F`fusiongraph)  then return F`fusiongraph,F`maps; end if;
+    if assigned(F`fusiongraph)  then return F`fusiongraph,F`maps; end if;
 
-Essentials := F`essentials;
-SS:= F`subgroups;
-S:= F`group;
-B:=F`borel;
-Gamma := Graph<#SS|>;
-SSxSS:= [[n,m]:n in [1..#SS],m in [1..#SS]];
-Maps:=AssociativeArray(SSxSS);
+    Essentials := F`essentials;
+    SS:= F`subgroups;
+    S:= F`group;
+    B:=F`borel;
+    Gamma := Graph<#SS|>;
+    SSxSS:= [[n,m]:n in [1..#SS],m in [1..#SS]];
+    Maps:=AssociativeArray(SSxSS);
 
 
-for E in Essentials do 
-        if E eq S then continue E; end if; 
-    
-    NBE := Normalizer(B,E);
-        SubsE := Subgroups(NBE:OrderDividing:= #E);
-        SSSE:={x`subgroup:x in SubsE|x`subgroup subset E};
-        while #SSSE ne 0 do
-        Q:= Rep(SSSE);
-        for X in SS do
-            a,h:= IsConjugate(B,X,Q); 
-            if a then
-                v:= Index(SS,X); 
-                g:=ConjtoHom( SS[v], Q,h); 
-                g1 :=ConjtoHom(Q, SS[v],h^-1); 
-                break;
-            end if;
-        end for;
-        Orb, NN, Elt := AutOrbit(E,Q,F`essentialautos[Index(F`essentials,E)]);
-        for x in Orb do 
-            if IsConjugate(B,Q,x) then continue; 
-            end if;
-            for y in SS do
-                a,b:= IsConjugate(B,x,y);
-                if a  then w:= Index(SS,y); namex:= Index(Orb,x);
-                theta := g*Elt[namex]*ConjtoHom(x,y,b);
-                theta1:= ConjtoHom(y,x,b^-1)*Elt[namex]^-1*g1;
-                break; end if;
+    for E in Essentials do 
+            if E eq S then continue E; end if; 
+        
+        NBE := Normalizer(B,E);
+            SubsE := Subgroups(NBE:OrderDividing:= #E);
+            SSSE:={x`subgroup:x in SubsE|x`subgroup subset E};
+            while #SSSE ne 0 do
+            Q:= Rep(SSSE);
+            for X in SS do
+                a,h:= IsConjugate(B,X,Q); 
+                if a then
+                    v:= Index(SS,X); 
+                    g:=ConjtoHom( SS[v], Q,h); 
+                    g1 :=ConjtoHom(Q, SS[v],h^-1); 
+                    break;
+                end if;
             end for;
-            if v ne w then
-                AddEdge(~Gamma,v,w);
-                Maps[[v,w]]:= theta;
-                //Maps[[w,v]]:= theta^-1;
-            Maps[[w,v]]:= theta1;
-            end if;
-         end for;
-         SSSE := SSSE diff Set(Orb);
-        end while;
-end for;
-return  Gamma, Maps;
+            Orb, NN, Elt := AutOrbit(E,Q,F`essentialautos[Index(F`essentials,E)]);
+            for x in Orb do 
+                if IsConjugate(B,Q,x) then continue; 
+                end if;
+                for y in SS do
+                    a,b:= IsConjugate(B,x,y);
+                    if a  then w:= Index(SS,y); namex:= Index(Orb,x);
+                    theta := g*Elt[namex]*ConjtoHom(x,y,b);
+                    theta1:= ConjtoHom(y,x,b^-1)*Elt[namex]^-1*g1;
+                    break; end if;
+                end for;
+                if v ne w then
+                    AddEdge(~Gamma,v,w);
+                    Maps[[v,w]]:= theta;
+                    //Maps[[w,v]]:= theta^-1;
+                Maps[[w,v]]:= theta1;
+                end if;
+             end for;
+             SSSE := SSSE diff Set(Orb);
+            end while;
+    end for;
+    return  Gamma, Maps;
 end intrinsic;
 
 
