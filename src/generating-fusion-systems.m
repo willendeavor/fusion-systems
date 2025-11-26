@@ -316,7 +316,8 @@ intrinsic  GroupFusionSystem(G::Grp,S::Grp)->FusionSystem
     {Creates the fusion system on the p-subgroup S of G}
     p:= GetPrime(S);
     ZZ:= Integers();
-    B1:= Normalizer(G,S); T1:= Sylow(B1,p);
+    B1:= Normalizer(G,S); 
+    T1:= Sylow(B1,p);
     require  T1 eq sub<G|S,Centralizer(T1,S)>:"system cannot be saturated";   
     Testers:= {Sylow(SL(2,p^2), p),Sylow(SL(2,p^3), p),Sylow(SL(2,p^4), p),Sylow(SL(2,p^5), p),
     Sylow(SL(2,p^6), p), Sylow(SU(3,p), p),Sylow(SU(3,p^2), p)};// Add more?
@@ -382,17 +383,19 @@ intrinsic  GroupFusionSystem(G::Grp,S::Grp)->FusionSystem
     F:=CreateFusionSystem(EEAA);
      
     F`grpsystem:=G;
-    F`group:=S;
     F`saturated := true;
     return F;
 end intrinsic
 
 
 
+
+
 intrinsic  GroupFusionSystem(G::Grp, p::RngIntElt)->FusionSystem
     {Makes the group fusion system on the Sylow p-subgroup}
-    S:= Sylow(G,p);F:= GroupFusionSystem(G,S);F`saturated:= true;
-
+    S:= Sylow(G,p);
+    F:= GroupFusionSystem(G,S);
+    F`saturated:= true;
     return F;
 end intrinsic;
 
