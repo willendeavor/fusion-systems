@@ -3,7 +3,7 @@ FusionRecord := recformat<
 	S_presentation : MonStgElt, 
 	S_order: RngIntElt,
 	S_name : MonStgElt,
-	S_small_group_id : SeqEnum, 
+	S_small_group_id : Tup, 
 	EssentialData : SeqEnum,
 	OpTriv: Bool, 
 	pPerfect: Bool
@@ -55,7 +55,8 @@ function FusionToRecord(FS)
 end function;
 
 
-procedure WriteRecord(filename, FS)
+intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
+	{Outputs a fusion record to a file}
     R := FusionToRecord(FS);
     F := Open(filename, "w");
 
@@ -82,13 +83,16 @@ procedure WriteRecord(filename, FS)
         fprintf F, "    >,\n";
     end for;
     fprintf F, "  ],\n";
-
-    fprintf F, "  OpTriv := %o,\n", R`OpTriv;
-    fprintf F, "  pPerfect := %o\n", R`pPerfect;
+    if assigned(R`OpTriv) then
+    	fprintf F, "  OpTriv := %o,\n", R`OpTriv;
+    end if;
+    if assigned(R`pPerfect) then 
+    	fprintf F, "  pPerfect := %o\n", R`pPerfect;
+    end if;
     fprintf F, ">;\n";
 
     delete F;
-end procedure;
+end intrinsic;
 
 
 
@@ -98,7 +102,7 @@ intrinsic ConvertDirectory(p::RngIntElt,n::RngIntElt)
 	base_in := Sprintf("database/p_%o/n_%o", p,n);
 	base_out := Sprintf("database/SmallFusionSystems/p_%o/n_%o", p, n);
 	System(Sprintf("mkdir -p %o", base_out));
-	files := Pipe("ls ",  base_in cat "/FS_*.m");
+	files := Pipe("ls" cat base_in cat "/FS_*.m", "");
     filelist := Split(files, "\n");
 
     for fname in filelist do
@@ -112,12 +116,13 @@ intrinsic ConvertDirectory(p::RngIntElt,n::RngIntElt)
         inpath  := Sprintf("%o/%o", base_in, fname);
         outpath := Sprintf("%o/%o", base_out, fname);
 
+
         // Load FS from file
         FS := 0;
-        eval Sprintf("load \"%o\";", inpath); 
+        Attach(inpath); 
 
         // Convert & write
-        WriteRecord(outpath, FS);
+        WriteFusionRecord(outpath, FS);
     end for;
 end intrinsic;
 
