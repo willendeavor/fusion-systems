@@ -4,6 +4,15 @@
 intrinsic SmallFusionSystem(S::Grp, i::RngIntElt) -> FusionSystem
 	{Return the i-th fusion system on S}
 	// Recall that loading the fusion system record does not load the fusion system
+	p := FactoredOrder(S)[1][1];
+	n := FactoredOrder(S)[1][2];
+	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
+	return LoadFusionSystem(filename);
+end intrinsic;
+
+
+intrinsic FusionRecordTemp() -> Rec
+	{dummy intrinsic, yes really this is the workaround}
 end intrinsic;
 
 
@@ -12,7 +21,19 @@ intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
 	// Sets R to be the fusion record
 	Attach(filename);
 	R := FusionRecordTemp();
-
+	S := R`S;
+	Autos := [];
+	for E_rec in R`EssentialData do 
+		E := E_rec`E;
+		AE := AutomorphismGroup(E);
+		gens := [];
+		for alpha in E_rec`AutFE_gens do
+			Append(~gens, AE!hom<E -> E | alpha>);
+		end for;
+		A := sub<AE | gens>;
+		Append(~Autos, A);
+	end for;
+	return(CreateFusionSystem(Autos));
 end intrinsic;
 
 
@@ -35,6 +56,7 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 			continue;
 		end if;
 		if IsIsomorphic(F_i, F) then
+			print "Fusion system is already in database \n";
 			new := false;
 			break;
 		end if;
@@ -43,9 +65,20 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 	if new then
 		p := FactoredOrder(S)[1][1];
 		n := FactoredOrder(S)[1][2];
-		filename := Sprintf("/data/SmallFusionSystem/p_%o/n_%o/FS_%o", p, n, m + 1)
+		filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
+		System(Sprintf("mkdir -p %o", filepath));
+		filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, m + 1);
 		WriteFusionRecord(filename, F);
+		print "Successfully added new fusion system \n";
 	end if;
+end intrinsic;
+
+
+intrinsic AddSmallFusionSystems(FS::SeqEnum)
+	{Given a list of fusion systems, add them to the database}
+	for F in FS do 
+		AddSmallFusionSystem(F);
+	end for;
 end intrinsic;
 
 
@@ -57,12 +90,17 @@ end intrinsic;
 
 intrinsic NumberSmallFusionSystems(S_order::RngIntElt) -> RngIntElt
 	{Returns the number of small fusion systems over a group of order S_order}
-	p := Factorisation(S_order)[1];
-	n := Factorisation(S_order)[2];
-	path := Sprintf("/data/SmallFusionSystem/p_%o/n_%o", p, n);
-	files := Pipe("ls" cat base_in cat "/FS_*.m", "");
+	p := Factorisation(S_order)[1][1];
+	n := Factorisation(S_order)[1][2];
+	path := Sprintf(" data/SmallFusionSystems/p_%o/n_%o/", p, n);
+	try 
+		files := Pipe("ls" cat path, "");
+	catch e
+		return 0;
+	end try;
     filelist := Split(files, "\n");
-    return(#filelist);
+    count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and #Split(s, ".") eq 1];
+    return(count);
 end intrinsic;
 
 

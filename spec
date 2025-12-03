@@ -11,5 +11,6 @@
 		saving-fusion-systems.m
 		all-fusion-systems.m
 		convert_to_database.m
+		small-fusion-systems.m
 	}
 }

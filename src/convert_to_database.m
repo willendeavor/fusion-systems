@@ -19,7 +19,7 @@ function FusionToRecord(FS)
 		E : Grp, 
 		E_name : MonStgElt,
 		AutFE_name : MonStgElt,
-		AutFE_gens : MonStgElt
+		AutFE_gens : SeqEnum
 		>;
 	S := PCGroup(FS`group);
 	p := FactoredOrder(S)[1][1];
@@ -35,17 +35,15 @@ function FusionToRecord(FS)
 	    E_gens := SetToSequence(PCGenerators(E));
 	    image_gens := [];
 	    for alpha in Generators(AutFE) do 
-	    	for x in E_gens do
-	    		y := E!x;
-	    		Append(~image_gens, <x, E!alpha(x)>);
-	    	end for;
+	    	pairs := [<S!g, S!alpha(g)> : g in E_gens];
+	    	Append(~image_gens, pairs);
 	    end for;
         Append(~EssentialSeq,
             rec< EssentialRecord |
                 E   := E,
                 E_name := GroupName(E),
                 AutFE_name := GroupName(AutFE),
-                AutFE_gens  := Sprint(image_gens)
+                AutFE_gens  := image_gens
             >
         );
     end for;
@@ -65,7 +63,9 @@ A VERY VERY ugly intrinsic that creates a file which can be loaded.
 However MAGMA is very very awkward about loading files, ideally we would have 
 just used load filename but MAGMA does not like this so instead what we do
 is create a file which contains a temporary intrinsic which is then called to create
-the record.
+the record. From the record it is fairly straightforward to recover F
+Ideally at some point we would remove the duplicate definition of FusionRecord
+and EssentialRecord but for now, this works, although I don't like it
 */
 intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 	{Outputs a fusion record to a file}
@@ -88,7 +88,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		E : Grp, 
 		E_name : MonStgElt,
 		AutFE_name : MonStgElt,
-		AutFE_gens : MonStgElt
+		AutFE_gens : SeqEnum
 		>; \n";
     S := R`S;
     // Print S as a PCGroup with generators that can be loaded
@@ -99,24 +99,21 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     fprintf F, "; \n";
     fprintf F, "";
     // Need to create the essential records before assigning then
-    fprintf F, "  EssentialData := [\n";
+    fprintf F, "  EssentialData := [];\n";
     for i in [1..#R`EssentialData] do
     	ER := R`EssentialData[i];
     	E := ER`E;
     	A := ER`AutFE_gens;
     	rel := [S!w:w in PCGenerators(E)];
-        fprintf F, "    rec< EssentialRecord |\n";
+    	fprintf F, " E := sub<S| %o>; \n", rel;
+        fprintf F, "    ER := rec< EssentialRecord |\n";
    		fprintf F, " E := sub<S| %o>, \n", rel;
    		fprintf F, "E_name := \"%o\", \n", ER`E_name;
-	    fprintf F, "AutFE_gens := \"%o\", \n", A;
+	    fprintf F, "AutFE_gens := %o, \n", A;
 	    fprintf F, "AutFE_name := \"%o\" \n", ER`AutFE_name;
-	    if i eq #R`EssentialData then
-	    	fprintf F, "    >\n"; // Final line
-	    	continue;
-	    end if;
-        fprintf F, "	>, \n"; // Continue listing otherwise
+        fprintf F, "	>; \n";
+        fprintf F, "Append(~EssentialData, ER);";
     end for;
-    fprintf F, "  ];\n"; // Close EssentialData
 
     fprintf F, "R := rec< FusionRecord |\n";
     fprintf F, "  p := %o,\n", R`p;
