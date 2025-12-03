@@ -1,11 +1,11 @@
 // Implements a database similar to SmallGroups
 
 
-intrinsic SmallFusionSystem(S::Grp, i::RngIntElt) -> FusionSystem
+intrinsic SmallFusionSystem(S_order::RngIntElt, i::RngIntElt) -> FusionSystem
 	{Return the i-th fusion system on S}
 	// Recall that loading the fusion system record does not load the fusion system
-	p := FactoredOrder(S)[1][1];
-	n := FactoredOrder(S)[1][2];
+	p := Factorisation(S_order)[1][1];
+	n := Factorisation(S_order)[1][2];
 	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
 	return LoadFusionSystem(filename);
 end intrinsic;
@@ -48,13 +48,7 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 	m := NumberSmallFusionSystems(#S);
 	new := true;
 	for i in [1..m] do 
-		F_i := SmallFusionSystem(S, i);
-		if not IsIsomorphic(S, F_i`group) then 
-			continue;
-		end if;
-		if not #F_i`essentials eq #F`essentials then
-			continue;
-		end if;
+		F_i := SmallFusionSystem(#S, i);
 		if IsIsomorphic(F_i, F) then
 			print "Fusion system is already in database \n";
 			new := false;
