@@ -3,6 +3,16 @@
 
 intrinsic SmallFusionSystem(S::Grp, i::RngIntElt) -> FusionSystem
 	{Return the i-th fusion system on S}
+	// Recall that loading the fusion system record does not load the fusion system
+end intrinsic;
+
+
+intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
+	{Creates a fusion system from a database entry}
+	// Sets R to be the fusion record
+	Attach(filename);
+	R := FusionRecordTemp();
+
 end intrinsic;
 
 
