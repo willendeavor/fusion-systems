@@ -15,12 +15,24 @@ intrinsic FusionRecordTemp() -> Rec
 	{dummy intrinsic, yes really this is the workaround}
 end intrinsic;
 
+intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec 
+	{Loads a fusion system record given the file path}
+	Attach(filename);
+	R := FusionRecordTemp();
+	return R;
+end intrinsic;
+
+intrinsic LoadSmallFusionSystemRecord(S_order::RngIntElt, i::RngIntElt) -> Rec 
+	{Return the record only for a small fusion system}
+	p := Factorisation(S_order)[1][1];
+	n := Factorisation(S_order)[1][2];
+	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
+	return LoadFusionSystemRecord(filename);
+end intrinsic;
 
 intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
 	{Creates a fusion system from a database entry}
-	// Sets R to be the fusion record
-	Attach(filename);
-	R := FusionRecordTemp();
+	R := LoadFusionSystemRecord(filename);
 	S := R`S;
 	Autos := [];
 	for E_rec in R`EssentialData do 
@@ -39,6 +51,18 @@ end intrinsic;
 
 intrinsic IdentifyFusionSystem(F::FusionSystem) -> SeqEnum
 	{If F is a small fusion system return its identifying pair}
+	S := F`group;
+	m := NumberSmallFusionSystems(#S);
+	for i in [1..m] do 
+		F_i := SmallFusionSystem(#S, i);
+		if IsIsomorphic(F_i, F) then
+			index := <#S, i>;
+			printf "Input fusion system is small fusion system <%o, %o> \n";
+			return index;
+		end if;
+	end for;
+	print "Fusion is not a small fusion system";
+	return <0,0>;
 end intrinsic;
 
 
