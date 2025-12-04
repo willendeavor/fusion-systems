@@ -25,7 +25,11 @@ function FusionToRecord(FS)
 	p := FactoredOrder(S)[1][1];
 	S_order := #S;
 	S_name := GroupName(S);
-	S_small_group_id := IdentifyGroup(S);
+	try 
+		S_small_group_id := IdentifyGroup(S);
+	catch e
+		S_small_group_id := <0,0>;
+	end try;
 	EssentialSeq := [];
     for i in [1..#FS`essentials] do
     	AutFE := FS`essentialautos[i];

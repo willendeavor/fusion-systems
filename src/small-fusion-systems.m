@@ -1,8 +1,15 @@
 // Implements a database similar to SmallGroups
 
 
+intrinsic GetSmallFusionSystemDirectory() -> MonStgElt
+	{Returns the path to the database}
+	return GetCurrentDirectory();
+end intrinsic
+
+
+
 intrinsic SmallFusionSystem(S_order::RngIntElt, i::RngIntElt) -> FusionSystem
-	{Return the i-th fusion system on S}
+	{Return the i-th fusion system on a group of order S_order}
 	// Recall that loading the fusion system record does not load the fusion system
 	p := Factorisation(S_order)[1][1];
 	n := Factorisation(S_order)[1][2];
@@ -15,6 +22,7 @@ intrinsic FusionRecordTemp() -> Rec
 	{dummy intrinsic, yes really this is the workaround}
 end intrinsic;
 
+
 intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec 
 	{Loads a fusion system record given the file path}
 	Attach(filename);
@@ -22,7 +30,8 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec
 	return R;
 end intrinsic;
 
-intrinsic LoadSmallFusionSystemRecord(S_order::RngIntElt, i::RngIntElt) -> Rec 
+
+intrinsic SmallFusionSystemRecord(S_order::RngIntElt, i::RngIntElt) -> Rec 
 	{Return the record only for a small fusion system}
 	p := Factorisation(S_order)[1][1];
 	n := Factorisation(S_order)[1][2];
@@ -30,9 +39,9 @@ intrinsic LoadSmallFusionSystemRecord(S_order::RngIntElt, i::RngIntElt) -> Rec
 	return LoadFusionSystemRecord(filename);
 end intrinsic;
 
-intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
-	{Creates a fusion system from a database entry}
-	R := LoadFusionSystemRecord(filename);
+
+intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
+	{Creates a fusion system from a fusion system record}
 	S := R`S;
 	Autos := [];
 	for E_rec in R`EssentialData do 
@@ -46,6 +55,13 @@ intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
 		Append(~Autos, A);
 	end for;
 	return(CreateFusionSystem(Autos));
+end intrinsic;
+
+
+intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
+	{Creates a fusion system from a database entry}
+	R := LoadFusionSystemRecord(filename);
+	return(LoadFusionSystem(R));
 end intrinsic;
 
 
@@ -102,6 +118,16 @@ end intrinsic;
 
 intrinsic AllSmallFusionSystems(S::Grp) -> SeqEnum
 	{Given a group S return all small fusion systems over S}
+	m, indices := NumberSmallFusionSystems(S);
+	FS := [LoadFusionSystem(SmallFusionSystemRecord(#S, i)) : i in indices ];
+	return(FS);
+end intrinsic;
+
+
+intrinsic AllSmallFusionSystems(S_order::RngIntElt) -> SeqEnum
+	{Return all small fusion systems on a p-group of S_order}
+	FS := [SmallFusionSystem(S_order,i) : i in [1..NumberSmallFusionSystems(S_order)]];
+	return(FS);
 end intrinsic;
 
 
@@ -119,6 +145,24 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt) -> RngIntElt
     filelist := Split(files, "\n");
     count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and #Split(s, ".") eq 1];
     return(count);
+end intrinsic;
+
+
+
+intrinsic NumberSmallFusionSystems(S::Grp) -> RngIntElt, SeqEnum
+	{Returns the number of small fusion systems over S and the indices of them}
+	p := FactoredOrder(S)[1][1];
+	n := FactoredOrder(S)[1][2];
+	indices := [];
+	m := NumberSmallFusionSystems(#S);
+	for i in [1..m] do 
+		R := SmallFusionSystemRecord(#S, i);
+		if IsIsomorphic(S, R`S) then 
+			Append(~indices, i);
+		end if;
+	end for;
+
+	return #indices, indices;
 end intrinsic;
 
 
