@@ -1,0 +1,29 @@
+// Testing old database has been correctly converted
+old_files := [
+	"All2to3",
+	"All2to4",
+	"All2to5",
+	"All2to6",
+	"All2to7",
+	"All3to3",
+	"All3to4",
+	"All3to5",
+	"All3to6",
+	"All5to3",
+	"All5to4",
+	"All5to5",
+	"All7to3",
+	"All7to4",
+	"All7to5"
+	];
+old_filepaths := ["database/OLD/" cat i : i in old_files];
+
+
+
+
+
+for F in FFS do 
+	if IdentifyFusionSystem(F) eq <0,0> then
+		print "Failed";
+	end if;
+end for;

@@ -1,7 +1,7 @@
 // Implements a database similar to SmallGroups
 
 
-intrinsic GetSmallFusionSystemDirectory() -> MonStgElt
+intrinsic SetSmallFusionSystemDirectory() -> MonStgElt
 	{Returns the path to the database}
 	return GetCurrentDirectory();
 end intrinsic
@@ -27,6 +27,8 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec
 	{Loads a fusion system record given the file path}
 	Attach(filename);
 	R := FusionRecordTemp();
+	// We can delete the signature file
+	System("rm " cat filename cat ".sig");
 	return R;
 end intrinsic;
 
