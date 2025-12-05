@@ -85,9 +85,9 @@ end intrinsic;
 intrinsic AddSmallFusionSystem(F::FusionSystem)
 	{Given a fusion system check if it is already in the database, otherwise add it}
 	S := F`group;
-	m := NumberSmallFusionSystems(#S);
+	m, indices := NumberSmallFusionSystems(S);
 	new := true;
-	for i in [1..m] do 
+	for i in indices do 
 		F_i := SmallFusionSystem(#S, i);
 		if IsIsomorphic(F_i, F) then
 			print "Fusion system is already in database \n";
@@ -101,7 +101,7 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 		n := FactoredOrder(S)[1][2];
 		filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
 		System(Sprintf("mkdir -p %o", filepath));
-		filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, m + 1);
+		filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
 		WriteFusionRecord(filename, F);
 		print "Successfully added new fusion system \n";
 	end if;
@@ -161,7 +161,6 @@ intrinsic NumberSmallFusionSystems(S::Grp) -> RngIntElt, SeqEnum
 			Append(~indices, i);
 		end if;
 	end for;
-
 	return #indices, indices;
 end intrinsic;
 
