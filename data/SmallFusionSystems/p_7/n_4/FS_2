@@ -18,41 +18,46 @@ intrinsic FusionRecordTemp() -> Rec
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>; 
-  S :=PCGroup(\[ 4, -7, 7, -7, -7, 449, 3618 ])
+
+  S :=PCGroup(\[ 4, -7, 7, -7, -7, 449, 25286 ])
 ; 
-  EssentialData := [];
- E := sub<S| [ S.1, S.2, S.3, S.4 ]>; 
-    ER := rec< EssentialRecord |
- E := sub<S| [ S.1, S.2, S.3, S.4 ]>, 
-E_name := "He7.C7", 
+EssentialData := [];
+
+E := sub<S| [ S.1, S.2, S.3, S.4 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.1, S.2, S.3, S.4 ]>, 
+E_name := "C7.He7", 
 AutFE_gens := [
-[ <S.1, S.1>, <S.2, S.2 * S.3>, <S.3, S.3>, <S.4, S.4> ],
+[ <S.1, S.1 * S.3^6>, <S.2, S.2>, <S.3, S.3>, <S.4, S.4> ],
+[ <S.1, S.1>, <S.2, S.2^6>, <S.3, S.3^6>, <S.4, S.4^6> ],
 [ <S.1, S.1>, <S.2, S.2>, <S.3, S.3>, <S.4, S.4> ],
-[ <S.1, S.1 * S.3^6>, <S.2, S.2>, <S.3, S.3 * S.4^6>, <S.4, S.4> ],
-[ <S.1, S.1^6>, <S.2, S.2>, <S.3, S.3^6>, <S.4, S.4^6> ],
-[ <S.1, S.1>, <S.2, S.2^6>, <S.3, S.3^6 * S.4^6>, <S.4, S.4> ],
-[ <S.1, S.1>, <S.2, S.2^4>, <S.3, S.3^4 * S.4>, <S.4, S.4^2> ],
-[ <S.1, S.1 * S.3^6>, <S.2, S.2 * S.4>, <S.3, S.3 * S.4^6>, <S.4, S.4> ]
+[ <S.1, S.1^6>, <S.2, S.2>, <S.3, S.3^6 * S.4^6>, <S.4, S.4> ],
+[ <S.1, S.1^4>, <S.2, S.2>, <S.3, S.3^4 * S.4>, <S.4, S.4^2> ],
+[ <S.1, S.1>, <S.2, S.2 * S.3>, <S.3, S.3 * S.4^6>, <S.4, S.4> ],
+[ <S.1, S.1 * S.4^6>, <S.2, S.2 * S.3>, <S.3, S.3 * S.4^6>, <S.4, S.4> ]
 ], 
 AutFE_name := "He7:(C2*C6)" 
 	>; 
-Append(~EssentialData, ER); E := sub<S| [ S.2 * S.3 * S.4, S.4 ]>; 
-    ER := rec< EssentialRecord |
- E := sub<S| [ S.2 * S.3 * S.4, S.4 ]>, 
+Append(~EssentialData, ER); 
+
+E := sub<S| [ S.1 * S.3^6 * S.4^6, S.4 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.1 * S.3^6 * S.4^6, S.4 ]>, 
 E_name := "C7^2", 
 AutFE_gens := [
-[ <S.2 * S.3 * S.4, S.2^5 * S.3^5 * S.4^6>, <S.4, S.2^4 * S.3^4> ],
-[ <S.2 * S.3 * S.4, S.2^3 * S.3^3 * S.4^6>, <S.4, S.2^2 * S.3^2> ],
-[ <S.2 * S.3 * S.4, S.2^6 * S.3^6 * S.4^5>, <S.4, S.4^6> ]
+[ <S.1 * S.3^6 * S.4^6, S.1^5 * S.3^2 * S.4>, <S.4, S.1^3 * S.3^4 * S.4^2> ],
+[ <S.1 * S.3^6 * S.4^6, S.1^3 * S.3^4 * S.4>, <S.4, S.1^5 * S.3^2 * S.4^4> ],
+[ <S.1 * S.3^6 * S.4^6, S.1^6 * S.3 * S.4^2>, <S.4, S.4^6> ]
 ], 
 AutFE_name := "SL(2,7).C2" 
 	>; 
-Append(~EssentialData, ER);R := rec< FusionRecord |
-  p := 7,
-  S := S, 
-  S_order := 2401,
-  S_name := "He7.C7",
-  S_small_group_id := <2401, 7>,
-  EssentialData := EssentialData>;
+Append(~EssentialData, ER); 
+R := rec< FusionRecord |
+p := 7,
+S := S, 
+S_order := 2401,
+S_name := "C7.He7",
+S_small_group_id := <2401, 7>,
+EssentialData := EssentialData>;
 return R; 
 end intrinsic;
