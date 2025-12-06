@@ -18,12 +18,14 @@ intrinsic FusionRecordTemp() -> Rec
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>; 
+
   S :=PCGroup(\[ 5, -2, 2, -2, 2, -2, 40, 61, 302, 157, 72, 58 ])
 ; 
-  EssentialData := [];
- E := sub<S| [ S.1, S.2, S.3, S.4, S.5 ]>; 
-    ER := rec< EssentialRecord |
- E := sub<S| [ S.1, S.2, S.3, S.4, S.5 ]>, 
+EssentialData := [];
+
+E := sub<S| [ S.1, S.2, S.3, S.4, S.5 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.1, S.2, S.3, S.4, S.5 ]>, 
 E_name := "C4wrC2", 
 AutFE_gens := [
 [ <S.1, S.1>, <S.2, S.2 * S.3>, <S.3, S.3 * S.5>, <S.4, S.4>, <S.5, S.5> ],
@@ -31,9 +33,11 @@ AutFE_gens := [
 ], 
 AutFE_name := "D4" 
 	>; 
-Append(~EssentialData, ER); E := sub<S| [ S.2, S.3, S.4, S.5 ]>; 
-    ER := rec< EssentialRecord |
- E := sub<S| [ S.2, S.3, S.4, S.5 ]>, 
+Append(~EssentialData, ER); 
+
+E := sub<S| [ S.2, S.3, S.4, S.5 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.2, S.3, S.4, S.5 ]>, 
 E_name := "D4:C2", 
 AutFE_gens := [
 [ <S.2, S.2>, <S.3, S.3 * S.5>, <S.4, S.4>, <S.5, S.5> ],
@@ -43,9 +47,11 @@ AutFE_gens := [
 ], 
 AutFE_name := "S4" 
 	>; 
-Append(~EssentialData, ER); E := sub<S| [ S.1 * S.2, S.4, S.3 * S.4 * S.5, S.5 ]>; 
-    ER := rec< EssentialRecord |
- E := sub<S| [ S.1 * S.2, S.4, S.3 * S.4 * S.5, S.5 ]>, 
+Append(~EssentialData, ER); 
+
+E := sub<S| [ S.1 * S.2, S.4, S.3 * S.4 * S.5, S.5 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.1 * S.2, S.4, S.3 * S.4 * S.5, S.5 ]>, 
 E_name := "C4^2", 
 AutFE_gens := [
 [ <S.1 * S.2, S.1 * S.2 * S.4 * S.5>, <S.4, S.1 * S.2 * S.3 * S.4>, <S.3 * S.4 * S.5, S.3 * S.4>, <S.5, S.3 * S.4 * S.5> ],
@@ -53,12 +59,13 @@ AutFE_gens := [
 ], 
 AutFE_name := "S3" 
 	>; 
-Append(~EssentialData, ER);R := rec< FusionRecord |
-  p := 2,
-  S := S, 
-  S_order := 32,
-  S_name := "C4wrC2",
-  S_small_group_id := <32, 11>,
-  EssentialData := EssentialData>;
+Append(~EssentialData, ER); 
+R := rec< FusionRecord |
+p := 2,
+S := S, 
+S_order := 32,
+S_name := "C4wrC2",
+S_small_group_id := <32, 11>,
+EssentialData := EssentialData>;
 return R; 
 end intrinsic;

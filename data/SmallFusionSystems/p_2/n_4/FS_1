@@ -18,12 +18,14 @@ intrinsic FusionRecordTemp() -> Rec
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>; 
+
   S :=PCGroup(\[ 4, -2, 2, -2, -2, 49, 146, 78, 34 ])
 ; 
-  EssentialData := [];
- E := sub<S| [ S.1, S.2, S.3, S.4 ]>; 
-    ER := rec< EssentialRecord |
- E := sub<S| [ S.1, S.2, S.3, S.4 ]>, 
+EssentialData := [];
+
+E := sub<S| [ S.1, S.2, S.3, S.4 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.1, S.2, S.3, S.4 ]>, 
 E_name := "D8", 
 AutFE_gens := [
 [ <S.1, S.1>, <S.2, S.2 * S.3>, <S.3, S.3 * S.4>, <S.4, S.4> ],
@@ -31,9 +33,11 @@ AutFE_gens := [
 ], 
 AutFE_name := "D4" 
 	>; 
-Append(~EssentialData, ER); E := sub<S| [ S.2, S.4 ]>; 
-    ER := rec< EssentialRecord |
- E := sub<S| [ S.2, S.4 ]>, 
+Append(~EssentialData, ER); 
+
+E := sub<S| [ S.2, S.4 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.2, S.4 ]>, 
 E_name := "C2^2", 
 AutFE_gens := [
 [ <S.2, S.4>, <S.4, S.2 * S.4> ],
@@ -41,9 +45,11 @@ AutFE_gens := [
 ], 
 AutFE_name := "S3" 
 	>; 
-Append(~EssentialData, ER); E := sub<S| [ S.1, S.4 ]>; 
-    ER := rec< EssentialRecord |
- E := sub<S| [ S.1, S.4 ]>, 
+Append(~EssentialData, ER); 
+
+E := sub<S| [ S.1, S.4 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.1, S.4 ]>, 
 E_name := "C2^2", 
 AutFE_gens := [
 [ <S.1, S.1 * S.4>, <S.4, S.1> ],
@@ -51,12 +57,13 @@ AutFE_gens := [
 ], 
 AutFE_name := "S3" 
 	>; 
-Append(~EssentialData, ER);R := rec< FusionRecord |
-  p := 2,
-  S := S, 
-  S_order := 16,
-  S_name := "D8",
-  S_small_group_id := <16, 7>,
-  EssentialData := EssentialData>;
+Append(~EssentialData, ER); 
+R := rec< FusionRecord |
+p := 2,
+S := S, 
+S_order := 16,
+S_name := "D8",
+S_small_group_id := <16, 7>,
+EssentialData := EssentialData>;
 return R; 
 end intrinsic;

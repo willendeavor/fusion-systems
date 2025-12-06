@@ -1,4 +1,5 @@
 // Functions that convert a fusion system to an entry in the SmallFusionSystems database
+// and generally work directly with the record files
 
 // Function that takes a fusion system and returns a completed fusion record
 // Idea is that the record does not do any major computations but stores enough to
@@ -96,6 +97,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		>; \n";
     S := R`S;
     // Print S as a PCGroup with generators that can be loaded
+    fprintf F, "\n";
     fprintf F, "  S :=";
     delete F;
     PrintFileMagma(filename, S);
@@ -103,31 +105,33 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     fprintf F, "; \n";
     fprintf F, "";
     // Need to create the essential records before assigning then
-    fprintf F, "  EssentialData := [];\n";
+    fprintf F, "EssentialData := [];\n";
     for i in [1..#R`EssentialData] do
     	ER := R`EssentialData[i];
     	E := ER`E;
     	A := ER`AutFE_gens;
     	rel := [S!w:w in PCGenerators(E)];
-    	fprintf F, " E := sub<S| %o>; \n", rel;
-        fprintf F, "    ER := rec< EssentialRecord |\n";
-   		fprintf F, " E := sub<S| %o>, \n", rel;
+    	// We have to define E outside of the record
+    	fprintf F, "\n";
+    	fprintf F, "E := sub<S| %o>; \n", rel;
+        fprintf F, "ER := rec< EssentialRecord |\n";
+   		fprintf F, "E := sub<S| %o>, \n", rel;
    		fprintf F, "E_name := \"%o\", \n", ER`E_name;
 	    fprintf F, "AutFE_gens := %o, \n", A;
 	    fprintf F, "AutFE_name := \"%o\" \n", ER`AutFE_name;
         fprintf F, "	>; \n";
-        fprintf F, "Append(~EssentialData, ER);";
+        fprintf F, "Append(~EssentialData, ER); \n";
     end for;
 
     fprintf F, "R := rec< FusionRecord |\n";
-    fprintf F, "  p := %o,\n", R`p;
-    fprintf F, "  S := S, \n";
-    fprintf F, "  S_order := %o,\n", R`S_order;
-    fprintf F, "  S_name := \"%o\",\n", R`S_name;
-    fprintf F, "  S_small_group_id := %o,\n", R`S_small_group_id;
+    fprintf F, "p := %o,\n", R`p;
+    fprintf F, "S := S, \n";
+    fprintf F, "S_order := %o,\n", R`S_order;
+    fprintf F, "S_name := \"%o\",\n", R`S_name;
+    fprintf F, "S_small_group_id := %o,\n", R`S_small_group_id;
 
     // Essentials
-    fprintf F, "  EssentialData := EssentialData";
+    fprintf F, "EssentialData := EssentialData";
     if assigned(R`OpTriv) then
     	fprintf F, "  , OpTriv := %o,\n", R`OpTriv;
     end if;
@@ -139,6 +143,75 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     fprintf F, "end intrinsic;";
     delete F;
 end intrinsic;
+
+
+
+intrinsic UpdateFusionRecord(filename::MonStgElt)
+	{Given filename rewrite the record to reflect any changes made}
+	F := LoadFusionSystem(filename);
+	WriteFusionRecord(filename, F);
+end intrinsic;
+
+
+
+
+intrinsic UpdateSmallFusionSystems()
+	{Update every single file in the SmallFusionSystems database}
+	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
+	p_list := Split(p_list, "\n");
+	for p in p_list do 
+		path := Sprintf("data/SmallFusionSystems/%o", p);
+		n_list := Pipe("ls " cat path, "");
+		n_list := Split(n_list, "\n");
+		for n in n_list do 
+			n_path := path cat Sprintf("/%o/", n);
+			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
+			// Get only file names with no extension
+			F_list := [x : x in F_list | #Split(x, ".") eq 1];
+			for i in F_list do 
+				filename := n_path cat i;
+				UpdateFusionRecord(filename);
+				printf "Updated %o \n", i;
+			end for;
+		end for;
+	end for;
+end intrinsic;
+
+
+intrinsic VerifyAllFusionRecords()
+	{Check that every fusion record at least returns a fusion system}
+	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
+	p_list := Split(p_list, "\n");
+	errors := [];
+	for p in p_list do 
+		path := Sprintf("data/SmallFusionSystems/%o", p);
+		n_list := Pipe("ls " cat path, "");
+		n_list := Split(n_list, "\n");
+		for n in n_list do 
+			n_path := path cat Sprintf("/%o/", n);
+			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
+			// Get only file names with no extension
+			F_list := [x : x in F_list | #Split(x, ".") eq 1];
+			for i in F_list do 
+				filename := n_path cat i;
+				try 
+					F := LoadFusionSystem(filename);
+					printf "Verified %o \n", filename;
+				catch e
+					printf "Failed to load %o \n", filename;
+					Append(~errors);
+				end try;
+			end for;
+		end for;
+	end for;
+	print errors;
+end intrinsic;
+
+
+
+
+
+
 
 
 

@@ -1,3 +1,8 @@
+# Program that given a fusion system file saved via the legacy SaveFS splits it into one 
+# file per fusion system. Used to convert the old database to the SmallFusionSystems one
+
+
+
 import os
 
 
@@ -9,9 +14,7 @@ pairs = [[2,3], [2,4], [2,5], [2,6], [2,7],
 
 
 
-def CreateFiles(p,n):
-	input_file = "OLD/All" + str(p) + "to" + str(n)
-	output_dir = "p_" + str(p) + "/n_" + str(n)
+def CreateFiles(input_file, output_dir):
 	os.makedirs(output_dir, exist_ok = True)
 	fusion_systems = []
 	with open(input_file) as f:
@@ -24,6 +27,9 @@ def CreateFiles(p,n):
 		with open(fname, "w") as out:
 			out.write("\n".join(lines[new_fs[i]:end_fs[i]+1]))
 
-for pair in pairs:
-	CreateFiles(pair[0], pair[1])
 
+
+filelist = ["OLD/All5to6/" + x for x in os.listdir("OLD/All5to6")]
+
+for f in filelist:
+	CreateFiles(f, "5to6")
