@@ -14,7 +14,9 @@ intrinsic FusionRecordTemp() -> Rec
 
 	EssentialRecord := recformat< 
 		E : Grp, 
+		E_order : RngIntElt,
 		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>; 
@@ -26,7 +28,9 @@ EssentialData := [];
 E := sub<S| [ S.1, S.2, S.3, S.4, S.5, S.6 ]>; 
 ER := rec< EssentialRecord |
 E := sub<S| [ S.1, S.2, S.3, S.4, S.5, S.6 ]>, 
+E_order := 64, 
 E_name := "D4:D4", 
+AutFE_order := 32, 
 AutFE_gens := [
 [ <S.1, S.1>, <S.2, S.2 * S.4>, <S.3, S.3 * S.5>, <S.4, S.4 * S.6>, <S.5, S.5>, <S.6, S.6> ],
 [ <S.1, S.1 * S.5>, <S.2, S.2>, <S.3, S.3>, <S.4, S.4 * S.6>, <S.5, S.5>, <S.6, S.6> ],
@@ -39,12 +43,14 @@ Append(~EssentialData, ER);
 E := sub<S| [ S.2, S.3, S.4, S.5, S.6 ]>; 
 ER := rec< EssentialRecord |
 E := sub<S| [ S.2, S.3, S.4, S.5, S.6 ]>, 
+E_order := 32, 
 E_name := "Q8:C2^2", 
+AutFE_order := 96, 
 AutFE_gens := [
 [ <S.2, S.2>, <S.3, S.3>, <S.4, S.4 * S.6>, <S.5, S.5>, <S.6, S.6> ],
-[ <S.2, S.2 * S.6>, <S.3, S.3 * S.6>, <S.4, S.4>, <S.5, S.5>, <S.6, S.6> ],
 [ <S.2, S.2 * S.4 * S.6>, <S.3, S.3 * S.5>, <S.4, S.4>, <S.5, S.5>, <S.6, S.6> ],
 [ <S.2, S.2>, <S.3, S.3>, <S.4, S.4 * S.6>, <S.5, S.5 * S.6>, <S.6, S.6> ],
+[ <S.2, S.2 * S.6>, <S.3, S.3 * S.6>, <S.4, S.4>, <S.5, S.5>, <S.6, S.6> ],
 [ <S.2, S.3>, <S.3, S.2 * S.3>, <S.4, S.2 * S.4 * S.5 * S.6>, <S.5, S.3 * S.4 * S.6>, <S.6, S.6> ],
 [ <S.2, S.2 * S.6>, <S.3, S.3>, <S.4, S.4>, <S.5, S.5>, <S.6, S.6> ]
 ], 
@@ -55,12 +61,14 @@ Append(~EssentialData, ER);
 E := sub<S| [ S.1, S.3, S.4, S.5, S.6 ]>; 
 ER := rec< EssentialRecord |
 E := sub<S| [ S.1, S.3, S.4, S.5, S.6 ]>, 
+E_order := 32, 
 E_name := "C4:D4", 
+AutFE_order := 48, 
 AutFE_gens := [
 [ <S.1, S.1 * S.5>, <S.3, S.3>, <S.4, S.4 * S.6>, <S.5, S.5>, <S.6, S.6> ],
-[ <S.1, S.1 * S.5 * S.6>, <S.3, S.3 * S.6>, <S.4, S.4 * S.6>, <S.5, S.5>, <S.6, S.6> ],
 [ <S.1, S.3 * S.4 * S.6>, <S.3, S.3>, <S.4, S.1 * S.3>, <S.5, S.6>, <S.6, S.5> ],
 [ <S.1, S.1 * S.4 * S.5>, <S.3, S.3>, <S.4, S.1 * S.3>, <S.5, S.5 * S.6>, <S.6, S.5> ],
+[ <S.1, S.1 * S.5 * S.6>, <S.3, S.3 * S.6>, <S.4, S.4 * S.6>, <S.5, S.5>, <S.6, S.6> ],
 [ <S.1, S.1 * S.5>, <S.3, S.3 * S.5>, <S.4, S.4>, <S.5, S.5>, <S.6, S.6> ]
 ], 
 AutFE_name := "C2*S4" 

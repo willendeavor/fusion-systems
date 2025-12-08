@@ -18,7 +18,9 @@ function FusionToRecord(FS)
 
 	EssentialRecord := recformat< 
 		E : Grp, 
+		E_order : RngIntElt,
 		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>;
@@ -46,7 +48,9 @@ function FusionToRecord(FS)
         Append(~EssentialSeq,
             rec< EssentialRecord |
                 E   := E,
+                E_order := #E,
                 E_name := GroupName(E),
+                AutFE_order := #AutFE,
                 AutFE_name := GroupName(AutFE),
                 AutFE_gens  := image_gens
             >
@@ -91,7 +95,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 
 	EssentialRecord := recformat< 
 		E : Grp, 
+		E_order : RngIntElt,
 		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>; \n";
@@ -116,7 +122,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	fprintf F, "E := sub<S| %o>; \n", rel;
         fprintf F, "ER := rec< EssentialRecord |\n";
    		fprintf F, "E := sub<S| %o>, \n", rel;
+   		fprintf F, "E_order := %o, \n", ER`E_order;
    		fprintf F, "E_name := \"%o\", \n", ER`E_name;
+   		fprintf F, "AutFE_order := %o, \n", ER`AutFE_order;
 	    fprintf F, "AutFE_gens := %o, \n", A;
 	    fprintf F, "AutFE_name := \"%o\" \n", ER`AutFE_name;
         fprintf F, "	>; \n";
@@ -146,6 +154,39 @@ end intrinsic;
 
 
 
+intrinsic FusionRecordTemp() -> Rec
+	{dummy intrinsic, yes really this is the workaround}
+end intrinsic;
+
+
+intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec 
+	{Loads a fusion system record given the file path}
+	Attach(filename);
+	R := FusionRecordTemp();
+	Detach(filename);
+	return R;
+end intrinsic;
+
+
+intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
+	{Creates a fusion system from a fusion system record}
+	S := R`S;
+	Autos := [];
+	for E_rec in R`EssentialData do 
+		E := E_rec`E;
+		AE := AutomorphismGroup(E);
+		gens := [];
+		for alpha in E_rec`AutFE_gens do
+			Append(~gens, AE!hom<E -> E | alpha>);
+		end for;
+		A := sub<AE | gens>;
+		Append(~Autos, A);
+	end for;
+	return(CreateFusionSystem(Autos));
+end intrinsic;
+
+
+
 intrinsic UpdateFusionRecord(filename::MonStgElt)
 	{Given filename rewrite the record to reflect any changes made}
 	F := LoadFusionSystem(filename);
@@ -155,61 +196,11 @@ end intrinsic;
 
 
 
-intrinsic UpdateSmallFusionSystems()
-	{Update every single file in the SmallFusionSystems database}
-	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
-	p_list := Split(p_list, "\n");
-	for p in p_list do 
-		path := Sprintf("data/SmallFusionSystems/%o", p);
-		n_list := Pipe("ls " cat path, "");
-		n_list := Split(n_list, "\n");
-		for n in n_list do 
-			n_path := path cat Sprintf("/%o/", n);
-			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
-			// Get only file names with no extension
-			F_list := [x : x in F_list | #Split(x, ".") eq 1];
-			for i in F_list do 
-				filename := n_path cat i;
-				UpdateFusionRecord(filename);
-				printf "Updated %o \n", i;
-			end for;
-		end for;
-	end for;
+intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
+	{Creates a fusion system from a database entry}
+	R := LoadFusionSystemRecord(filename);
+	return(LoadFusionSystem(R));
 end intrinsic;
-
-
-intrinsic VerifyAllFusionRecords()
-	{Check that every fusion record at least returns a fusion system}
-	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
-	p_list := Split(p_list, "\n");
-	errors := [];
-	for p in p_list do 
-		path := Sprintf("data/SmallFusionSystems/%o", p);
-		n_list := Pipe("ls " cat path, "");
-		n_list := Split(n_list, "\n");
-		for n in n_list do 
-			n_path := path cat Sprintf("/%o/", n);
-			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
-			// Get only file names with no extension
-			F_list := [x : x in F_list | #Split(x, ".") eq 1];
-			for i in F_list do 
-				filename := n_path cat i;
-				try 
-					F := LoadFusionSystem(filename);
-					printf "Verified %o \n", filename;
-				catch e
-					printf "Failed to load %o \n", filename;
-					Append(~errors);
-				end try;
-			end for;
-		end for;
-	end for;
-	print errors;
-end intrinsic;
-
-
-
-
 
 
 
