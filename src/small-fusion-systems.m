@@ -159,8 +159,6 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 		filename := path cat i;
 		UpdateFusionRecord(filename);
 		printf "Updated %o \n", i;
-			end for;
-		end for;
 	end for;
 end intrinsic;
 
