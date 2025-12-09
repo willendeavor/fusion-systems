@@ -14,7 +14,9 @@ intrinsic FusionRecordTemp() -> Rec
 
 	EssentialRecord := recformat< 
 		E : Grp, 
+		E_order : RngIntElt,
 		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>; 
@@ -26,7 +28,9 @@ EssentialData := [];
 E := sub<S| [ S.1, S.2, S.3 ]>; 
 ER := rec< EssentialRecord |
 E := sub<S| [ S.1, S.2, S.3 ]>, 
+E_order := 8, 
 E_name := "D4", 
+AutFE_order := 4, 
 AutFE_gens := [
 [ <S.1, S.1 * S.3>, <S.2, S.2>, <S.3, S.3> ],
 [ <S.1, S.1>, <S.2, S.2 * S.3>, <S.3, S.3> ]
@@ -38,7 +42,9 @@ Append(~EssentialData, ER);
 E := sub<S| [ S.1, S.3 ]>; 
 ER := rec< EssentialRecord |
 E := sub<S| [ S.1, S.3 ]>, 
+E_order := 4, 
 E_name := "C2^2", 
+AutFE_order := 6, 
 AutFE_gens := [
 [ <S.1, S.3>, <S.3, S.1 * S.3> ],
 [ <S.1, S.1 * S.3>, <S.3, S.3> ]
@@ -50,7 +56,9 @@ Append(~EssentialData, ER);
 E := sub<S| [ S.2, S.3 ]>; 
 ER := rec< EssentialRecord |
 E := sub<S| [ S.2, S.3 ]>, 
+E_order := 4, 
 E_name := "C2^2", 
+AutFE_order := 6, 
 AutFE_gens := [
 [ <S.2, S.3>, <S.3, S.2 * S.3> ],
 [ <S.2, S.2 * S.3>, <S.3, S.3> ]

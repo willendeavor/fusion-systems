@@ -14,7 +14,9 @@ intrinsic FusionRecordTemp() -> Rec
 
 	EssentialRecord := recformat< 
 		E : Grp, 
+		E_order : RngIntElt,
 		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>; 
@@ -26,43 +28,49 @@ EssentialData := [];
 E := sub<S| [ S.1, S.2, S.3 ]>; 
 ER := rec< EssentialRecord |
 E := sub<S| [ S.1, S.2, S.3 ]>, 
+E_order := 27, 
 E_name := "He3", 
+AutFE_order := 36, 
 AutFE_gens := [
-[ <S.1, S.1>, <S.2, S.2 * S.3>, <S.3, S.3> ],
-[ <S.1, S.1^2>, <S.2, S.2>, <S.3, S.3^2> ],
-[ <S.1, S.1^2 * S.3^2>, <S.2, S.2^2>, <S.3, S.3> ],
-[ <S.1, S.1>, <S.2, S.2 * S.3^2>, <S.3, S.3> ],
-[ <S.1, S.1 * S.3^2>, <S.2, S.2>, <S.3, S.3> ]
+[ <S.1, S.1 * S.3^2>, <S.2, S.2>, <S.3, S.3> ],
+[ <S.1, S.1^2>, <S.2, S.2^2 * S.3>, <S.3, S.3> ],
+[ <S.1, S.1 * S.3>, <S.2, S.2>, <S.3, S.3> ],
+[ <S.1, S.1>, <S.2, S.2^2>, <S.3, S.3^2> ],
+[ <S.1, S.1>, <S.2, S.2 * S.3>, <S.3, S.3> ]
 ], 
 AutFE_name := "S3^2" 
-	>; 
-Append(~EssentialData, ER); 
-
-E := sub<S| [ S.2, S.3 ]>; 
-ER := rec< EssentialRecord |
-E := sub<S| [ S.2, S.3 ]>, 
-E_name := "C3^2", 
-AutFE_gens := [
-[ <S.2, S.2^2>, <S.3, S.3^2> ],
-[ <S.2, S.2^2 * S.3^2>, <S.3, S.2> ],
-[ <S.2, S.2 * S.3>, <S.3, S.2 * S.3^2> ],
-[ <S.2, S.2 * S.3>, <S.3, S.3^2> ],
-[ <S.2, S.2^2 * S.3>, <S.3, S.2 * S.3> ]
-], 
-AutFE_name := "GL(2,3)" 
 	>; 
 Append(~EssentialData, ER); 
 
 E := sub<S| [ S.1, S.3 ]>; 
 ER := rec< EssentialRecord |
 E := sub<S| [ S.1, S.3 ]>, 
+E_order := 9, 
 E_name := "C3^2", 
+AutFE_order := 48, 
 AutFE_gens := [
 [ <S.1, S.1^2>, <S.3, S.3^2> ],
-[ <S.1, S.1 * S.3>, <S.3, S.3> ],
-[ <S.1, S.3>, <S.3, S.1^2> ],
-[ <S.1, S.1^2>, <S.3, S.3> ],
-[ <S.1, S.1^2 * S.3>, <S.3, S.1 * S.3> ]
+[ <S.1, S.1 * S.3^2>, <S.3, S.1^2 * S.3^2> ],
+[ <S.1, S.1 * S.3^2>, <S.3, S.3^2> ],
+[ <S.1, S.1^2 * S.3>, <S.3, S.1^2> ],
+[ <S.1, S.1^2 * S.3^2>, <S.3, S.1^2 * S.3> ]
+], 
+AutFE_name := "GL(2,3)" 
+	>; 
+Append(~EssentialData, ER); 
+
+E := sub<S| [ S.2, S.3 ]>; 
+ER := rec< EssentialRecord |
+E := sub<S| [ S.2, S.3 ]>, 
+E_order := 9, 
+E_name := "C3^2", 
+AutFE_order := 48, 
+AutFE_gens := [
+[ <S.2, S.2^2>, <S.3, S.3^2> ],
+[ <S.2, S.3^2>, <S.3, S.2> ],
+[ <S.2, S.2^2>, <S.3, S.3> ],
+[ <S.2, S.2 * S.3^2>, <S.3, S.3> ],
+[ <S.2, S.2^2 * S.3^2>, <S.3, S.2^2 * S.3> ]
 ], 
 AutFE_name := "GL(2,3)" 
 	>; 
