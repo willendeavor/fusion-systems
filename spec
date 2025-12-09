@@ -10,7 +10,7 @@
 		generating-fusion-systems.m
 		saving-fusion-systems.m
 		all-fusion-systems.m
-		convert_to_database.m
+		fusion-records.m
 		small-fusion-systems.m
 	}
 }

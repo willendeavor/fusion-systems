@@ -18,19 +18,6 @@ intrinsic SmallFusionSystem(S_order::RngIntElt, i::RngIntElt) -> FusionSystem
 end intrinsic;
 
 
-intrinsic FusionRecordTemp() -> Rec
-	{dummy intrinsic, yes really this is the workaround}
-end intrinsic;
-
-
-intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec 
-	{Loads a fusion system record given the file path}
-	Attach(filename);
-	R := FusionRecordTemp();
-	Detach(filename);
-	return R;
-end intrinsic;
-
 
 intrinsic SmallFusionSystemRecord(S_order::RngIntElt, i::RngIntElt) -> Rec 
 	{Return the record only for a small fusion system}
@@ -40,30 +27,6 @@ intrinsic SmallFusionSystemRecord(S_order::RngIntElt, i::RngIntElt) -> Rec
 	return LoadFusionSystemRecord(filename);
 end intrinsic;
 
-
-intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
-	{Creates a fusion system from a fusion system record}
-	S := R`S;
-	Autos := [];
-	for E_rec in R`EssentialData do 
-		E := E_rec`E;
-		AE := AutomorphismGroup(E);
-		gens := [];
-		for alpha in E_rec`AutFE_gens do
-			Append(~gens, AE!hom<E -> E | alpha>);
-		end for;
-		A := sub<AE | gens>;
-		Append(~Autos, A);
-	end for;
-	return(CreateFusionSystem(Autos));
-end intrinsic;
-
-
-intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
-	{Creates a fusion system from a database entry}
-	R := LoadFusionSystemRecord(filename);
-	return(LoadFusionSystem(R));
-end intrinsic;
 
 
 intrinsic IdentifyFusionSystem(F::FusionSystem) -> SeqEnum
@@ -90,6 +53,7 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 	new := true;
 	for i in indices do 
 		F_i := SmallFusionSystem(#S, i);
+		printf "Checking if F is isomorphic to fusion system %o", i;
 		if IsIsomorphic(F_i, F) then
 			print "Fusion system is already in database \n";
 			new := false;
@@ -166,3 +130,89 @@ intrinsic NumberSmallFusionSystems(S::Grp) -> RngIntElt, SeqEnum
 end intrinsic;
 
 
+
+intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt) -> SeqEnum
+	{Given S_order return a list of all groups which have a small fusion system}
+	grps := [];
+	m := NumberSmallFusionSystems(S_order);
+	for i in [1..m] do 
+		R := SmallFusionSystemRecord(S_order,i);
+		S := R`S;
+		if forall{not IsIsomorphic(S,T) : T in grps} then
+			Append(~grps, S);
+		end if;
+	end for;
+	return grps;
+end intrinsic;
+
+
+
+intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
+	{Update the files in the SmallFusionSystems S_order database}
+	p := Factorisation(S_order)[1][1];
+	n := Factorisation(S_order)[1][2];
+	path := Sprintf("data/SmallFusionSystems/p_%o/n_%o/", p, n);
+	F_list := Split(Pipe("ls " cat path, ""), "\n");
+	// Get only file names with no extension
+	F_list := [x : x in F_list | #Split(x, ".") eq 1];
+	for i in F_list do 
+		filename := path cat i;
+		UpdateFusionRecord(filename);
+		printf "Updated %o \n", i;
+	end for;
+end intrinsic;
+
+
+
+intrinsic UpdateAllSmallFusionSystems()
+	{Update every single file in the SmallFusionSystems database}
+	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
+	p_list := Split(p_list, "\n");
+	for p in p_list do 
+		path := Sprintf("data/SmallFusionSystems/%o", p);
+		n_list := Pipe("ls " cat path, "");
+		n_list := Split(n_list, "\n");
+		for n in n_list do 
+			n_path := path cat Sprintf("/%o/", n);
+			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
+			// Get only file names with no extension
+			F_list := [x : x in F_list | #Split(x, ".") eq 1];
+			for i in F_list do 
+				filename := n_path cat i;
+				UpdateFusionRecord(filename);
+				printf "Updated %o \n", i;
+			end for;
+		end for;
+	end for;
+end intrinsic;
+
+
+
+intrinsic VerifyAllSmallFusionSystemRecords()
+	{Check that every fusion record at least returns a fusion system}
+	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
+	p_list := Split(p_list, "\n");
+	errors := [];
+	for p in p_list do 
+		path := Sprintf("data/SmallFusionSystems/%o", p);
+		n_list := Pipe("ls " cat path, "");
+		n_list := Split(n_list, "\n");
+		for n in n_list do 
+			n_path := path cat Sprintf("/%o/", n);
+			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
+			// Get only file names with no extension
+			F_list := [x : x in F_list | #Split(x, ".") eq 1];
+			for i in F_list do 
+				filename := n_path cat i;
+				try 
+					F := LoadFusionSystem(filename);
+					printf "Verified %o \n", filename;
+				catch e
+					printf "Failed to load %o \n", filename;
+					Append(~errors);
+				end try;
+			end for;
+		end for;
+	end for;
+	print errors;
+end intrinsic;
