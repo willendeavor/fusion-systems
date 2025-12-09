@@ -1,5 +1,13 @@
 // Implements a database similar to SmallGroups
 
+procedure UpdateLog(entry)
+	log_file := Open("data/update.log", "a");
+	date := Trim(Pipe("date '+%Y-%m-%d %H:%M:%S'", ""));
+	fprintf log_file, "\n %o: %o", date, entry;
+	delete log_file;
+end procedure;
+
+
 
 intrinsic SetSmallFusionSystemDirectory() -> MonStgElt
 	{Returns the path to the database}
@@ -69,6 +77,8 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 		filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
 		WriteFusionRecord(filename, F);
 		print "Successfully added new fusion system \n";
+		UpdateLog(Sprintf(
+			"Added SmallFusionSystem(%o^%o, %o)", p, n, NumberSmallFusionSystems(#S) + 1));
 	end if;
 end intrinsic;
 
