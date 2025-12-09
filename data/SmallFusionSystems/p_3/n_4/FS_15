@@ -25,17 +25,17 @@ intrinsic FusionRecordTemp() -> Rec
 ; 
 EssentialData := [];
 
-E := sub<S| [ S.1, S.2, S.3, S.4 ]>; 
+E := sub<S| { S.1, S.2, S.3, S.4 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.1, S.2, S.3, S.4 ]>, 
+E := sub<S| { S.1, S.2, S.3, S.4 }>, 
 E_order := 81, 
 E_name := "He3:C3", 
 AutFE_order := 108, 
 AutFE_gens := [
 [ <E.1, E.1>, <E.2, E.2^2>, <E.3, E.3^2 * E.4^2>, <E.4, E.4> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
 [ <E.1, E.1^2 * E.4>, <E.2, E.2>, <E.3, E.3^2>, <E.4, E.4^2> ],
 [ <E.1, E.1>, <E.2, E.2 * E.3>, <E.3, E.3>, <E.4, E.4> ],
-[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
 [ <E.1, E.1 * E.3^2>, <E.2, E.2 * E.4>, <E.3, E.3 * E.4^2>, <E.4, E.4> ],
 [ <E.1, E.1 * E.3^2>, <E.2, E.2>, <E.3, E.3 * E.4^2>, <E.4, E.4> ]
 ], 
@@ -43,17 +43,17 @@ AutFE_name := "C3.S3^2"
 	>; 
 Append(~EssentialData, ER); 
 
-E := sub<S| [ S.2 * S.3 * S.4, S.4 ]>; 
+E := sub<S| { S.2 * S.3 * S.4, S.4 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.2 * S.3 * S.4, S.4 ]>, 
+E := sub<S| { S.2 * S.3 * S.4, S.4 }>, 
 E_order := 9, 
 E_name := "C3^2", 
 AutFE_order := 48, 
 AutFE_gens := [
 [ <E.1, E.2>, <E.2, E.1^2> ],
+[ <E.1, E.2>, <E.2, E.1> ],
 [ <E.1, E.2^2>, <E.2, E.1 * E.2^2> ],
 [ <E.1, E.1^2>, <E.2, E.2^2> ],
-[ <E.1, E.2>, <E.2, E.1> ],
 [ <E.1, E.1 * E.2>, <E.2, E.1 * E.2^2> ]
 ], 
 AutFE_name := "GL(2,3)" 

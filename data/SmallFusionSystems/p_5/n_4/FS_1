@@ -25,17 +25,17 @@ intrinsic FusionRecordTemp() -> Rec
 ; 
 EssentialData := [];
 
-E := sub<S| [ S.1, S.2, S.3, S.4 ]>; 
+E := sub<S| { S.1, S.3, S.4, S.2 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.1, S.2, S.3, S.4 ]>, 
+E := sub<S| { S.1, S.3, S.4, S.2 }>, 
 E_order := 625, 
 E_name := "C5.He5", 
 AutFE_order := 500, 
 AutFE_gens := [
 [ <E.1, E.1^2>, <E.2, E.2^2>, <E.3, E.3^4 * E.4>, <E.4, E.4^3> ],
+[ <E.1, E.1 * E.3^4>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
 [ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
 [ <E.1, E.1^4>, <E.2, E.2^4>, <E.3, E.3 * E.4^2>, <E.4, E.4^4> ],
-[ <E.1, E.1 * E.3^4>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
 [ <E.1, E.1 * E.4^3>, <E.2, E.2 * E.3>, <E.3, E.3 * E.4^3>, <E.4, E.4> ],
 [ <E.1, E.1>, <E.2, E.2 * E.3>, <E.3, E.3 * E.4^3>, <E.4, E.4> ]
 ], 
@@ -43,9 +43,9 @@ AutFE_name := "C5^2:F5"
 	>; 
 Append(~EssentialData, ER); 
 
-E := sub<S| [ S.2, S.3, S.4 ]>; 
+E := sub<S| { S.3, S.4, S.2 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.2, S.3, S.4 ]>, 
+E := sub<S| { S.3, S.4, S.2 }>, 
 E_order := 125, 
 E_name := "C5^3", 
 AutFE_order := 120, 
@@ -57,9 +57,9 @@ AutFE_name := "S5"
 	>; 
 Append(~EssentialData, ER); 
 
-E := sub<S| [ S.1 * S.2^4 * S.3^4 * S.4^4, S.4 ]>; 
+E := sub<S| { S.4, S.1 * S.2^4 * S.3^4 * S.4^4 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.1 * S.2^4 * S.3^4 * S.4^4, S.4 ]>, 
+E := sub<S| { S.4, S.1 * S.2^4 * S.3^4 * S.4^4 }>, 
 E_order := 25, 
 E_name := "C5^2", 
 AutFE_order := 120, 
@@ -72,9 +72,9 @@ AutFE_name := "SL(2,5)"
 	>; 
 Append(~EssentialData, ER); 
 
-E := sub<S| [ S.1 * S.2^3 * S.3 * S.4^2, S.4 ]>; 
+E := sub<S| { S.4, S.1 * S.2^3 * S.3 * S.4^2 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.1 * S.2^3 * S.3 * S.4^2, S.4 ]>, 
+E := sub<S| { S.4, S.1 * S.2^3 * S.3 * S.4^2 }>, 
 E_order := 25, 
 E_name := "C5^2", 
 AutFE_order := 120, 
@@ -87,9 +87,9 @@ AutFE_name := "SL(2,5)"
 	>; 
 Append(~EssentialData, ER); 
 
-E := sub<S| [ S.1 * S.2 * S.4^2, S.4 ]>; 
+E := sub<S| { S.1 * S.2 * S.4^2, S.4 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.1 * S.2 * S.4^2, S.4 ]>, 
+E := sub<S| { S.1 * S.2 * S.4^2, S.4 }>, 
 E_order := 25, 
 E_name := "C5^2", 
 AutFE_order := 120, 
@@ -102,9 +102,9 @@ AutFE_name := "SL(2,5)"
 	>; 
 Append(~EssentialData, ER); 
 
-E := sub<S| [ S.1 * S.3^4 * S.4^2, S.4 ]>; 
+E := sub<S| { S.4, S.1 * S.3^4 * S.4^2 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.1 * S.3^4 * S.4^2, S.4 ]>, 
+E := sub<S| { S.4, S.1 * S.3^4 * S.4^2 }>, 
 E_order := 25, 
 E_name := "C5^2", 
 AutFE_order := 120, 
@@ -117,9 +117,9 @@ AutFE_name := "SL(2,5)"
 	>; 
 Append(~EssentialData, ER); 
 
-E := sub<S| [ S.1 * S.2^2 * S.3^3 * S.4^4, S.4 ]>; 
+E := sub<S| { S.1 * S.2^2 * S.3^3 * S.4^4, S.4 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| [ S.1 * S.2^2 * S.3^3 * S.4^4, S.4 ]>, 
+E := sub<S| { S.1 * S.2^2 * S.3^3 * S.4^4, S.4 }>, 
 E_order := 25, 
 E_name := "C5^2", 
 AutFE_order := 120, 

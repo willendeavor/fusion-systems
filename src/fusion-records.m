@@ -37,7 +37,7 @@ function FusionToRecord(FS)
     for i in [1..#FS`essentials] do
     	AutFE := FS`essentialautos[i];
         E := Group(AutFE);
-        R := [S!w:w in PCGenerators(E)];
+        R := {S!w:w in PCGenerators(E)};
 	    E:=sub<S|R>;
 	    E_gens := SetToSequence(PCGenerators(E));
 	    image_gens := [];
@@ -116,7 +116,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	ER := R`EssentialData[i];
     	E := ER`E;
     	A := ER`AutFE_gens;
-    	rel := [S!w:w in PCGenerators(E)];
+    	rel := {S!w:w in PCGenerators(E)};
     	// We have to define E outside of the record
     	fprintf F, "\n";
     	fprintf F, "E := sub<S| %o>; \n", rel;
