@@ -175,11 +175,11 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	for E_rec in R`EssentialData do 
 		E := E_rec`E;
 		AE := AutomorphismGroup(E);
-		gens := [];
+		A := sub<AE | >;
 		for alpha in E_rec`AutFE_gens do
-			Append(~gens, AE!hom<E -> E | alpha>);
+			phi := AE!hom<E -> E | alpha>;
+			A := sub<AE | A, phi>;
 		end for;
-		A := sub<AE | gens>;
 		Append(~Autos, A);
 	end for;
 	return(CreateFusionSystem(Autos));
