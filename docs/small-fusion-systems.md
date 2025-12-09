@@ -1,6 +1,6 @@
 ## Documentation: `small-fusion-systems.m`
 
-## Overview:
+### Overview
 
 This file contains commands for accessing specifically the SmallFusionSystem database, convert-to-database contains commands for generally saving a fusion system record and maintaining the database. 
 
