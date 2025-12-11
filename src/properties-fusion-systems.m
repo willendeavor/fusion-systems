@@ -98,7 +98,7 @@ intrinsic FocalSubgroup(F::FusionSystem)->Grp
     for e in F`essentials do 
         i:= Index(F`essentials,e);
         AutFE:= F`essentialautos[i];
-        Foc:= sub<S|Foc, {x^-1*aa(x): x in e, aa in Generators(AutFE)}>;
+        Foc:= sub<S|Foc, [x^-1*aa(x): x in Generators(e), aa in Generators(AutFE)]>;
     end for;
     return Foc;
 end  intrinsic;
