@@ -112,8 +112,15 @@ In order to produce the list including those with $O_p(\mathcal{F}) \neq 1$ or $
 4 6
 ``` 
 
+### SmallFusionSystems
+As of v2.0.0 the best way to save and load fusion systems is using the commands `WriteFusionRecord(file)` and `LoadFusionSystem(file)`. Included now is the library SmallFusionSystems, details of its use can be found in the documentation but in essence `SmallFusionSystem(order, i)` returns the ith small fusion systems over a group of order `order` and `AllSmallFusionSystems(order)` or `AllSmallFusionSystems(S)` will return all fusion systems over a group of order `order` or over `S` respectively. Currently all the fusion systems saved in https://github.com/chris1961parker/Fusion-Systems have been added and over time more will be added. There is a command `AddSmallFusionSystem(F)` that will check if a fusion system is already in the library and if not add it. As of right now (v2.1.1) there is not a particularly robust management or maintenance of the library but I plan to add this.
 
-### Saving fusion systems
+
+
+
+
+### Saving fusion systems (legacy)
+This method of saving and loading has been replaced by the above.
 It is possible to save a fusion system or even a sequence of fusion systems to a file that can be loaded as needed. This is done using the `SaveFS` command which given a file name and a fusion system (or sequence of them) will output a file in the directory containing a sequence of commands that can be loaded. 
 ```
 > SaveFS("examplefs", F);

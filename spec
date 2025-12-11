@@ -10,6 +10,7 @@
 		generating-fusion-systems.m
 		saving-fusion-systems.m
 		all-fusion-systems.m
-		direct-product.m
+		fusion-records.m
+		small-fusion-systems.m
 	}
 }
