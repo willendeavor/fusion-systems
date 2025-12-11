@@ -30,7 +30,7 @@ intrinsic MakeDirectProductGroup(G_1::Grp, G_2::Grp) -> DirectProductGroup
 end intrinsic;
 
 
-
+// Unused but might be handy if we ever want to calculate hands on
 intrinsic AutDirectProduct(a::GrpAutoElt, b::GrpAutoElt) -> GrpAutoElt
 	{Given a in Aut(A) and b in Aut(B) return a x b in Aut(A x B)}
 	A := Domain(a);
@@ -43,7 +43,7 @@ intrinsic AutDirectProduct(a::GrpAutoElt, b::GrpAutoElt) -> GrpAutoElt
 end intrinsic;
 
 
-
+// Only used with the overgroup option
 intrinsic AutDirectProduct(A_1::GrpAuto, A_2::GrpAuto : Overgroup := false) -> GrpAuto
 	{Given A_i < Aut(G_i) return A_1 x A_2 < Aut(G_1 x G_2) and if given an overgroup D ensure G_1 x G_2 is a subgroup}
 	G_1 := Group(A_1);
@@ -144,35 +144,3 @@ end intrinsic;
 
 
 
-
-/*
-intrinsic FusionDirectProduct(F_factors::SeqEnum[FusionSystem]) -> FusionSystem
-	{Given a list of fusion systems calculate their direct product}
-	n := #F_factors;
-	S_factors := [F_i`group : F_i in F_factors];
-	S := MakeDirectProductGroup(S_factors);
-	AutFS_i_list := [F_i`essentialautos[1] : F_i in F_factors];
-	// Make the first automiser sequence element, Aut_F(S)
-	aut_seq := [AutDirectProduct(AutFS_i_list: Overgroup := S)];
-	// The essentials are given by E_i x S_i^* where E_i is F_i-essential and S_i^* is product of all factors except S_i
-	for F_i in F_factors do 
-		// Get list of Aut_{F_j}(S_j), j neq i
-		AutFE := [x : x in AutFS_i_list | x ne F_i`essentialautos[1]];
-		AutFE_i_list := Remove(F_i`essentialautos,1);
-		for AutFE_i in AutFE_i_list do 
-			// Add Aut_{F_i}(E_i) and calculate Aut_F(E), note we maintain position
-			AutFEE := Insert(AutFE, Index(F_factors, F_i), AutFE_i);
-			Append(~aut_seq, AutDirectProduct(AutFEE: Overgroup := S));
-			print "added one";
-		end for;
-	end for;
-	F := CreateFusionSystem(aut_seq);
-	try
-		F`directproductgrp := MakeDirectProductGroup(S_factors);
-	catch e
-		print "Unable to make a DirectProductGroup";
-	end try;
-	F`factors := F_factors;
-	return F;
-end intrinsic;
-*/
