@@ -12,5 +12,6 @@
 		all-fusion-systems.m
 		fusion-records.m
 		small-fusion-systems.m
+		direct-product.m
 	}
 }
