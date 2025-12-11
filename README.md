@@ -1,6 +1,6 @@
 # Fusion Systems
 
-A modest refactoring of the MAGMA package written by Chris Parker and Jason Semeraro and detailed in the paper "Algorithms for fusion systems with applications to $p$-groups of small order", with the aim of making the code more readable and with relatively in-depth documentation and usage. Originally I planned this to be backwards compatible with the original code and this is mostly still true but increasingly the functionality is changing enough that this may not be true. There is also extended functionality, to see a complete table of what this package can do see [Features](docs/features-wishlist.ms)
+A modest refactoring of the MAGMA package written by Chris Parker and Jason Semeraro and detailed in the paper "Algorithms for fusion systems with applications to $p$-groups of small order", with the aim of making the code more readable and with relatively in-depth documentation and usage. Originally I planned this to be backwards compatible with the original code and this is mostly still true but increasingly the functionality is changing enough that this may not be true. There is also extended functionality, to see a complete table of what this package can do see [Features](docs/features-wishlist.md)
 
 This is mostly a project to bring myself up to speed with Git and writing documentation, tests etc.
 
