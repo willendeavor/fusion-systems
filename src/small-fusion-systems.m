@@ -221,14 +221,14 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 end intrinsic;
 
 
-intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt)
+intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt])
 	{Updates a given attribute e.g. Core in a fusion systems record}
 	F := SmallFusionSystem(order, i);
-	if option eq "Core" or option eq "OpTriv" then 
+	if "Core" in options or "OpTriv" in options then 
 		F`OpTriv, F`Core := Core(F);
 		print F`OpTriv;
 	end if;
-	if option eq "FocalSubgroup" or option eq "pPerfect" then 
+	if "FocalSubgroup" in options or "pPerfect" in options then 
 		F`FocalSubgroup := FocalSubgroup(F);
 		F`pPerfect := F`FocalSubgroup eq F`group;
 	end if;
@@ -237,6 +237,26 @@ intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, opt
 	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
 	WriteFusionRecord(filename, F);
 end intrinsic;
+
+
+
+intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt)
+	{Updates a given attribute e.g. Core in a fusion systems record, single argument version}
+	UpdateSmallFusionSystemAttributes(order, i, [option]);
+end intrinsic;
+
+
+intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEnum[MonStgElt] : resume := 1)
+	{Update the attributes of all SmallFusionSystems of a particular order}
+	m := NumberSmallFusionSystems(order);
+	for i in [resume..m] do 
+		UpdateSmallFusionSystemAttributes(order, i, options);
+		message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
+		UpdateLog(message);
+	end for;
+end intrinsic;
+
+
 
 
 
@@ -307,7 +327,7 @@ intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> Seq
 		checks := [x : x in indices | x gt i ];
 		for j in checks do  
 			RR := SmallFusionSystemRecord(order, j);
-			if IsomorphismTest(R, RR) then 
+			if IsIsomorphicFusionRecords(R, RR) then 
 				printf "SmallFusionSystems (%o, %o) and (%o, %o) are isomorphic \n", order,i, order, j;
 				Append(~duplicates, [i,j]);
 			end if;

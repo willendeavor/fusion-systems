@@ -244,7 +244,7 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	F := CreateFusionSystem(Autos);
 	optional := GetOptionalArgs();
 	for x in optional do 
-		if assigned R``x then 
+		if x in Names(R) and assigned R``x then 
 			F``x := R``x;
 		end if;
 	end for;
@@ -252,11 +252,13 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 end intrinsic;
 
 
+
 intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
 	{Creates a fusion system from a database entry}
 	R := LoadFusionSystemRecord(filename);
 	return(LoadFusionSystem(R));
 end intrinsic;
+
 
 
 intrinsic UpdateFusionRecord(filename::MonStgElt)
@@ -268,7 +270,7 @@ end intrinsic;
 
 
 
-intrinsic IsomorphismTest(R_1::Rec, R_2::Rec) -> Bool
+intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec) -> Bool
 	{Given two fusion records return if they are potentially isomorphic without constructing the fusion systems}
 	// Trivial case
 	if R_1 cmpeq R_2 then 
