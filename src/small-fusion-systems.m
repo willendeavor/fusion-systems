@@ -16,6 +16,9 @@ end intrinsic
 
 
 
+//////////////////////// Loading SmallFusionSystems /////////////////////////////////
+
+
 intrinsic SmallFusionSystem(S_order::RngIntElt, i::RngIntElt) -> FusionSystem
 	{Return the i-th fusion system on a group of order S_order}
 	// Recall that loading the fusion system record does not load the fusion system
@@ -54,6 +57,10 @@ intrinsic IdentifyFusionSystem(F::FusionSystem) -> SeqEnum
 end intrinsic;
 
 
+
+////////////////////////////// Adding fusion systems ///////////////////////////////////////////////////////
+
+
 intrinsic AddSmallFusionSystem(F::FusionSystem)
 	{Given a fusion system check if it is already in the database, otherwise add it}
 	S := F`group;
@@ -61,7 +68,7 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 	new := true;
 	for i in indices do 
 		F_i := SmallFusionSystem(#S, i);
-		printf "Checking if F is isomorphic to fusion system %o", i;
+		printf "Checking if F is isomorphic to fusion system %o \n", i;
 		if IsIsomorphic(F_i, F) then
 			print "Fusion system is already in database \n";
 			new := false;
@@ -104,6 +111,40 @@ intrinsic AllSmallFusionSystems(S_order::RngIntElt) -> SeqEnum
 	FS := [SmallFusionSystem(S_order,i) : i in [1..NumberSmallFusionSystems(S_order)]];
 	return(FS);
 end intrinsic;
+
+
+
+intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1)
+    {Add all fusion systems over a group of given order}
+    UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
+    for i in [resume..NumberOfSmallGroups(order)] do
+        m := Sprintf("Starting adding all fusion systems over SmallGroup(%o, %o)", order, i);
+        UpdateLog(m);
+        print m;
+        AddAllFusionSystems(SmallGroup(order,i));
+        m := Sprintf("Finished adding all fusion systems over SmallGroup(%o, %o)", order, i);
+        UpdateLog(m);
+        print m;
+    end for;
+    UpdateLog(Sprintf("Finished adding all fusion systems of order %o", order));
+end intrinsic;
+
+
+
+intrinsic AddAllFusionSystems(S::Grp)
+    {Adds all fusion systems possible to the SmallFusionSystems database}
+    FF := AllFusionSystems(S:OpTriv := false, pPerfect := false);
+    AddSmallFusionSystems(FF);
+end intrinsic;
+
+
+
+
+
+
+
+
+//////////////// Loading information about all fusion systems ////////////////////////////
 
 
 
@@ -157,6 +198,12 @@ end intrinsic;
 
 
 
+
+///////////////// Updating and verifying ////////////////////////////////////////////
+
+
+
+
 intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 	{Update the files in the SmallFusionSystems S_order database}
 	p := Factorisation(S_order)[1][1];
@@ -169,6 +216,7 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 		filename := path cat i;
 		UpdateFusionRecord(filename);
 		printf "Updated %o \n", i;
+		UpdateLog(Sprintf("Updated SmallFusionSystem(%o, %o)", p^n, Split(i, "_")[2]));
 	end for;
 end intrinsic;
 
@@ -225,4 +273,29 @@ intrinsic VerifyAllSmallFusionSystemRecords()
 		end for;
 	end for;
 	print errors;
+end intrinsic;
+
+
+
+intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt) -> SeqEnum
+	{Check if there are duplicates in the database}
+	duplicates := [];
+	for i in [1..NumberSmallFusionSystems(order)] do 
+		R := SmallFusionSystemRecord(order,i);
+		S := R`S;
+		m, indices := NumberSmallFusionSystems(S);
+		// Get only those we haven't checked yet
+		checks := [x : x in indices | x gt i ];
+		for j in checks do  
+			RR := SmallFusionSystemRecord(order, j);
+			if IsomorphismTest(R, RR) then 
+				printf "SmallFusionSystems (%o, %o) and (%o, %o) are isomorphic \n", order,i, order, j;
+				Append(~duplicates, [i,j]);
+			end if;
+		end for;
+	end for;
+	if IsEmpty(duplicates) then
+		print "No duplicates found";
+	end if;
+	return duplicates;
 end intrinsic;

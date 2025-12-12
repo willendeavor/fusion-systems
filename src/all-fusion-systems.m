@@ -1,3 +1,7 @@
+
+
+
+
 // Puts the essentials in order according to Group Name
 procedure OrderEssentials(S, ~Autos)
     p := FactoredOrder(S)[1][1];
@@ -14,6 +18,8 @@ procedure OrderEssentials(S, ~Autos)
         Reverse(~Autos); 
     end if; 
 end procedure;
+
+
 
 
 intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[],OpTriv:=true,pPerfect:= true)-> SeqEnum
