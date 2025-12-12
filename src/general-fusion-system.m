@@ -1,5 +1,7 @@
 // General functions dealing with fusion systems
 
+import "properties-fusion-systems.m" : MakeAllSubgroups;
+
 
 intrinsic 'eq'(F1::FusionSystem, F2::FusionSystem) -> Bool
     {checks if two fusion systems are equal}
@@ -128,7 +130,7 @@ intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
     ImAutEssentials[zz]:=ImAutEssentialsCalc;
      
     end for;
-
+    MakeAllSubgroups(F2);
     for XXct in [1..#ImEssentials] do XX:=ImEssentials[XXct];
         for ii in [1..#XX] do e:= XX[ii]; if e in F2`subgroups then continue; end if;
                 jj:= IdentifyBClass(F2,e);

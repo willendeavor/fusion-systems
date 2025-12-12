@@ -229,81 +229,43 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
     ////////////////////////////////////////////////// 
     InnFp:=sub<AutSp|{map(g): g in Generators(InnS1)}>;
     AutFSp:=sub<AutSp|{map(g): g in Generators(Autos[1])}>;  
-      C:=Random(Complements(AutFSp,InnFp));  
+    C:=Random(Complements(AutFSp,InnFp));  
     C:=SubInvMap(map,AutS1,C); 
     if #C gt 1 then 
-         Ba, phi1:= Holomorph(GrpFP,S1,C); 
-         Sa:= sub<Ba|[phi1(x):x in Generators(S1)]>; 
-         phi2:=iso<Sa->S1|[<phi1(S1.i),S1.i>: i in [1..#Generators(Sa)]]>; 
-         L:= sub<Ba|{x: x in Generators(Ba)| not x in Sa}>;  
-         theta, Bb:= CosetAction(Ba,L); B,thetaB:= PCGroup(Bb);
+        Ba, phi1:= Holomorph(GrpFP,S1,C); 
+        Sa:= sub<Ba|[phi1(x):x in Generators(S1)]>; 
+        phi2:=iso<Sa->S1|[<phi1(S1.i),S1.i>: i in [1..#Generators(Sa)]]>; 
+        L:= sub<Ba|{x: x in Generators(Ba)| not x in Sa}>;  
+        theta, Bb:= CosetAction(Ba,L); 
+        B,thetaB:= PCGroup(Bb);
         phiB:= phi1*theta*thetaB; 
         S:= sub<B|[phiB(x):x in Setseq(Generators(S1))]>;
         InvphiB := Inverse(thetaB)*Inverse(theta)*phi2;
-       
-         else
-         B:= S1; 
-         B,phiB:= PCGroup(B); InvphiB := Inverse(phiB);
+    else
+        B:= S1; 
+        B,phiB:= PCGroup(B); InvphiB := Inverse(phiB);
     end if;
     S:= phiB(S1); 
     F`group:= S;    
     F`borel:= B;  
-      
-      MakeAutos(S);
-      F`essentialautos:= [];
-       F`essentials:=[phiB(Group(Autos[i])):i in [1..#Autos]];
-     for x in F`essentials do MakeAutos(x); end for;
-        for ix in [1..#Autos] do
-            x:= F`essentials[ix];  
-       XX:=sub<x`autogrp|[InvphiB*w*phiB:w in Generators(Autos[ix])]>; 
-        
-        F`essentialautos:= Append( F`essentialautos,XX); 
-        end for;
-      
-    ////////////////////////
-    ////The essentials and essential autos have been assigned. 
-    ////We treat S as an essential. 
-    ////////////////////////
 
-    ////////////////////////
-    //////We now create all the subgroups of the fusion system up to B conjugacy 
-    //////Perhaps this could be done later.
-    //////////////////////
-    subsBS:=Subgroups(B: OrderDividing:=#S);
-
-    ////////////////////////
-    //////Perhaps the algorithm doesn't select our essentials as representatives of 
-    /////their B-conjugacy class. We correct this
-    //////////////////////
-
-    //
-    F`subgroups:=[x`subgroup:x in subsBS];
-    for ii := 1 to #F`essentials do
-        X:= F`essentials[ii];
-        if X in F`subgroups eq false then 
-            for jj in [1..#F`subgroups] do
-                w:= F`subgroups[jj];
-                if IsConjugate(B,w , X) then   F`subgroups[jj]:= X; break jj; end if;
-            end for;
-        end if;
+    F`essentialautos:= [];
+    F`essentials:=[phiB(Group(Autos[i])):i in [1..#Autos]];
+    for x in F`essentials do 
+        MakeAutos(x); 
     end for;
-    //////////////////////////////////////////
-    ///////We initialise F`AutF and place in the automorphism of essentials 
-    ///////////////////////////// 
-    F`AutF:= AssociativeArray(F`subgroups);
 
+    for ix in [1..#Autos] do
+        x:= F`essentials[ix];  
+        XX:=sub<x`autogrp|[InvphiB*w*phiB:w in Generators(Autos[ix])]>; 
+        F`essentialautos:= Append(F`essentialautos,XX); 
+    end for;
+    
+    F`AutF:= AssociativeArray();
     for x in F`essentials do 
        F`AutF[x] := F`essentialautos[Index(F`essentials,x)]; 
     end for; 
 
-    //We make all autos of S-centric subgroups. Perhaps this is a place we can save
-    //memory
-    for ii in [1..#F`subgroups] do 
-        x:= F`subgroups[ii]; 
-        if IsSCentric(S,x) then 
-            MakeAutos(x);
-        end if; 
-    end for;
     return F;
 end intrinsic;
 
@@ -316,7 +278,8 @@ intrinsic  GroupFusionSystem(G::Grp,S::Grp)->FusionSystem
     {Creates the fusion system on the p-subgroup S of G}
     p:= GetPrime(S);
     ZZ:= Integers();
-    B1:= Normalizer(G,S); T1:= Sylow(B1,p);
+    B1:= Normalizer(G,S); 
+    T1:= Sylow(B1,p);
     require  T1 eq sub<G|S,Centralizer(T1,S)>:"system cannot be saturated";   
     Testers:= {Sylow(SL(2,p^2), p),Sylow(SL(2,p^3), p),Sylow(SL(2,p^4), p),Sylow(SL(2,p^5), p),
     Sylow(SL(2,p^6), p), Sylow(SU(3,p), p),Sylow(SU(3,p^2), p)};// Add more?
@@ -382,17 +345,19 @@ intrinsic  GroupFusionSystem(G::Grp,S::Grp)->FusionSystem
     F:=CreateFusionSystem(EEAA);
      
     F`grpsystem:=G;
-    F`group:=S;
     F`saturated := true;
     return F;
 end intrinsic
 
 
 
+
+
 intrinsic  GroupFusionSystem(G::Grp, p::RngIntElt)->FusionSystem
     {Makes the group fusion system on the Sylow p-subgroup}
-    S:= Sylow(G,p);F:= GroupFusionSystem(G,S);F`saturated:= true;
-
+    S:= Sylow(G,p);
+    F:= GroupFusionSystem(G,S);
+    F`saturated:= true;
     return F;
 end intrinsic;
 

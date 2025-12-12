@@ -1,6 +1,32 @@
 // Functions that determine properties of a given fusion system
 
 
+
+
+procedure MakeAllSubgroups(F)
+    // Assigns all subgroups of a fusion system
+    if not assigned(F`subgroups) then
+        B := F`borel;
+        subsBS:=Subgroups(B: OrderDividing:=#F`group);
+        F`subgroups:=[x`subgroup:x in subsBS];
+        // The following code makes sure our essentials are the representatives in F`subgroups
+        for ii := 1 to #F`essentials do
+            X:= F`essentials[ii];
+            if X in F`subgroups eq false then 
+                for jj in [1..#F`subgroups] do
+                    w:= F`subgroups[jj];
+                    if IsConjugate(B,w , X) then   F`subgroups[jj]:= X; break jj; end if;
+                end for;
+            end if;
+        end for;
+    end if;
+
+
+end procedure;
+
+
+
+
 // Duplicated in the original file
 intrinsic AutFCore(Es::SeqEnum,AutE::SeqEnum)->Grp,GrpAuto
     {calculates F core and action on it}
@@ -98,7 +124,7 @@ intrinsic FocalSubgroup(F::FusionSystem)->Grp
     for E in F`essentials do 
         i:= Index(F`essentials,E);
         AutFE:= F`essentialautos[i];
-        Foc:= sub<S|Foc, {x^-1*alpha(x): x in E, alpha in Generators(AutFE)}>;
+        Foc:= sub<S|Foc, [x^-1*aa(x): x in Generators(e), aa in Generators(AutFE)]>;
     end for;
     return Foc;
 end intrinsic;
@@ -124,6 +150,8 @@ intrinsic FusionGraph(F::FusionSystem)->GrphUnd, Assoc
 
     if assigned(F`fusiongraph)  then return F`fusiongraph,F`maps; end if;
 
+
+
     Essentials := F`essentials;
     SS:= F`subgroups;
     S:= F`group;
@@ -131,6 +159,7 @@ intrinsic FusionGraph(F::FusionSystem)->GrphUnd, Assoc
     Gamma := Graph<#SS|>;
     SSxSS:= [[n,m]:n in [1..#SS],m in [1..#SS]];
     Maps:=AssociativeArray(SSxSS);
+
 
 
     for E in Essentials do 
@@ -185,6 +214,7 @@ intrinsic FusionGraphSCentrics(F::FusionSystem)->GrphUnd, Assoc
 
     S:= F`group;
     B:=F`borel;
+    MakeAllSubgroups(F);
     SS:=  F`subgroups;
     Gamma := Graph<#SS|>;
     SSxSS:= [[n,m]:n in [1..#SS],m in [1..#SS]];
@@ -265,6 +295,7 @@ intrinsic MakeAllAutFCentric(FF::FusionSystem:saturationtest)->Assoc, Bool
     {Makes all AutF for centric subgroups unless parameter saturated test eq true in which case it stops early when the system is not saturated .}
 
     ZZ:=Integers();
+    MakeAllSubgroups(FF);
     SS:= FF`subgroups;
     S:= FF`group; 
     B:= FF`borel; 
@@ -411,7 +442,7 @@ intrinsic IsSaturated(F::FusionSystem)-> Bool
     {Determines if F is saturated}
 
     if assigned(F`saturated) then return F`saturated; end if;
-     
+    MakeAllSubgroups(F);
     SS:= F`subgroups; 
     S:= F`group; 
     B:= F`borel; 

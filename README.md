@@ -1,14 +1,12 @@
 # Fusion Systems
 
-A modest refactoring of the MAGMA package written by Chris Parker and Jason Semeraro and detailed in the paper "Algorithms for fusion systems with applications to $p$-groups of small order", with the aim of making the code more readable and with relatively in-depth documentation and usage. 
-I have no plans currently to extend or seriously modify the functionality and with some perhaps small exceptions there shouldn't be any compatibility issues between this package and https://github.com/chris1961parker/Fusion-Systems
+A modest refactoring of the MAGMA package written by Chris Parker and Jason Semeraro and detailed in the paper "Algorithms for fusion systems with applications to $p$-groups of small order", with the aim of making the code more readable and with relatively in-depth documentation and usage. Originally I planned this to be backwards compatible with the original code and this is mostly still true but increasingly the functionality is changing enough that this may not be true. There is also extended functionality, to see a complete table of what this package can do see [Features](docs/features-wishlist.md)
 
-This is mostly a project to bring myself up to speed with Git and writing documentation etc.
+This is mostly a project to bring myself up to speed with Git and writing documentation, tests etc but the library [SmallFusionSystems](docs/small-fusion-systems.md) is perhaps actually useful for playing around with fusion systems without having to wait a long time to build them.
 
 ## Installation and execution
 
-For the most recent code clone the main branch and run `AttachSpec("spec")` from the root directory
-For v.1.0.0 run `load "fusion-systems.m"` from the root directory
+For the most recent code clone the main branch and run `AttachSpec("spec")` from the root directory, otherwise the releases should be fairly stable and tested and the code can be downloaded there. Importantly the SmallFusionSystems functionality references paths from the root directory, at some point I will add the option to set a directory but for now MAGMA must be run from the root directory. Note as well this uses OS commands that may or may not be specific to the OS.
 
 
 ## Usage and an example (v.1.0.0)
@@ -112,8 +110,15 @@ In order to produce the list including those with $O_p(\mathcal{F}) \neq 1$ or $
 4 6
 ``` 
 
+### SmallFusionSystems
+As of v2.0.0 the best way to save and load fusion systems is using the commands `WriteFusionRecord(file)` and `LoadFusionSystem(file)`. Included now is the library SmallFusionSystems, details of its use can be found in the documentation but in essence `SmallFusionSystem(order, i)` returns the ith small fusion systems over a group of order `order` and `AllSmallFusionSystems(order)` or `AllSmallFusionSystems(S)` will return all fusion systems over a group of order `order` or over `S` respectively. Currently all the fusion systems saved in https://github.com/chris1961parker/Fusion-Systems have been added and over time more will be added. There is a command `AddSmallFusionSystem(F)` that will check if a fusion system is already in the library and if not add it. As of right now (v2.1.1) there is not a particularly robust management or maintenance of the library but I plan to add this.
 
-### Saving fusion systems
+
+
+
+
+### Saving fusion systems (legacy)
+This method of saving and loading has been replaced by the above.
 It is possible to save a fusion system or even a sequence of fusion systems to a file that can be loaded as needed. This is done using the `SaveFS` command which given a file name and a fusion system (or sequence of them) will output a file in the directory containing a sequence of commands that can be loaded. 
 ```
 > SaveFS("examplefs", F);
