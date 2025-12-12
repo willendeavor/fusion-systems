@@ -350,10 +350,10 @@ end intrinsic;
 
 intrinsic IsWeaklyClosed(F::FusionSystem, P::Grp)->Bool
     {Returns true if the subgroups is weakly closed}
-    WC:= false;
-    if IsNormal(F`borel,P) eq false then return false; end if;
-    if #ConjugacyClass(F,P) eq 1 then WC := true; end if;
-    return WC;
+    if IsNormal(F`borel,P) eq false then 
+        return false; 
+    end if;
+    return #ConjugacyClass(F,P) eq 1;
 end intrinsic;
 
 
@@ -361,13 +361,16 @@ end intrinsic;
 intrinsic IsStronglyClosed(F::FusionSystem, P::Grp)->Bool
     {Returns true if the subgroups is strongly closed}
     SC:= true;
-    if IsWeaklyClosed(F,P) eq false then return false; end if;
-
+    if IsWeaklyClosed(F,P) eq false then 
+        return false; 
+    end if;
     X:= {x`subgroup: x in Subgroups(P)};
     for x in X do 
         xC:= ConjugacyClass(F,x);  
         for w in xC do
-            if w subset P eq false then return false; end if; 
+            if w subset P eq false then 
+                return false; 
+            end if; 
         end for;
     end for; 
     return SC;
@@ -394,7 +397,7 @@ intrinsic AutomorphismGroup(F::FusionSystem,P::Grp)-> GrpAuto
     ComponentP:= Setseq(IdentifyFOrbit(F,P));
      
     for x in ComponentP do MakeAutos(SS[Index(x)]); end for;
-
+    MakeAutos(P);
     AutP:= P`autogrp;
 
     AP := sub<AutP|>;
@@ -498,5 +501,41 @@ end intrinsic;
 
 
 
+intrinsic IsNormal(F::FusionSystem, P::Grp) -> Bool 
+    {Determine if P is a normal subgroup of the fusion system}
+    // For each essential E test if P is in E and P is Aut_F(E)-invariant
+    for i in [1..#F`essentials] do 
+        E := F`essentials[i];
+        if not P subset E then 
+            return false;
+        end if;
+        if not IsInvariant(F`essentialautos[i], E, P) then
+            return false;
+        end if;
+    end for;
+    return true;
+end intrinsic;
 
 
+// Using definition
+intrinsic IsCentral(F::FusionSystem, P::Grp) -> Bool 
+    {Determine if P is a central subgroup of the fusion system}
+    for x in P do 
+        if not #FConjugacyClass(F,x) eq 1 then
+            return false;
+        end if;
+    end for;
+    return true;
+end intrinsic;
+
+
+
+/*
+// Using essentials? Haven't proven this formally
+intrinsic IsCentralTemp(F::FusionSystem, P::Grp) -> Bool
+    {Determine if P is a central subgroup of the fusion system}
+    for i in [1..#F`essentials] do 
+
+    end for;
+end intrinsic;
+*/
