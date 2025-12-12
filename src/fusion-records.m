@@ -1,6 +1,9 @@
 // Functions that convert a fusion system to an entry in the SmallFusionSystems database
 // and generally work directly with the record files
 
+
+
+
 // Function that takes a fusion system and returns a completed fusion record
 // Idea is that the record does not do any major computations but stores enough to
 // compare different fusion systems
@@ -186,6 +189,12 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 end intrinsic;
 
 
+intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
+	{Creates a fusion system from a database entry}
+	R := LoadFusionSystemRecord(filename);
+	return(LoadFusionSystem(R));
+end intrinsic;
+
 
 intrinsic UpdateFusionRecord(filename::MonStgElt)
 	{Given filename rewrite the record to reflect any changes made}
@@ -196,11 +205,48 @@ end intrinsic;
 
 
 
-intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
-	{Creates a fusion system from a database entry}
-	R := LoadFusionSystemRecord(filename);
-	return(LoadFusionSystem(R));
+intrinsic IsomorphismTest(R_1::Rec, R_2::Rec) -> Bool
+	{Given two fusion records return if they are potentially isomorphic without constructing the fusion systems}
+	// Trivial case
+	if R_1 cmpeq R_2 then 
+		return true;
+	end if;
+
+	// Check orders of everything first
+	if not #R_1`EssentialData eq #R_2`EssentialData then 
+		return false;
+	end if;
+	// We've already checked they have the same number of essentials so worry about duplicate orders
+	orders_1 := {X`E_order : X in R_1`EssentialData};
+	orders_2 := {X`E_order : X in R_2`EssentialData};
+	if not orders_1 eq orders_2 then 
+		return false;
+	end if;
+	// Now check isomorphism of the essential subgroups
+	for E_1 in R_1`EssentialData do 
+		E := E_1`E;
+		if forall{E_2`E : E_2 in R_2`EssentialData | IsIsomorphic(E, E_2`E)} then
+			return false;
+		end if;
+	end for;
+
+	for E_2 in R_2`EssentialData do 
+		E := E_2`E;
+		if forall{E_1`E : E_1 in R_1`EssentialData | IsIsomorphic(E, E_1`E)} then 
+			return false;
+		end if;
+	end for;
+
+	// Finally perform isomorphism test of the fusion systems
+	return IsIsomorphic(LoadFusionSystem(R_1), LoadFusionSystem(R_2));
 end intrinsic;
+
+
+
+
+
+
+
 
 
 
