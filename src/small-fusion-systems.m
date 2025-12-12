@@ -221,6 +221,24 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 end intrinsic;
 
 
+intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt)
+	{Updates a given attribute e.g. Core in a fusion systems record}
+	F := SmallFusionSystem(order, i);
+	if option eq "Core" or option eq "OpTriv" then 
+		F`OpTriv, F`Core := Core(F);
+		print F`OpTriv;
+	end if;
+	if option eq "FocalSubgroup" or option eq "pPerfect" then 
+		F`FocalSubgroup := FocalSubgroup(F);
+		F`pPerfect := F`FocalSubgroup eq F`group;
+	end if;
+	p := Factorisation(order)[1][1];
+	n := Factorisation(order)[1][2];
+	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
+	WriteFusionRecord(filename, F);
+end intrinsic;
+
+
 
 intrinsic UpdateAllSmallFusionSystems()
 	{Update every single file in the SmallFusionSystems database}
@@ -277,10 +295,11 @@ end intrinsic;
 
 
 
-intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt) -> SeqEnum
+intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> SeqEnum
 	{Check if there are duplicates in the database}
 	duplicates := [];
-	for i in [1..NumberSmallFusionSystems(order)] do 
+	for i in [resume..NumberSmallFusionSystems(order)] do 
+		printf "Checking for duplicates of FS_%o", i;
 		R := SmallFusionSystemRecord(order,i);
 		S := R`S;
 		m, indices := NumberSmallFusionSystems(S);
