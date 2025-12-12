@@ -10,9 +10,9 @@ A table keeping track of what features currently work and future features that w
 |Weakly/Strongly closed | Determine if a subgroup is weakly or strongly closed in a fusion system | `IsStronglyClosed`, `IsWeaklyClosed` | 
 |$O_p(\mathcal{F})$| Can calculate the core of a fusion system and the automorphism group if wanted | `AutFCore`, `Core`, `FCoreTest` | Some duplication in code see [#55](https://github.com/willendeavor/fusion-systems/issues/55) |
 | $\mathfrak{foc}(\mathcal{F})$| Calculate the focal subgroup | `FocalSubgroup`, `FocalSubgroupTest` | 
-| Direct products $\mathcal{F}_1 \times \mathcal{F}_2$| Add support for constructing direct products, to start with probably easier to work with internal direct products first. For external I think would require some thinking about, perhaps similar to my AutoMatrix package defining a direct product type that can keep track of everything is needed. | `FusionDirectProduct` | Added in PR[#71](https://github.com/willendeavor/fusion-systems/pull/71) V2.2 onwards | 
+| Direct products $\mathcal{F}_1 \times \mathcal{F}_2$| Add support for constructing direct products | `FusionDirectProduct` | Added in PR[#71](https://github.com/willendeavor/fusion-systems/pull/71) V2.2 onwards | 
 | Saving fusion systems | Option to save a fusion system to a file/record and load it | `WriteFusionRecord`, `LoadFusionRecord`, `LoadFusionSystem` | Still working on improving it|
-| SmallFusionSystems | Access to a library of known fusion systems | See [SmallFusionSystems](docs/small-fusion-systems.md) | |
+| SmallFusionSystems | Access to a library of known fusion systems | See [SmallFusionSystems](small-fusion-systems.md) | |
 
 
 ## Feature Wishlist
