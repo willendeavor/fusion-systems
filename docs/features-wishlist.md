@@ -10,6 +10,9 @@ A table keeping track of what features currently work and future features that w
 |Weakly/Strongly closed | Determine if a subgroup is weakly or strongly closed in a fusion system | `IsStronglyClosed`, `IsWeaklyClosed` | 
 |$O_p(\mathcal{F})$| Can calculate the core of a fusion system and the automorphism group if wanted | `AutFCore`, `Core`, `FCoreTest` | Some duplication in code see [#55](https://github.com/willendeavor/fusion-systems/issues/55) |
 | $\mathfrak{foc}(\mathcal{F})$| Calculate the focal subgroup | `FocalSubgroup`, `FocalSubgroupTest` | 
+| Direct products $\mathcal{F}_1 \times \mathcal{F}_2$| Add support for constructing direct products, to start with probably easier to work with internal direct products first. For external I think would require some thinking about, perhaps similar to my AutoMatrix package defining a direct product type that can keep track of everything is needed. | `FusionDirectProduct` | Added in PR[#71](https://github.com/willendeavor/fusion-systems/pull/71) V2.2 onwards | 
+| Saving fusion systems | Option to save a fusion system to a file/record and load it | `WriteFusionRecord`, `LoadFusionRecord`, `LoadFusionSystem` | Still working on improving it|
+| SmallFusionSystems | Access to a library of known fusion systems | See [SmallFusionSystems](docs/small-fusion-systems.md) | |
 
 
 ## Feature Wishlist
@@ -19,7 +22,6 @@ A table keeping track of what features currently work and future features that w
 |Subsystem support| Add basic functionality to work with subsystems, at least asking if something is a subsystem. Start by doing it in a very slow, dumb way then perhaps think about doing it via essential subgroups. | Not started | 
 |Calculate $O^{p'}(\mathcal{F})$ | Add a function to calculate the residual subsystem, currently unsure of how to do this in general cases but we can at least calculate $O^{p'}_*(\mathcal{F})$, the not necessarily saturated system containing all $O^{p'}(\mathrm{Aut}_\mathcal{F}(E))$ and $\mathrm{Aut}_\mathcal{F}^E(S)$ |In progress | [#48](https://github.com/willendeavor/fusion-systems/issues/48) 
 | Calculate $O^p(\mathcal{F})$ | Function that calculates the hyperfocal subsystem $O^p(\mathcal{F})$, should be more straightforward than the residual subsystem. | Not started|
-| Direct products $\mathcal{F}_1 \times \mathcal{F}_2$| Add support for constructing direct products, to start with probably easier to work with internal direct products first. For external I think would require some thinking about, perhaps similar to my AutoMatrix package defining a direct product type that can keep track of everything is needed. | Not started | 
 |Quotients of a strongly closed subgroup| Add support for working with quotient fusion systems. This will be easiest in the case where the strongly closed subgroup is central since we calculate the essential subgroups straight away | Not started| |
 | Normal subgroups $P \lhd \mathcal{F}$ | Add a function to determine if a subgroup is normal in $\mathcal{F}$, should be easy using the equivalence from [AKO] | Done in [branch](https://github.com/willendeavor/fusion-systems/tree/dev-add-fusion-subsystems) | |
 | Central subgroups| Determine if a subgroup is central in the fusion system | Done in [branch](https://github.com/willendeavor/fusion-systems/tree/dev-add-fusion-subsystems) |
