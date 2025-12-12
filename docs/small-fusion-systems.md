@@ -2,22 +2,22 @@
 
 ### Overview
 
-This file contains commands for accessing specifically the SmallFusionSystem database, convert-to-database contains commands for generally saving a fusion system record and maintaining the database. The following table lists the orders that are currently available, whether they include fusion systems that do not have trivial core and are not perfect and whether all possible direct products that can be built from these fusion systems have been added (of course in theory for example all 2^3 x 2^3 should already be in the database).
+This file contains commands for accessing specifically the SmallFusionSystem database, convert-to-database contains commands for generally saving a fusion system record and maintaining the database. The following table lists the orders that are currently available, whether they include fusion systems that do not have trivial core and are not perfect and whether all possible direct products that can be built from these fusion systems have been added (of course in theory for example all 2^3 x 2^3 should already be in the database), note as well that the core and focal subgroup are only really interesting to run once the non pPerfect and non OpTriv have been added.
 
 | $p$ 	| $n$ 	| Number 	| Added $O_p(\mathcal{F}) \neq 1$, $O^p(\mathcal{F}) \neq \mathcal{F}$ 	| Added direct products 	| Added core and focal subgroup |
 |-----	|-----	|--------	|----------------------------------------------------------------------	|-----------------------	| ----------------|
-| 2   	| 3   	| 2      	| Y                                                                    	|                       	|
-|     	| 4   	| 7      	| Y                                                                    	|                       	|
-|     	| 5   	| 37     	| Y                                                                    	|                       	|
-|     	| 6   	| 9    	  |                                                                     	|                       	|
+| 2   	| 3   	| 2      	| Y                                                                    	|                       	| Y
+|     	| 4   	| 7      	| Y                                                                    	|                       	| Y
+|     	| 5   	| 37     	| Y                                                                    	|                       	| Y
+|     	| 6   	| 209    	| Y                                                                    	|                       	| Y
 |     	| 7   	|        	|                                                                     	|                       	|
-| 3   	| 3   	| 6      	| Y                                                                     	|                       	|
-|     	| 4   	| 28     	| Y                                                                     	|                       	|
-|     	| 5   	| 16     	|                                                                      	|                       	|
+| 3   	| 3   	| 6      	| Y                                                                     	|                       	| Y
+|     	| 4   	| 28     	| Y                                                                     	|                       	| Y
+|     	| 5   	| 194     	| Y                                                                     	|                       	| Y
 |     	| 6   	| 70     	|                                                                      	|                       	|
 |     	| 7   	| 88     	|                                                                      	|                       	|
-| 5   	| 3   	| 3      	|                                                                      	|                       	|
-|     	| 4   	| 30     	|                                                                      	|                       	|
+| 5   	| 3   	| 6      	| Y                                                                     	|                       	| Y
+|     	| 4   	| 43     	| Y                                                                     	|                       	| Y
 |     	| 5   	| 58     	|                                                                      	|                       	|
 |     	| 6   	| 37     	|                                                                      	|                       	|
 | 7     | 3     | 13      |                                                                        |                        |
