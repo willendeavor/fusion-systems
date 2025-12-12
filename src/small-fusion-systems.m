@@ -221,6 +221,44 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 end intrinsic;
 
 
+intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt])
+	{Updates a given attribute e.g. Core in a fusion systems record}
+	F := SmallFusionSystem(order, i);
+	if "Core" in options or "OpTriv" in options then 
+		F`OpTriv, F`Core := Core(F);
+		print F`OpTriv;
+	end if;
+	if "FocalSubgroup" in options or "pPerfect" in options then 
+		F`FocalSubgroup := FocalSubgroup(F);
+		F`pPerfect := F`FocalSubgroup eq F`group;
+	end if;
+	p := Factorisation(order)[1][1];
+	n := Factorisation(order)[1][2];
+	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
+	WriteFusionRecord(filename, F);
+end intrinsic;
+
+
+
+intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt)
+	{Updates a given attribute e.g. Core in a fusion systems record, single argument version}
+	UpdateSmallFusionSystemAttributes(order, i, [option]);
+end intrinsic;
+
+
+intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEnum[MonStgElt] : resume := 1)
+	{Update the attributes of all SmallFusionSystems of a particular order}
+	m := NumberSmallFusionSystems(order);
+	for i in [resume..m] do 
+		UpdateSmallFusionSystemAttributes(order, i, options);
+		message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
+		UpdateLog(message);
+	end for;
+end intrinsic;
+
+
+
+
 
 intrinsic UpdateAllSmallFusionSystems()
 	{Update every single file in the SmallFusionSystems database}
@@ -277,10 +315,11 @@ end intrinsic;
 
 
 
-intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt) -> SeqEnum
+intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> SeqEnum
 	{Check if there are duplicates in the database}
 	duplicates := [];
-	for i in [1..NumberSmallFusionSystems(order)] do 
+	for i in [resume..NumberSmallFusionSystems(order)] do 
+		printf "Checking for duplicates of FS_%o", i;
 		R := SmallFusionSystemRecord(order,i);
 		S := R`S;
 		m, indices := NumberSmallFusionSystems(S);
@@ -288,7 +327,7 @@ intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt) -> SeqEnum
 		checks := [x : x in indices | x gt i ];
 		for j in checks do  
 			RR := SmallFusionSystemRecord(order, j);
-			if IsomorphismTest(R, RR) then 
+			if IsIsomorphicFusionRecords(R, RR) then 
 				printf "SmallFusionSystems (%o, %o) and (%o, %o) are isomorphic \n", order,i, order, j;
 				Append(~duplicates, [i,j]);
 			end if;

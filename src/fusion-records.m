@@ -2,6 +2,24 @@
 // and generally work directly with the record files
 
 
+// Given S and a subgroup of S return the string sub<S | gens >;
+function GetOptionalArgs()
+	optional := [
+    		"Core",
+    		"OpTriv",
+    		"pPerfect",
+    		"FocalSubgroup"
+    	];
+	return optional;
+end function;
+
+
+
+
+function SubgroupToString(S,T)
+	rel := {S!w:w in PCGenerators(T)};
+	return(Sprintf("sub<S | %o>", rel));
+end function;
 
 
 // Function that takes a fusion system and returns a completed fusion record
@@ -15,8 +33,10 @@ function FusionToRecord(FS)
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		OpTriv: Bool, 
-		pPerfect: Bool
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -59,7 +79,8 @@ function FusionToRecord(FS)
             >
         );
     end for;
-    return rec< FusionRecord |
+    // Add the minimum record information
+    R := rec< FusionRecord |
         p                := p,
         S   := S ,
         S_order          := S_order,
@@ -67,6 +88,18 @@ function FusionToRecord(FS)
         S_small_group_id := S_small_group_id,
         EssentialData    := EssentialSeq
     >;
+    // Now check any additional info
+    optional := GetOptionalArgs();
+    for x in optional do  
+    	if assigned FS``x then
+    		// If FS``x is supposed to store a subgroup of S then get the PC presentation
+    		if ISA(Type(FS``x), Grp) then
+    			FS``x := sub<S | {S!w : w in PCGenerators(FS``x)}>;
+    		end if;
+    		R``x := FS``x;
+    	end if;
+    end for;
+    return R;
 end function;
 
 
@@ -92,8 +125,10 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		OpTriv: Bool, 
-		pPerfect: Bool
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -143,13 +178,34 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 
     // Essentials
     fprintf F, "EssentialData := EssentialData";
-    if assigned(R`OpTriv) then
-    	fprintf F, "  , OpTriv := %o,\n", R`OpTriv;
+
+    // Optional info
+    optional := GetOptionalArgs();
+    // If no optionals defined closed records assignment
+    if forall{x : x in optional | not assigned R``x} then 
+    	fprintf F, ">;\n";
+    // Otherwise add the optionals
+    else 
+    	options := [x : x in optional | assigned R``x];
+    	fprintf F, ", \n";
+    	// Get a list of values so we can change types if necessary e.g. group to string
+    	// Not using an actual list since types vary
+    	info := AssociativeArray(options);
+    	for i in options do
+    		if ISA(Type(R``i), Grp) then
+    			info[i] := SubgroupToString(S,R``i);
+    		else
+    			info[i] := R``i;
+    		end if;
+    	end for;
+    	for i in [1..#options -1] do 
+    		x := options[i];
+    		fprintf F, "%o := %o, \n", x, info[x];
+    	end for;
+    	// Save last one so trailing comma is not added
+    	fprintf F, "%o := %o >; \n", options[#options], info[options[#options]];
     end if;
-    if assigned(R`pPerfect) then 
-    	fprintf F, "  pPerfect := %o\n", R`pPerfect;
-    end if;
-    fprintf F, ">;\n";
+
     fprintf F, "return R; \n";
     fprintf F, "end intrinsic;";
     delete F;
@@ -185,8 +241,16 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 		end for;
 		Append(~Autos, A);
 	end for;
-	return CreateFusionSystem(Autos);
+	F := CreateFusionSystem(Autos);
+	optional := GetOptionalArgs();
+	for x in optional do 
+		if x in Names(R) and assigned R``x then 
+			F``x := R``x;
+		end if;
+	end for;
+	return F;
 end intrinsic;
+
 
 
 intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
@@ -194,6 +258,7 @@ intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
 	R := LoadFusionSystemRecord(filename);
 	return(LoadFusionSystem(R));
 end intrinsic;
+
 
 
 intrinsic UpdateFusionRecord(filename::MonStgElt)
@@ -205,7 +270,7 @@ end intrinsic;
 
 
 
-intrinsic IsomorphismTest(R_1::Rec, R_2::Rec) -> Bool
+intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec) -> Bool
 	{Given two fusion records return if they are potentially isomorphic without constructing the fusion systems}
 	// Trivial case
 	if R_1 cmpeq R_2 then 
