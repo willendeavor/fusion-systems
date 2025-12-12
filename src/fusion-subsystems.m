@@ -1,6 +1,25 @@
 // Functions that calculate certain subsystems of a given fusion system.
 
 
+intrinsic IsSubsystem(F_1::FusionSystem, F_2:: FusionSystem) -> Bool
+	{Determine if F_2 is a subsystem of F_1}
+	// We simply need each AutF_2(E) < AutF_1(E) for all E essential, then all compositions/restrictions are in F_2
+	// Should probably check this in more detail
+	if not F_1`group subset F_2`group then
+		return false;
+	end if;
+	for i in [1..F_1`essentials] do
+		E := F_1`essentials[i];
+		AE := F_1`essentialautos[i];
+		if not AE subset AutomorphismGroup(F_2, E) then
+			return false;
+		end if;
+	end for; 
+	return true;
+end intrinsic;
+
+
+
 // Calculate quotient subsystem for a strongly closed subgroup
 
 
@@ -35,7 +54,7 @@ function CalculateAutFES(S,E, AutFS, AutFE)
 		// Determine if \alpha|_E in O^{p'}(Aut_\F(E))
 		alphaE := AutFE!hom<E->E | x:->alpha(x)>;
 		if permmap(alphaE) in Opprime then
-			Append(AutFES_gens, alpha);
+			Append(~AutFES_gens, alpha);
 		end if;
 	end for;
 	AutFES := sub<AutFS | AutFES_gens>;
@@ -51,9 +70,10 @@ intrinsic CalculateAutSResidual(F::FusionSystem) -> Grp
 	AutFES_list := [];
 	for i in [2..#F`essentials] do 
 		AutFES := CalculateAutFES(S,F`essentials[i], AutFS, F`essentialautos[i]);
-		Append(AutFES_list, AutFES);
+		Append(~AutFES_list, AutFES);
 	end for;
 	AutF0S := sub<AutFS | AutFES_list, Inn(S)>;
+	print #AutF0S/#Inn(S);
 	return AutF0S;
 end intrinsic;
 
@@ -62,8 +82,9 @@ end intrinsic;
 intrinsic IsResidual(F::FusionSystem) -> Bool
 	{returns if F is its residual subsystem}
 	S := F`group;
+	MakeAutos(S);
 	permmap := S`autopermmap;
-	return permmap(CalculateAutSResidual(F)) eq permmap(F`essentialautos[1]);
+	return CalculateAutSResidual(F) eq F`essentialautos[1];
 end intrinsic;
 
 

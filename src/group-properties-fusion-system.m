@@ -380,7 +380,7 @@ end intrinsic;
 
 intrinsic AutomorphismGroup(F::FusionSystem,P::Grp)-> GrpAuto
     {Calculates the automorphism group of P}
-     MakeAllSubgroups(F);
+    MakeAllSubgroups(F);
     SS:= F`subgroups;
     Essentials:= F`essentials;
     B:= F`borel;
