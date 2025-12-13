@@ -10,7 +10,7 @@ This file contains commands for accessing specifically the SmallFusionSystem dat
 |     	| 4   	| 7      	| Y                                                                    	|                       	| Y
 |     	| 5   	| 37     	| Y                                                                    	|                       	| Y
 |     	| 6   	| 209    	| Y                                                                    	|                       	| Y
-|     	| 7   	|        	|                                                                     	|                       	|
+|     	| 7   	| 487     | Up to SmallGroup(2^7, 1000)                                                                    	|                       	|
 | 3   	| 3   	| 6      	| Y                                                                     	|                       	| Y
 |     	| 4   	| 28     	| Y                                                                     	|                       	| Y
 |     	| 5   	| 194     	| Y                                                                     	|                       	| Y
@@ -20,8 +20,8 @@ This file contains commands for accessing specifically the SmallFusionSystem dat
 |     	| 4   	| 43     	| Y                                                                     	|                       	| Y
 |     	| 5   	| 58     	|                                                                      	|                       	|
 |     	| 6   	| 37     	|                                                                      	|                       	|
-| 7     | 3     | 13      |                                                                        |                        |
-|       | 4     | 8       |                                                                        |                        |
+| 7     | 3     | 17      | Y                                                                       |                        | Y
+|       | 4     | 24       | Y                                                                       |                        | Y
 |       | 5     | 11      |                                                                        |                         |
 
 ---
