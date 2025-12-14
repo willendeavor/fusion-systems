@@ -1,0 +1,77 @@
+intrinsic FusionRecordTemp() -> Rec 
+ {} 
+
+    FusionRecord := recformat<
+		p : RngIntElt,
+		S : Grp, 
+		S_order: RngIntElt,
+		S_name : MonStgElt,
+		S_small_group_id : Tup, 
+		EssentialData : SeqEnum,
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
+		>;
+
+	EssentialRecord := recformat< 
+		E : Grp, 
+		E_order : RngIntElt,
+		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
+		AutFE_name : MonStgElt,
+		AutFE_gens : SeqEnum
+		>; 
+
+  S :=PCGroup(\[ 4, -5, 5, -5, -5, 241, 1802 ])
+; 
+EssentialData := [];
+
+E := sub<S| { S.1, S.3, S.4, S.2 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.1, S.3, S.4, S.2 }>, 
+E_order := 625, 
+E_name := "C5.He5", 
+AutFE_order := 2000, 
+AutFE_gens := [
+[ <E.1, E.1 * E.3^3 * E.4>, <E.2, E.2^2>, <E.3, E.3^2>, <E.4, E.4^2> ],
+[ <E.1, E.1 * E.4^3>, <E.2, E.2 * E.3>, <E.3, E.3 * E.4>, <E.4, E.4> ],
+[ <E.1, E.1^4 * E.4^2>, <E.2, E.2>, <E.3, E.3^4 * E.4>, <E.4, E.4> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
+[ <E.1, E.1 * E.4>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
+[ <E.1, E.1 * E.3^4>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
+[ <E.1, E.1^2 * E.4^2>, <E.2, E.2>, <E.3, E.3^2 * E.4>, <E.4, E.4^4> ],
+[ <E.1, E.1 * E.3^4 * E.4^3>, <E.2, E.2^4>, <E.3, E.3^4>, <E.4, E.4^4> ]
+], 
+AutFE_name := "He5:C4^2" 
+	>; 
+Append(~EssentialData, ER); 
+
+E := sub<S| { S.3, S.4, S.2 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.3, S.4, S.2 }>, 
+E_order := 125, 
+E_name := "C5^3", 
+AutFE_order := 480, 
+AutFE_gens := [
+[ <E.1, E.1^3>, <E.2, E.2^3>, <E.3, E.3^3> ],
+[ <E.1, E.1^2 * E.2^2>, <E.2, E.2 * E.3^2>, <E.3, E.1> ],
+[ <E.1, E.1^3 * E.2^2 * E.3^3>, <E.2, E.2^4>, <E.3, E.1^4 * E.2^2 * E.3^2> ],
+[ <E.1, E.1^4>, <E.2, E.2^4>, <E.3, E.3^4> ]
+], 
+AutFE_name := "C4*S5" 
+	>; 
+Append(~EssentialData, ER); 
+R := rec< FusionRecord |
+p := 5,
+S := S, 
+S_order := 625,
+S_name := "C5.He5",
+S_small_group_id := <625, 7>,
+EssentialData := EssentialData, 
+Core := sub<S | { S.2 * S.3^2 * S.4, S.3 * S.4^3, S.4 }>, 
+OpTriv := false, 
+pPerfect := true, 
+FocalSubgroup := sub<S | { S.3, S.4, S.2, S.1 * S.4^4 }> >; 
+return R; 
+end intrinsic;

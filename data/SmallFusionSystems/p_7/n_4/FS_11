@@ -1,0 +1,76 @@
+intrinsic FusionRecordTemp() -> Rec 
+ {} 
+
+    FusionRecord := recformat<
+		p : RngIntElt,
+		S : Grp, 
+		S_order: RngIntElt,
+		S_name : MonStgElt,
+		S_small_group_id : Tup, 
+		EssentialData : SeqEnum,
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
+		>;
+
+	EssentialRecord := recformat< 
+		E : Grp, 
+		E_order : RngIntElt,
+		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
+		AutFE_name : MonStgElt,
+		AutFE_gens : SeqEnum
+		>; 
+
+  S :=PCGroup(\[ 4, -7, 7, -7, -7, 449, 3618 ])
+; 
+EssentialData := [];
+
+E := sub<S| { S.1, S.3, S.4, S.2 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.1, S.3, S.4, S.2 }>, 
+E_order := 2401, 
+E_name := "He7.C7", 
+AutFE_order := 2058, 
+AutFE_gens := [
+[ <E.1, E.1>, <E.2, E.2^6>, <E.3, E.3^6 * E.4^6>, <E.4, E.4> ],
+[ <E.1, E.1>, <E.2, E.2 * E.3>, <E.3, E.3>, <E.4, E.4> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4> ],
+[ <E.1, E.1 * E.3^6>, <E.2, E.2>, <E.3, E.3 * E.4^6>, <E.4, E.4> ],
+[ <E.1, E.1^2>, <E.2, E.2^2>, <E.3, E.3^4 * E.4^5>, <E.4, E.4> ],
+[ <E.1, E.1>, <E.2, E.2 * E.4^6>, <E.3, E.3>, <E.4, E.4> ]
+], 
+AutFE_name := "He7:C6" 
+	>; 
+Append(~EssentialData, ER); 
+
+E := sub<S| { S.3, S.4, S.2 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.3, S.4, S.2 }>, 
+E_order := 343, 
+E_name := "He7", 
+AutFE_order := 16464, 
+AutFE_gens := [
+[ <E.1, E.1^6 * E.3^3>, <E.2, E.2^6 * E.3^5>, <E.3, E.3> ],
+[ <E.1, E.1^2 * E.2^4 * E.3^3>, <E.2, E.1^6 * E.2^2 * E.3^5>, <E.3, E.3> ],
+[ <E.1, E.2^6>, <E.2, E.1 * E.3^4>, <E.3, E.3> ],
+[ <E.1, E.1 * E.3>, <E.2, E.2 * E.3^6>, <E.3, E.3> ],
+[ <E.1, E.1 * E.3>, <E.2, E.2 * E.3^3>, <E.3, E.3> ]
+], 
+AutFE_name := "C7^2.SL(2,7)" 
+	>; 
+Append(~EssentialData, ER); 
+R := rec< FusionRecord |
+p := 7,
+S := S, 
+S_order := 2401,
+S_name := "He7.C7",
+S_small_group_id := <2401, 7>,
+EssentialData := EssentialData, 
+Core := sub<S | { S.3, S.4, S.2 }>, 
+OpTriv := false, 
+pPerfect := true, 
+FocalSubgroup := sub<S | { S.1, S.3, S.4, S.2 }> >; 
+return R; 
+end intrinsic;

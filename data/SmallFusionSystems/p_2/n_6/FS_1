@@ -8,8 +8,10 @@ intrinsic FusionRecordTemp() -> Rec
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		OpTriv: Bool, 
-		pPerfect: Bool
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -73,6 +75,10 @@ S := S,
 S_order := 64,
 S_name := "D32",
 S_small_group_id := <64, 52>,
-EssentialData := EssentialData>;
+EssentialData := EssentialData, 
+Core := sub<S | {}>, 
+OpTriv := true, 
+pPerfect := true, 
+FocalSubgroup := sub<S | { S.1 * S.6, S.2 * S.6, S.3, S.5, S.4, S.6 }> >; 
 return R; 
 end intrinsic;

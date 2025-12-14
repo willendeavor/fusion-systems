@@ -8,8 +8,10 @@ intrinsic FusionRecordTemp() -> Rec
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		OpTriv: Bool, 
-		pPerfect: Bool
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -21,24 +23,24 @@ intrinsic FusionRecordTemp() -> Rec
 		AutFE_gens : SeqEnum
 		>; 
 
-  S :=PCGroup(\[ 6, -2, 2, 2, -2, 2, -2, 362, 116, 963, 730 ])
+  S :=PCGroup(\[ 6, -2, 2, 2, -2, 2, -2, 362, 404, 963, 730 ])
 ; 
 EssentialData := [];
 
-E := sub<S| { S.1, S.2, S.3, S.5, S.4, S.6 }>; 
+E := sub<S| { S.1, S.2, S.3, S.5, S.4 * S.6, S.6 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| { S.1, S.2, S.3, S.5, S.4, S.6 }>, 
+E := sub<S| { S.1, S.2, S.3, S.5, S.4 * S.6, S.6 }>, 
 E_order := 64, 
 E_name := "C2wrC2^2", 
 AutFE_order := 96, 
 AutFE_gens := [
 [ <E.1, E.1 * E.5 * E.6>, <E.2, E.2 * E.4 * E.6>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6> ],
-[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.5>, <E.4, E.4 * E.6>, <E.5, E.5>, <E.6, E.6> ],
-[ <E.1, E.1 * E.5>, <E.2, E.2 * E.4>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6> ],
-[ <E.1, E.2>, <E.2, E.1 * E.2>, <E.3, E.3>, <E.4, E.4 * E.5 * E.6>, <E.5, E.4>, <E.6, E.6> ],
 [ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.4 * E.5 * E.6>, <E.4, E.4 * E.6>, <E.5, E.5 * E.6>, <E.6, E.6> ],
-[ <E.1, E.1 * E.5>, <E.2, E.2 * E.4 * E.6>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6> ],
-[ <E.1, E.1 * E.5 * E.6>, <E.2, E.2 * E.4>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6> ]
+[ <E.1, E.1 * E.2>, <E.2, E.1>, <E.3, E.3>, <E.4, E.5>, <E.5, E.4 * E.5 * E.6>, <E.6, E.6> ],
+[ <E.1, E.1 * E.5 * E.6>, <E.2, E.2 * E.4>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6> ],
+[ <E.1, E.1 * E.5>, <E.2, E.2 * E.4>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.4>, <E.4, E.4>, <E.5, E.5 * E.6>, <E.6, E.6> ],
+[ <E.1, E.1 * E.5>, <E.2, E.2 * E.4 * E.6>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6> ]
 ], 
 AutFE_name := "C2^2wrC2:C3" 
 	>; 
@@ -51,27 +53,27 @@ E_order := 32,
 E_name := "Q8:C2^2", 
 AutFE_order := 288, 
 AutFE_gens := [
-[ <E.1, E.2 * E.5>, <E.2, E.1 * E.2>, <E.3, E.1 * E.2 * E.3 * E.4 * E.5>, <E.4, E.2 * E.3 * E.5>, <E.5, E.5> ],
-[ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4 * E.5>, <E.5, E.5> ],
-[ <E.1, E.3 * E.4>, <E.2, E.4>, <E.3, E.1 * E.4 * E.5>, <E.4, E.1 * E.2 * E.3 * E.4 * E.5>, <E.5, E.5> ],
-[ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
-[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.5>, <E.4, E.4>, <E.5, E.5> ],
-[ <E.1, E.1 * E.2 * E.3 * E.4 * E.5>, <E.2, E.1 * E.4 * E.5>, <E.3, E.1>, <E.4, E.1 * E.2>, <E.5, E.5> ],
-[ <E.1, E.1>, <E.2, E.2 * E.5>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ]
+[ <E.1, E.1 * E.2>, <E.2, E.1 * E.5>, <E.3, E.1 * E.4>, <E.4, E.1 * E.2 * E.3 * E.4>, <E.5, E.5> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4 * E.5>, <E.5, E.5> ],
+[ <E.1, E.1>, <E.2, E.2 * E.5>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
+[ <E.1, E.2 * E.3>, <E.2, E.1 * E.2 * E.3 * E.4>, <E.3, E.1 * E.2 * E.5>, <E.4, E.2>, <E.5, E.5> ],
+[ <E.1, E.3 * E.5>, <E.2, E.3 * E.4 * E.5>, <E.3, E.1 * E.2 * E.3 * E.4 * E.5>, <E.4, E.2 * E.3>, <E.5, E.5> ],
+[ <E.1, E.1>, <E.2, E.2 * E.5>, <E.3, E.3 * E.5>, <E.4, E.4>, <E.5, E.5> ],
+[ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ]
 ], 
 AutFE_name := "A4wrC2" 
 	>; 
 Append(~EssentialData, ER); 
 
-E := sub<S| { S.3, S.5, S.4 * S.6, S.6 }>; 
+E := sub<S| { S.4 * S.5, S.3, S.5, S.6 }>; 
 ER := rec< EssentialRecord |
-E := sub<S| { S.3, S.5, S.4 * S.6, S.6 }>, 
+E := sub<S| { S.4 * S.5, S.3, S.5, S.6 }>, 
 E_order := 16, 
 E_name := "C2^4", 
 AutFE_order := 60, 
 AutFE_gens := [
-[ <E.1, E.2 * E.4>, <E.2, E.1 * E.2 * E.3>, <E.3, E.1>, <E.4, E.1 * E.2> ],
-[ <E.1, E.3 * E.4>, <E.2, E.1 * E.3>, <E.3, E.2 * E.3 * E.4>, <E.4, E.1 * E.2 * E.3 * E.4> ]
+[ <E.1, E.3>, <E.2, E.2>, <E.3, E.2 * E.3 * E.4>, <E.4, E.1 * E.3 * E.4> ],
+[ <E.1, E.2 * E.3>, <E.2, E.1 * E.3>, <E.3, E.3>, <E.4, E.1 * E.2 * E.4> ]
 ], 
 AutFE_name := "A5" 
 	>; 
@@ -82,6 +84,10 @@ S := S,
 S_order := 64,
 S_name := "C2wrC2^2",
 S_small_group_id := <64, 138>,
-EssentialData := EssentialData>;
+EssentialData := EssentialData, 
+Core := sub<S | {}>, 
+OpTriv := true, 
+pPerfect := true, 
+FocalSubgroup := sub<S | { S.3 * S.4 * S.6, S.4 * S.5 * S.6, S.2, S.1 * S.2, S.5, S.6 }> >; 
 return R; 
 end intrinsic;

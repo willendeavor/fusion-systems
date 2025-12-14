@@ -15,27 +15,29 @@ intrinsic SetSmallFusionSystemDirectory() -> MonStgElt
 end intrinsic
 
 
+function GetSmallFusionSystemFilePath(order, i)
+	p := Factorisation(order)[1][1];
+	n := Factorisation(order)[1][2];
+	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
+	return filename;
+end function;
+
+
 
 //////////////////////// Loading SmallFusionSystems /////////////////////////////////
 
 
-intrinsic SmallFusionSystem(S_order::RngIntElt, i::RngIntElt) -> FusionSystem
-	{Return the i-th fusion system on a group of order S_order}
+intrinsic SmallFusionSystem(order::RngIntElt, i::RngIntElt) -> FusionSystem
+	{Return the i-th fusion system on a group of given order}
 	// Recall that loading the fusion system record does not load the fusion system
-	p := Factorisation(S_order)[1][1];
-	n := Factorisation(S_order)[1][2];
-	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
-	return LoadFusionSystem(filename);
+	return LoadFusionSystem(GetSmallFusionSystemFilePath(order, i));
 end intrinsic;
 
 
 
-intrinsic SmallFusionSystemRecord(S_order::RngIntElt, i::RngIntElt) -> Rec 
+intrinsic SmallFusionSystemRecord(order::RngIntElt, i::RngIntElt) -> Rec 
 	{Return the record only for a small fusion system}
-	p := Factorisation(S_order)[1][1];
-	n := Factorisation(S_order)[1][2];
-	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
-	return LoadFusionSystemRecord(filename);
+	return LoadFusionSystemRecord(GetSmallFusionSystemFilePath(order, i));
 end intrinsic;
 
 
@@ -221,6 +223,7 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 end intrinsic;
 
 
+
 intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt])
 	{Updates a given attribute e.g. Core in a fusion systems record}
 	F := SmallFusionSystem(order, i);
@@ -232,10 +235,7 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		F`FocalSubgroup := FocalSubgroup(F);
 		F`pPerfect := F`FocalSubgroup eq F`group;
 	end if;
-	p := Factorisation(order)[1][1];
-	n := Factorisation(order)[1][2];
-	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
-	WriteFusionRecord(filename, F);
+	WriteFusionRecord(GetSmallFusionSystemFilePath(order, i), F);
 end intrinsic;
 
 
@@ -244,6 +244,7 @@ intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, opt
 	{Updates a given attribute e.g. Core in a fusion systems record, single argument version}
 	UpdateSmallFusionSystemAttributes(order, i, [option]);
 end intrinsic;
+
 
 
 intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEnum[MonStgElt] : resume := 1)
@@ -255,8 +256,6 @@ intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEn
 		UpdateLog(message);
 	end for;
 end intrinsic;
-
-
 
 
 
@@ -337,4 +336,17 @@ intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> Seq
 		print "No duplicates found";
 	end if;
 	return duplicates;
+end intrinsic;
+
+
+
+intrinsic AddGroupFusionSystem(F::FusionSystem)
+	{Given a group fusion system find it in the SmallFusionSystem library and add the FusionGroup}
+	require assigned F`grpsystem : "F is not a group fusion system";
+	pair := IdentifyFusionSystem(F);
+	G := F`grpsystem;
+	// Replace G by G/O_{p'}(G)
+	WriteFusionRecord(GetSmallFusionSystemFilePath(pair[1], pair[2]), F);
+	message := Sprintf("Added FusionGroup to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
+	UpdateLog(message);
 end intrinsic;

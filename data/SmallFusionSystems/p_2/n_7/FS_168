@@ -1,0 +1,76 @@
+intrinsic FusionRecordTemp() -> Rec 
+ {} 
+
+    FusionRecord := recformat<
+		p : RngIntElt,
+		S : Grp, 
+		S_order: RngIntElt,
+		S_name : MonStgElt,
+		S_small_group_id : Tup, 
+		EssentialData : SeqEnum,
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
+		>;
+
+	EssentialRecord := recformat< 
+		E : Grp, 
+		E_order : RngIntElt,
+		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
+		AutFE_name : MonStgElt,
+		AutFE_gens : SeqEnum
+		>; 
+
+  S :=PCGroup(\[ 7, -2, 2, 2, -2, 2, -2, 2, 141, 422, 1123, 570, 745, 136, 2804, 1971,
+718, 172 ]: ExponentLimit := 1)
+; 
+EssentialData := [];
+
+E := sub<S| { S.1, S.2, S.3, S.5, S.4, S.7, S.6 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.1, S.2, S.3, S.5, S.4, S.7, S.6 }>, 
+E_order := 128, 
+E_name := "C2.D4:D4", 
+AutFE_order := 96, 
+AutFE_gens := [
+[ <E.1, E.1>, <E.2, E.2 * E.4>, <E.3, E.3 * E.5>, <E.4, E.4 * E.6>, <E.5, E.5 * E.7>, <E.6, E.6>, <E.7, E.7> ],
+[ <E.1, E.1>, <E.2, E.3>, <E.3, E.2 * E.3>, <E.4, E.5>, <E.5, E.4 * E.5 * E.6 * E.7>, <E.6, E.7>, <E.7, E.6 * E.7> ],
+[ <E.1, E.1 * E.6>, <E.2, E.2 * E.6>, <E.3, E.3 * E.6 * E.7>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6>, <E.7, E.7> ],
+[ <E.1, E.1 * E.5 * E.7>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4 * E.6 * E.7>, <E.5, E.5 * E.7>, <E.6, E.6>, <E.7, E.7> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6>, <E.7, E.7> ],
+[ <E.1, E.1 * E.7>, <E.2, E.2 * E.6 * E.7>, <E.3, E.3 * E.7>, <E.4, E.4>, <E.5, E.5>, <E.6, E.6>, <E.7, E.7> ],
+[ <E.1, E.1 * E.4 * E.6>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4 * E.6>, <E.5, E.5 * E.6 * E.7>, <E.6, E.6>, <E.7, E.7> ]
+], 
+AutFE_name := "C2^2wrC2:C3" 
+	>; 
+Append(~EssentialData, ER); 
+
+E := sub<S| { S.2, S.3, S.5, S.4, S.7, S.6 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.2, S.3, S.5, S.4, S.7, S.6 }>, 
+E_order := 64, 
+E_name := "C2^2wrC2:C2", 
+AutFE_order := 288, 
+AutFE_gens := [
+[ <E.1, E.1 * E.3>, <E.2, E.2 * E.4>, <E.3, E.3 * E.5>, <E.4, E.4 * E.6>, <E.5, E.5>, <E.6, E.6> ],
+[ <E.1, E.1 * E.6>, <E.2, E.2 * E.5>, <E.3, E.3 * E.6>, <E.4, E.4 * E.5>, <E.5, E.5>, <E.6, E.6> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.6>, <E.4, E.4 * E.5>, <E.5, E.5>, <E.6, E.6> ],
+[ <E.1, E.1 * E.2 * E.6>, <E.2, E.1 * E.5>, <E.3, E.1 * E.4 * E.5 * E.6>, <E.4, E.2 * E.3 * E.4 * E.5>, <E.5, E.5>, <E.6, E.6> ],
+[ <E.1, E.1 * E.2>, <E.2, E.1>, <E.3, E.2 * E.3 * E.6>, <E.4, E.1 * E.2 * E.4 * E.5>, <E.5, E.6>, <E.6, E.5 * E.6> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.5>, <E.4, E.4 * E.5 * E.6>, <E.5, E.5>, <E.6, E.6> ],
+[ <E.1, E.1 * E.5>, <E.2, E.2 * E.5 * E.6>, <E.3, E.3 * E.5>, <E.4, E.4 * E.5 * E.6>, <E.5, E.5>, <E.6, E.6> ]
+], 
+AutFE_name := "A4wrC2" 
+	>; 
+Append(~EssentialData, ER); 
+R := rec< FusionRecord |
+p := 2,
+S := S, 
+S_order := 128,
+S_name := "C2.D4:D4",
+S_small_group_id := <128, 387>,
+EssentialData := EssentialData>;
+return R; 
+end intrinsic;

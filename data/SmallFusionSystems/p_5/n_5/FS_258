@@ -1,0 +1,87 @@
+intrinsic FusionRecordTemp() -> Rec 
+ {} 
+
+    FusionRecord := recformat<
+		p : RngIntElt,
+		S : Grp, 
+		S_order: RngIntElt,
+		S_name : MonStgElt,
+		S_small_group_id : Tup, 
+		EssentialData : SeqEnum,
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
+		>;
+
+	EssentialRecord := recformat< 
+		E : Grp, 
+		E_order : RngIntElt,
+		E_name : MonStgElt,
+		AutFE_order : RngIntElt,
+		AutFE_name : MonStgElt,
+		AutFE_gens : SeqEnum
+		>; 
+
+  S :=PCGroup(\[ 5, -5, 5, 5, -5, -5, 457, 1613 ]: ExponentLimit := 1)
+; 
+EssentialData := [];
+
+E := sub<S| { S.1, S.3, S.4, S.2, S.5 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.1, S.3, S.4, S.2, S.5 }>, 
+E_order := 3125, 
+E_name := "C5*He5.C5", 
+AutFE_order := 1000, 
+AutFE_gens := [
+[ <E.1, E.1>, <E.2, E.2^4>, <E.3, E.3 * E.4^3>, <E.4, E.4^4>, <E.5, E.5^4> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.4>, <E.4, E.4>, <E.5, E.5> ],
+[ <E.1, E.1>, <E.2, E.2 * E.4^4>, <E.3, E.3 * E.5^3>, <E.4, E.4 * E.5^3>, <E.5, E.5> ],
+[ <E.1, E.1>, <E.2, E.2^2>, <E.3, E.3^2 * E.4^2 * E.5^3>, <E.4, E.4^4 * E.5>, <E.5, E.5^3> ],
+[ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.5^2>, <E.4, E.4>, <E.5, E.5> ],
+[ <E.1, E.1>, <E.2, E.2^4>, <E.3, E.3^4 * E.4^2 * E.5^4>, <E.4, E.4 * E.5^2>, <E.5, E.5^4> ]
+], 
+AutFE_name := "He5:(C2*C4)" 
+	>; 
+Append(~EssentialData, ER); 
+
+E := sub<S| { S.1, S.2 * S.3 * S.4^4 * S.5^4, S.5 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.1, S.2 * S.3 * S.4^4 * S.5^4, S.5 }>, 
+E_order := 125, 
+E_name := "C5^3", 
+AutFE_order := 120, 
+AutFE_gens := [
+[ <E.1, E.1>, <E.2, E.2^4 * E.3^2>, <E.3, E.2 * E.3^2> ],
+[ <E.1, E.1>, <E.2, E.2^4>, <E.3, E.3^4> ],
+[ <E.1, E.1>, <E.2, E.2 * E.3^2>, <E.3, E.2^4 * E.3^4> ]
+], 
+AutFE_name := "SL(2,5)" 
+	>; 
+Append(~EssentialData, ER); 
+
+E := sub<S| { S.1, S.3 * S.4^4, S.5 }>; 
+ER := rec< EssentialRecord |
+E := sub<S| { S.1, S.3 * S.4^4, S.5 }>, 
+E_order := 125, 
+E_name := "C5^3", 
+AutFE_order := 240, 
+AutFE_gens := [
+[ <E.1, E.1>, <E.2, E.2^4>, <E.3, E.3^4> ],
+[ <E.1, E.1>, <E.2, E.3>, <E.3, E.2^4> ],
+[ <E.1, E.1>, <E.2, E.3^2>, <E.3, E.2^3 * E.3^3> ],
+[ <E.1, E.1>, <E.2, E.2^2>, <E.3, E.3^2> ]
+], 
+AutFE_name := "C4.A5" 
+	>; 
+Append(~EssentialData, ER); 
+R := rec< FusionRecord |
+p := 5,
+S := S, 
+S_order := 3125,
+S_name := "C5*He5.C5",
+S_small_group_id := <3125, 61>,
+EssentialData := EssentialData>;
+return R; 
+end intrinsic;

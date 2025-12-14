@@ -2,20 +2,21 @@
 // and generally work directly with the record files
 
 
-// Given S and a subgroup of S return the string sub<S | gens >;
 function GetOptionalArgs()
 	optional := [
     		"Core",
     		"OpTriv",
     		"pPerfect",
-    		"FocalSubgroup"
+    		"FocalSubgroup",
+    		"FusionGroup",
+    		"FusionGroup_name"
     	];
 	return optional;
 end function;
 
 
 
-
+// Given S and a subgroup of S return the string sub<S | gens >;
 function SubgroupToString(S,T)
 	rel := {S!w:w in PCGenerators(T)};
 	return(Sprintf("sub<S | %o>", rel));
@@ -36,7 +37,9 @@ function FusionToRecord(FS)
 		Core: Grp, 
 		OpTriv : BoolElt,
 		pPerfect: BoolElt,
-		FocalSubgroup : Grp
+		FocalSubgroup : Grp,
+		FusionGroup_name : MonStgElt,
+		FusionGroup : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -91,6 +94,10 @@ function FusionToRecord(FS)
     // Now check any additional info
     optional := GetOptionalArgs();
     for x in optional do  
+    	// We deal with this outside this loop
+    	if x eq "FusionGroup_name" or x eq "FusionGroup" then 
+    		continue;
+    	end if;
     	if assigned FS``x then
     		// If FS``x is supposed to store a subgroup of S then get the PC presentation
     		if ISA(Type(FS``x), Grp) then
@@ -99,6 +106,11 @@ function FusionToRecord(FS)
     		R``x := FS``x;
     	end if;
     end for;
+    // For backwards compatability check for both and separate from other optionals
+    if assigned FS`grpsystem or assigned FS`FusionGroup then
+    	R`FusionGroup := FS`grpsystem;
+    	R`FusionGroup_name := GroupName(R`FusionGroup);
+    end if;
     return R;
 end function;
 
@@ -128,7 +140,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		Core: Grp, 
 		OpTriv : BoolElt,
 		pPerfect: BoolElt,
-		FocalSubgroup : Grp
+		FocalSubgroup : Grp,
+		FusionGroup_name : MonStgElt,
+		FusionGroup : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -193,7 +207,20 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	info := AssociativeArray(options);
     	for i in options do
     		if ISA(Type(R``i), Grp) then
-    			info[i] := SubgroupToString(S,R``i);
+    			// If subgroup of S then we save it as a subgroup construction
+    			if ISA(Type(R``i), GrpPC) and R``i subset S then 
+    				info[i] := SubgroupToString(S,R``i);
+    			// Otherwise it must be the FusionGroup and we save it how MAGMA likes			
+    			else
+    				// We want it as a string so create a temp file
+    				PrintFileMagma("temp_FusionGroup.m", R``i);
+    				info[i] := Read("temp_FusionGroup.m");
+    				System("rm temp_FusionGroup.m");
+    			end if;
+    		// If string then surround in quotes so is string when defined
+			elif ISA(Type(R``i), MonStgElt) then
+				info[i] := Sprintf("\"%o\"", R``i);
+    		// Otherwise straightforward saving	
     		else
     			info[i] := R``i;
     		end if;
@@ -244,7 +271,7 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	F := CreateFusionSystem(Autos);
 	optional := GetOptionalArgs();
 	for x in optional do 
-		if x in Names(R) and assigned R``x then 
+		if x in GetAttributes(FusionSystem) and assigned R``x then 
 			F``x := R``x;
 		end if;
 	end for;

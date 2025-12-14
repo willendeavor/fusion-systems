@@ -8,8 +8,10 @@ intrinsic FusionRecordTemp() -> Rec
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		OpTriv: Bool, 
-		pPerfect: Bool
+		Core: Grp, 
+		OpTriv : BoolElt,
+		pPerfect: BoolElt,
+		FocalSubgroup : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -48,9 +50,9 @@ E_name := "Q8:C2^2",
 AutFE_order := 96, 
 AutFE_gens := [
 [ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.2 * E.3>, <E.4, E.1 * E.4 * E.5>, <E.5, E.5> ],
+[ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
 [ <E.1, E.1>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4 * E.5>, <E.5, E.5> ],
 [ <E.1, E.1>, <E.2, E.2 * E.5>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
-[ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
 [ <E.1, E.1 * E.4 * E.5>, <E.2, E.2 * E.3 * E.5>, <E.3, E.2 * E.5>, <E.4, E.1>, <E.5, E.5> ],
 [ <E.1, E.1>, <E.2, E.2>, <E.3, E.3 * E.5>, <E.4, E.4>, <E.5, E.5> ]
 ], 
@@ -66,9 +68,9 @@ E_name := "C2^2wrC2",
 AutFE_order := 48, 
 AutFE_gens := [
 [ <E.1, E.1 * E.4 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
+[ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
 [ <E.1, E.1 * E.5>, <E.2, E.2 * E.3 * E.4 * E.5>, <E.3, E.3 * E.5>, <E.4, E.4 * E.5>, <E.5, E.5> ],
 [ <E.1, E.1>, <E.2, E.2 * E.4>, <E.3, E.3 * E.5>, <E.4, E.4>, <E.5, E.5> ],
-[ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
 [ <E.1, E.1 * E.4 * E.5>, <E.2, E.3 * E.4 * E.5>, <E.3, E.2 * E.3 * E.5>, <E.4, E.5>, <E.5, E.4 * E.5> ]
 ], 
 AutFE_name := "C2*S4" 
@@ -83,9 +85,9 @@ E_name := "C2^2wrC2",
 AutFE_order := 48, 
 AutFE_gens := [
 [ <E.1, E.1 * E.5>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
+[ <E.1, E.1>, <E.2, E.2 * E.4>, <E.3, E.3 * E.5>, <E.4, E.4>, <E.5, E.5> ],
 [ <E.1, E.1 * E.4>, <E.2, E.2>, <E.3, E.3>, <E.4, E.4>, <E.5, E.5> ],
 [ <E.1, E.1>, <E.2, E.2>, <E.3, E.2 * E.3>, <E.4, E.4>, <E.5, E.4 * E.5> ],
-[ <E.1, E.1>, <E.2, E.2 * E.4>, <E.3, E.3 * E.5>, <E.4, E.4>, <E.5, E.5> ],
 [ <E.1, E.1>, <E.2, E.3>, <E.3, E.2 * E.3>, <E.4, E.5>, <E.5, E.4 * E.5> ]
 ], 
 AutFE_name := "C2*S4" 
@@ -97,6 +99,10 @@ S := S,
 S_order := 64,
 S_name := "C2wrC2^2",
 S_small_group_id := <64, 138>,
-EssentialData := EssentialData>;
+EssentialData := EssentialData, 
+Core := sub<S | {}>, 
+OpTriv := true, 
+pPerfect := true, 
+FocalSubgroup := sub<S | { S.1 * S.6, S.2, S.5 * S.6, S.3 * S.4 * S.5 * S.6, S.4 * S.6, S.6 }> >; 
 return R; 
 end intrinsic;
