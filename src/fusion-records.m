@@ -269,10 +269,13 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 		Append(~Autos, A);
 	end for;
 	F := CreateFusionSystem(Autos);
+	// If we can assign the optionals then do so
 	optional := GetOptionalArgs();
 	for x in optional do 
-		if x in GetAttributes(FusionSystem) and assigned R``x then 
-			F``x := R``x;
+		if x in GetAttributes(FusionSystem) and x in Names(R) then
+			if assigned R``x then
+				F``x := R``x;
+			end if; 
 		end if;
 	end for;
 	return F;
