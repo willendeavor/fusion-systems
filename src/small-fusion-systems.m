@@ -340,13 +340,25 @@ end intrinsic;
 
 
 
-intrinsic AddGroupFusionSystem(F::FusionSystem)
+intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 	{Given a group fusion system find it in the SmallFusionSystem library and add the FusionGroup}
 	require assigned F`grpsystem : "F is not a group fusion system";
 	pair := IdentifyFusionSystem(F);
 	G := F`grpsystem;
 	// Replace G by G/O_{p'}(G)
-	WriteFusionRecord(GetSmallFusionSystemFilePath(pair[1], pair[2]), F);
-	message := Sprintf("Added FusionGroup to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
-	UpdateLog(message);
+	if pair eq <0,0> then
+		message := Sprintf("Adding group fusion system of %o", GroupName(G));
+		UpdateLog(message);
+		AddSmallFusionSystem(F);
+	else
+		R := SmallFusionSystemRecord(pair[1], pair[2]);
+		if (assigned R`FusionGroup and overwrite eq true) or not assigned R`FusionGroup then
+			WriteFusionRecord(GetSmallFusionSystemFilePath(pair[1], pair[2]), F);
+			message := Sprintf("Added FusionGroup to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
+			UpdateLog(message);
+		else
+			printf "SmallFusionSystem(%o, %o) already has group %o attached", pair[1], pair[2], R`FusionGroup_name;
+		end if;
+	end if;
+	
 end intrinsic;
