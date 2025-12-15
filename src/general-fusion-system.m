@@ -67,19 +67,27 @@ end intrinsic;
 
 intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
     a, theta := IsIsomorphic(F1`borel,F2`borel);
-    if a eq false then return false; end if; 
+    if a eq false then 
+        return false; 
+    end if; 
     p:= F1`prime;
     bounds:=[8,6,6,6];
     primes:=[2,3,4,4];
 
-    if p in primes and #F1`group le p^bounds[Index(primes,p)]  then
-    RO1:=[IdentifyGroup( x):x in F1`essentials];
-    RO2:=[IdentifyGroup(x):x in F2`essentials];
-    else
-    RO1:=[#x:x in F1`essentials];
-    RO2:=[#x:x in F2`essentials];
+    if not #F1`essentials eq #F2`essentials then
+        return false;
     end if; 
-    if  RO1 ne RO2 then   return false; end if; 
+    // Checked the same number of essentials so duplicates don't matter
+    if p in primes and #F1`group le p^bounds[Index(primes,p)]  then
+        RO1:={IdentifyGroup(x):x in F1`essentials};
+        RO2:={IdentifyGroup(x):x in F2`essentials};
+    else
+        RO1:={#x:x in F1`essentials};
+        RO2:={#x:x in F2`essentials};
+    end if; 
+    if RO1 ne RO2 then  
+        return false; 
+    end if; 
 
      
 
@@ -128,9 +136,8 @@ intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
         end for;
         
     ImAutEssentials[zz]:=ImAutEssentialsCalc;
-     
-    end for;
     MakeAllSubgroups(F2);
+    end for;
     for XXct in [1..#ImEssentials] do XX:=ImEssentials[XXct];
         for ii in [1..#XX] do e:= XX[ii]; if e in F2`subgroups then continue; end if;
                 jj:= IdentifyBClass(F2,e);
