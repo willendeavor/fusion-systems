@@ -26,6 +26,9 @@ This file contains commands for accessing specifically the SmallFusionSystem dat
 
 ---
 
+### Storing Fusion Systems
+A basic overview of how the fusion systems are stored is that each FS_i file contains an intrinsic that is attached when loaded. This intrinsic does not return a fusion system but rather a record of the format `FusionRecord` (details included in [fusion-records](https://github.com/willendeavor/fusion-systems/blob/main/docs/fusion-records.md)). This format is determined by a function when saving a new fusion record but for backwards compatibility each intrinsic actually contains the definition of the FusionRecord as of when the file was created. Therefore even if the format has since between updated and extended there is no issues with loading fusion systems saved using an older version of code.
+
 ### Intrinsics
 
 ### Loading
