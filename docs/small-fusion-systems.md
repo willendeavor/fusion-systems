@@ -28,6 +28,8 @@ This file contains commands for accessing specifically the SmallFusionSystem dat
 
 ### Intrinsics
 
+### Loading
+
 #### SmallFusionSystem
 
 `SmallFusionSystem(S_order::RngIntElt, i::RngIntElt) -> FusionSystem`  
@@ -52,6 +54,8 @@ Determines whether `F` matches one of the known small fusion systems (via isomor
 Returns `<|S|, index>` or `<0,0>` if not in the database.
 
 ---
+
+### Adding
 
 #### AddSmallFusionSystem
 
@@ -86,6 +90,24 @@ Returns all small fusion systems over groups of order `S_order`.
 
 ---
 
+#### AddAllFusionSystems (order version)
+
+`AddAllFusionSystems(order::RngIntElt: resume := 1)`  
+
+Adds all small fusion systems (including those without trivial core or p-perfect) over groups of order `order` to the library by using `AllFusionSystems`. The options resume can be used to start adding groups from SmallGroups(order, i) upwards.
+
+---
+
+#### AddAllFusionSystems (group version)
+
+`AddAllFusionSystems(S::Grp)`  
+
+Adds all small fusion systems (including those without trivial core or p-perfect) over the group `S` to the library by using `AllFusionSystems`.
+
+---
+
+### Accessing information
+
 #### NumberSmallFusionSystems (order version)
 
 `NumberSmallFusionSystems(S_order::RngIntElt) -> RngIntElt`  
@@ -102,11 +124,43 @@ Returns the count and list of indices of fusion systems whose Sylow p-subgroup i
 
 ---
 
+### Updating and Verification
+
 #### UpdateSmallFusionSystems
 
-`UpdateSmallFusionSystems()`
+`UpdateSmallFusionSystems(S_order::RngIntElt)`
 
-Calls `UpdateFusionRecord` on every fusion system in the SmallFusionSystems database.
+Calls `UpdateFusionRecord` on every small fusion system over a group of the given order
+
+---
+
+#### UpdateAllSmallFusionSystems
+
+`UpdateAllSmallFusionSystems()`
+
+Calls `UpdateFusionRecord` on every fusion system in the SmallFusionSystems database so changes made to the fusion record format can be reflected on every file.
+
+#### UpdateSmallFusionSystemAttributes
+
+`UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt])`
+
+Updates the given options from the small fusion systems record, options should be a sublist of ["Core", "OpTriv", "FocalSubgroup", "pPerfect"]
+
+---
+
+#### UpdateSmallFusionSystemAttribute
+
+`UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt)`
+
+Updates the given option from the small fusion systems record i.e. option is one of ["Core", "OpTriv", "FocalSubgroup", "pPerfect"]
+
+---
+
+#### UpdateAllSmallFusionSystemsAttributes
+
+`UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEnum[MonStgElt] : resume := 1)`
+
+Calls UpdateSmallFusionSystemAttributes on every small fusion system over a group of the given order
 
 ---
 
@@ -115,3 +169,20 @@ Calls `UpdateFusionRecord` on every fusion system in the SmallFusionSystems data
 `VerifyAllSmallFusionSystemRecords()`
 
 Checks that every file in the SmallFusionSystems database successfully returns a fusion system.
+
+
+#### CheckDuplicatesSmallFusionSystem
+
+`CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> SeqEnum`
+
+Checks if there are duplicate isomorphic fusion systems over groups of the given order, resume allows you to start checking from SmallFusionSystem(order, i). Returns a list of duplicates if there are any.
+
+
+#### AddGroupFusionSysten
+
+`AddGroupFusionSystem(F::FusionSystem : overwrite := false)`
+
+Given a group fusion system checks if it is in the database already and if so add the group to a fusion systems record. Otherwise add it to the database. If a fusion system already has a group attached then does nothing unless overwrite is set to true.
+
+
+
