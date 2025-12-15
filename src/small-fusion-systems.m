@@ -229,7 +229,6 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	F := SmallFusionSystem(order, i);
 	if "Core" in options or "OpTriv" in options then 
 		F`OpTriv, F`Core := Core(F);
-		print F`OpTriv;
 	end if;
 	if "FocalSubgroup" in options or "pPerfect" in options then 
 		F`FocalSubgroup := FocalSubgroup(F);
@@ -279,26 +278,40 @@ intrinsic UpdateAllSmallFusionSystems()
 			end for;
 		end for;
 	end for;
+	UpdateLog("Updated all SmallFusionSystems");
 end intrinsic;
 
 
 
-intrinsic VerifyAllSmallFusionSystemRecords()
+intrinsic VerifyAllSmallFusionSystemRecords(resume::SeqEnum)
 	{Check that every fusion record at least returns a fusion system}
+	if resume eq [0] then
+		resume := [2,3,1];
+	end if;
 	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
 	p_list := Split(p_list, "\n");
+	p_list := [x : x in p_list | StringToInteger(Split(x, "_")[2]) ge resume[1]];
 	errors := [];
 	for p in p_list do 
 		path := Sprintf("data/SmallFusionSystems/%o", p);
 		n_list := Pipe("ls " cat path, "");
 		n_list := Split(n_list, "\n");
+		// If p is the resume value then we need only resumed n
+		if StringToInteger(Split(p, "_")[2]) eq resume[1] then
+			n_list := [x : x in n_list | StringToInteger(Split(x, "_")[2]) ge resume[2]];
+		end if;
 		for n in n_list do 
 			n_path := path cat Sprintf("/%o/", n);
 			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
 			// Get only file names with no extension
 			F_list := [x : x in F_list | #Split(x, ".") eq 1];
+			// If we are at (p,n) resume then get only those above resume
+			if StringToInteger(Split(p, "_")[2]) eq resume[1] and StringToInteger(Split(n, "_")[2]) eq resume[2] then
+				F_list := [x : x in F_list | StringToInteger(Split(x, "_")[2]) ge resume[3]];
+			end if;
 			for i in F_list do 
 				filename := n_path cat i;
+				print filename;
 				try 
 					F := LoadFusionSystem(filename);
 					printf "Verified %o \n", filename;

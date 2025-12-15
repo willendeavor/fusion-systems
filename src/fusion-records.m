@@ -19,7 +19,7 @@ end function;
 // Given S and a subgroup of S return the string sub<S | gens >;
 function SubgroupToString(S,T)
 	rel := {S!w:w in PCGenerators(T)};
-	return(Sprintf("sub<S | %o>", rel));
+	return Sprintf("sub<S | %o>", rel);
 end function;
 
 
@@ -85,7 +85,7 @@ function FusionToRecord(FS)
     // Add the minimum record information
     R := rec< FusionRecord |
         p                := p,
-        S   := S ,
+        S                := S,
         S_order          := S_order,
         S_name           := S_name,
         S_small_group_id := S_small_group_id,
@@ -108,7 +108,12 @@ function FusionToRecord(FS)
     end for;
     // For backwards compatability check for both and separate from other optionals
     if assigned FS`grpsystem or assigned FS`FusionGroup then
-    	R`FusionGroup := FS`grpsystem;
+    	if assigned FS`grpsystem then
+    		R`FusionGroup := FS`grpsystem;
+    	end if;
+    	if assigned FS`FusionGroup then 
+    		R`FusionGroup := FS`FusionGroup;
+    	end if;
     	R`FusionGroup_name := GroupName(R`FusionGroup);
     end if;
     return R;
@@ -168,12 +173,11 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	ER := R`EssentialData[i];
     	E := ER`E;
     	A := ER`AutFE_gens;
-    	rel := {S!w:w in PCGenerators(E)};
-    	// We have to define E outside of the record
+    	// We have to define E outside of the record otherwise we lost subgroup information
     	fprintf F, "\n";
-    	fprintf F, "E := sub<S| %o>; \n", rel;
+    	fprintf F, "E := %o; \n", SubgroupToString(S,E);
         fprintf F, "ER := rec< EssentialRecord |\n";
-   		fprintf F, "E := sub<S| %o>, \n", rel;
+   		fprintf F, "E := %o, \n", SubgroupToString(S,E);
    		fprintf F, "E_order := %o, \n", ER`E_order;
    		fprintf F, "E_name := \"%o\", \n", ER`E_name;
    		fprintf F, "AutFE_order := %o, \n", ER`AutFE_order;
@@ -182,6 +186,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
         fprintf F, "	>; \n";
         fprintf F, "Append(~EssentialData, ER); \n";
     end for;
+
+    
+   
 
     fprintf F, "R := rec< FusionRecord |\n";
     fprintf F, "p := %o,\n", R`p;
@@ -274,7 +281,12 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	for x in optional do 
 		if x in GetAttributes(FusionSystem) and x in Names(R) then
 			if assigned R``x then
-				F``x := R``x;
+				// If want a subgroup of S we need to transport it to the Borel group
+				if ISA(Type(R``x), Grp) and not x eq "FusionGroup" and R``x subset S then
+					F``x := F`borelmap(R``x);
+				else
+					F``x := R``x;
+				end if;
 			end if; 
 		end if;
 	end for;

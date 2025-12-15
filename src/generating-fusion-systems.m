@@ -248,7 +248,7 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
     S:= phiB(S1); 
     F`group:= S;    
     F`borel:= B;  
-
+    F`borelmap := phiB;
     F`essentialautos:= [];
     F`essentials:=[phiB(Group(Autos[i])):i in [1..#Autos]];
     for x in F`essentials do 
