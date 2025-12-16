@@ -345,6 +345,7 @@ intrinsic  GroupFusionSystem(G::Grp,S::Grp)->FusionSystem
     F:=CreateFusionSystem(EEAA);
      
     F`grpsystem:=G;
+    F`FusionGroup := G;
     F`saturated := true;
     return F;
 end intrinsic
