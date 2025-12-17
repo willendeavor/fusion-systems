@@ -79,17 +79,17 @@ Calls `AddSmallFusionSystem` on every fusion system in the given list.
 
 #### AllSmallFusionSystems (group version)
 
-`AllSmallFusionSystems(S::Grp) -> SeqEnum`  
+`AllSmallFusionSystems(S::Grp: almost_reduced := false) -> SeqEnum`  
 
-Returns all small fusion systems whose underlying group is isomorphic to `S`.
+Returns all small fusion systems whose underlying group is isomorphic to `S`. If `almost_reduced := true` then returns only those that satisfy $O_p(\mathcal{F}) = 1$ and $O^p(\mathcal{F}) = \mathcal{F}$.
 
 ---
 
 #### AllSmallFusionSystems (order version)
 
-`AllSmallFusionSystems(S_order::RngIntElt) -> SeqEnum`  
+`AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := false) -> SeqEnum`  
 
-Returns all small fusion systems over groups of order `S_order`.
+Returns all small fusion systems over groups of order `S_order`. If `almost_reduced := true` then returns only those that satisfy $O_p(\mathcal{F}) = 1$ and $O^p(\mathcal{F}) = \mathcal{F}$.
 
 ---
 
@@ -113,7 +113,7 @@ Adds all small fusion systems (including those without trivial core or p-perfect
 
 #### NumberSmallFusionSystems (order version)
 
-`NumberSmallFusionSystems(S_order::RngIntElt) -> RngIntElt`  
+`NumberSmallFusionSystems(S_order::RngIntElt : almost_reduced := false) -> RngIntElt`  
 
 Returns the number of fusion systems stored in the database on groups of order `S_order`.
 
@@ -121,7 +121,7 @@ Returns the number of fusion systems stored in the database on groups of order `
 
 #### NumberSmallFusionSystems (group version)
 
-`NumberSmallFusionSystems(S::Grp) -> RngIntElt, SeqEnum`  
+`NumberSmallFusionSystems(S::Grp : almost_reduced := false) -> RngIntElt, SeqEnum`  
 
 Returns the count and list of indices of fusion systems whose Sylow p-subgroup is isomorphic to `S`.
 
@@ -145,17 +145,17 @@ Calls `UpdateFusionRecord` on every fusion system in the SmallFusionSystems data
 
 #### UpdateSmallFusionSystemAttributes
 
-`UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt])`
+`UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt] : FusionGroup := false)`
 
-Updates the given options from the small fusion systems record, options should be a sublist of ["Core", "OpTriv", "FocalSubgroup", "pPerfect"]
+Updates the given options from the small fusion systems record, options should be a sublist of ["Core", "OpTriv", "FocalSubgroup", "pPerfect", "FusionGroup"], if "FusionGroup" is passed then FusionGroup should be passed with the group.
 
 ---
 
 #### UpdateSmallFusionSystemAttribute
 
-`UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt)`
+`UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : FusionGroup := false)`
 
-Updates the given option from the small fusion systems record i.e. option is one of ["Core", "OpTriv", "FocalSubgroup", "pPerfect"]
+Updates the given option from the small fusion systems record i.e. option is one of ["Core", "OpTriv", "FocalSubgroup", "pPerfect", "FusionGroup"], if "FusionGroup" is passed then FusionGroup should be passed with the group.
 
 ---
 
@@ -163,15 +163,15 @@ Updates the given option from the small fusion systems record i.e. option is one
 
 `UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEnum[MonStgElt] : resume := 1)`
 
-Calls UpdateSmallFusionSystemAttributes on every small fusion system over a group of the given order
+Calls UpdateSmallFusionSystemAttributes on every small fusion system over a group of the given order, note "FusionGroup" is not an option here.
 
 ---
 
 #### VerifyAllSmallFusionSystemRecords
 
-`VerifyAllSmallFusionSystemRecords()`
+`VerifyAllSmallFusionSystemRecords(resume::SeqEnum)`
 
-Checks that every file in the SmallFusionSystems database successfully returns a fusion system.
+Checks that every file in the SmallFusionSystems database successfully returns a fusion system. Resume should be a list [p,n,i] such that fusion systems from then on are verified.
 
 
 #### CheckDuplicatesSmallFusionSystem
