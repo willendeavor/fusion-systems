@@ -14,12 +14,41 @@ intrinsic SetSmallFusionSystemDirectory() -> MonStgElt
 	return GetCurrentDirectory();
 end intrinsic
 
+// Creates the name FS_pp_nn_i with i padded with 0s to width 5
+function GetSmallFusionSystemFileName(order, i)
+	p := Factorisation(order)[1][1];
+	n := Factorisation(order)[1][2];
+	padded := Sprint(i);
+	while #padded lt 5 do 
+		padded := "0" cat padded;
+	end while;
+	filename := Sprintf("FS_p%o_n%o_%o.m", p, n, padded);
+	return filename;
+end function;
 
+// Returns the full file path
 function GetSmallFusionSystemFilePath(order, i)
 	p := Factorisation(order)[1][1];
 	n := Factorisation(order)[1][2];
-	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
-	return filename;
+	filename := GetSmallFusionSystemFileName(order,i);
+	filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o/%o", p, n, filename);
+	return filepath;
+end function;
+
+function GetAllpn()
+	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
+	p_list := Split(p_list, "\n");
+	p_list := [Split(x, "_")[2] : x in p_list];
+	all_list := AssociativeArray(p_list);
+	for p in p_list do 
+		path := Sprintf("data/SmallFusionSystems/%o", p);
+		// n_list = ["n_3", "n_4", ....]
+		n_list := Pipe("ls " cat path, "");
+		n_list := Split(n_list, "\n");
+		n_list := [Split(x, "_")[2] : x in n_list];
+		all_list[p] := all_list;
+	end for;
+	return all_list;
 end function;
 
 
@@ -83,7 +112,8 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 		n := FactoredOrder(S)[1][2];
 		filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
 		System(Sprintf("mkdir -p %o", filepath));
-		filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
+		// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
+		filename := GetSmallFusionSystemFilePath(p^n, NumberSmallFusionSystems(#S) + 1);
 		WriteFusionRecord(filename, F);
 		print "Successfully added new fusion system \n";
 		UpdateLog(Sprintf(
@@ -100,19 +130,22 @@ intrinsic AddSmallFusionSystems(FS::SeqEnum)
 end intrinsic;
 
 
-intrinsic AllSmallFusionSystems(S::Grp) -> SeqEnum
+intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := false) -> SeqEnum
 	{Given a group S return all small fusion systems over S}
-	m, indices := NumberSmallFusionSystems(S);
-	FS := [LoadFusionSystem(SmallFusionSystemRecord(#S, i)) : i in indices ];
+	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
+	FS := [LoadFusionSystem(SmallFusionSystemRecord(#S, i)) : i in indices];
 	return(FS);
 end intrinsic;
 
 
-intrinsic AllSmallFusionSystems(S_order::RngIntElt) -> SeqEnum
+intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := false) -> SeqEnum
 	{Return all small fusion systems on a p-group of S_order}
-	FS := [SmallFusionSystem(S_order,i) : i in [1..NumberSmallFusionSystems(S_order)]];
+	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystem(S_order,i) : i in indices];
 	return(FS);
 end intrinsic;
+
+
 
 intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 	{Given a group fusion system find it in the SmallFusionSystem library and add the FusionGroup}
@@ -127,7 +160,7 @@ intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 	else
 		R := SmallFusionSystemRecord(pair[1], pair[2]);
 		if (assigned R`FusionGroup and overwrite eq true) or not assigned R`FusionGroup then
-			WriteFusionRecord(GetSmallFusionSystemFilePath(pair[1], pair[2]), F);
+			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["FusionGroup"] : FusionGroup := G);
 			message := Sprintf("Added FusionGroup to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
 			UpdateLog(message);
 		else
@@ -173,8 +206,8 @@ end intrinsic;
 
 
 
-intrinsic NumberSmallFusionSystems(S_order::RngIntElt) -> RngIntElt
-	{Returns the number of small fusion systems over a group of order S_order}
+intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := false) -> RngIntElt, SeqEnum
+	{Returns the number of small fusion systems over a group of order S_order and a list of their indices}
 	p := Factorisation(S_order)[1][1];
 	n := Factorisation(S_order)[1][2];
 	path := Sprintf(" data/SmallFusionSystems/p_%o/n_%o/", p, n);
@@ -184,19 +217,30 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt) -> RngIntElt
 		return 0;
 	end try;
     filelist := Split(files, "\n");
-    count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and #Split(s, ".") eq 1];
-    return(count);
+    count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and Split(s, ".")[2] eq "m"];
+    if almost_reduced then
+    	indices := [];
+    	for i in [1..count] do  
+    		R := SmallFusionSystemRecord(S_order, i);
+    		if R`OpTriv eq true and R`pPerfect eq true then 
+    			Append(~indices, i);
+    		end if;
+    	end for;
+    	return #indices, indices;
+    end if;
+
+    return count, [1..count];
 end intrinsic;
 
 
 
-intrinsic NumberSmallFusionSystems(S::Grp) -> RngIntElt, SeqEnum
+intrinsic NumberSmallFusionSystems(S::Grp: almost_reduced := false) -> RngIntElt, SeqEnum
 	{Returns the number of small fusion systems over S and the indices of them}
 	p := FactoredOrder(S)[1][1];
 	n := FactoredOrder(S)[1][2];
 	indices := [];
-	m := NumberSmallFusionSystems(#S);
-	for i in [1..m] do 
+	m, all_indices := NumberSmallFusionSystems(#S: almost_reduced := almost_reduced);
+	for i in all_indices do 
 		R := SmallFusionSystemRecord(#S, i);
 		if IsIsomorphic(S, R`S) then 
 			Append(~indices, i);
@@ -207,11 +251,11 @@ end intrinsic;
 
 
 
-intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt) -> SeqEnum
+intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := false) -> SeqEnum
 	{Given S_order return a list of all groups which have a small fusion system}
 	grps := [];
-	m := NumberSmallFusionSystems(S_order);
-	for i in [1..m] do 
+	m, indices := NumberSmallFusionSystems(S_order: almost_reduced := almost_reduced);
+	for i in indices do 
 		R := SmallFusionSystemRecord(S_order,i);
 		S := R`S;
 		if forall{not IsIsomorphic(S,T) : T in grps} then
@@ -235,8 +279,8 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 	n := Factorisation(S_order)[1][2];
 	path := Sprintf("data/SmallFusionSystems/p_%o/n_%o/", p, n);
 	F_list := Split(Pipe("ls " cat path, ""), "\n");
-	// Get only file names with no extension
-	F_list := [x : x in F_list | #Split(x, ".") eq 1];
+	// Get only file names with correct extension
+	F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
 	for i in F_list do 
 		filename := path cat i;
 		UpdateFusionRecord(filename);
@@ -247,7 +291,7 @@ end intrinsic;
 
 
 
-intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt])
+intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt]: FusionGroup := false)
 	{Updates a given attribute e.g. Core in a fusion systems record}
 	F := SmallFusionSystem(order, i);
 	if "Core" in options or "OpTriv" in options then 
@@ -257,14 +301,19 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		F`FocalSubgroup := FocalSubgroup(F);
 		F`pPerfect := F`FocalSubgroup eq F`group;
 	end if;
+	if "FusionGroup" in options and ISA(Type(FusionGroup), Grp) then
+		F`FusionGroup := FusionGroup;
+	end if;
 	WriteFusionRecord(GetSmallFusionSystemFilePath(order, i), F);
+	message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
+	UpdateLog(message);
 end intrinsic;
 
 
 
-intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt)
+intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : FusionGroup := false)
 	{Updates a given attribute e.g. Core in a fusion systems record, single argument version}
-	UpdateSmallFusionSystemAttributes(order, i, [option]);
+	UpdateSmallFusionSystemAttributes(order, i, [option] : FusionGroup := FusionGroup);
 end intrinsic;
 
 
@@ -292,8 +341,8 @@ intrinsic UpdateAllSmallFusionSystems()
 		for n in n_list do 
 			n_path := path cat Sprintf("/%o/", n);
 			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
-			// Get only file names with no extension
-			F_list := [x : x in F_list | #Split(x, ".") eq 1];
+			// Get only file names with correct extension
+			F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
 			for i in F_list do 
 				filename := n_path cat i;
 				UpdateFusionRecord(filename);
@@ -378,20 +427,39 @@ end intrinsic;
 
 
 
+/*
+intrinsic MaintainSmallFusionSystems()
+	{Performs some maintenance tasks and status tasks}
+	all_list := GetAllpn();
+	for p in Keys(all_list) do  
+		n_list := all_list[p];
+		for n in n_list do 
+			m := NumberSmallFusionSystems(p^n);
+
+	end for;
+end intrinsic;
+*/
 
 
-function UpdateIndexMigrationYAML(dir, mapping)
+
+
+
+
+
+
+
+procedure UpdateIndexMigrationYAML(dir, mapping, order)
 	date := Trim(Pipe("date '+%Y-%m-%d %H:%M:%S'", ""));
 	filename := dir cat "/index_migration.yaml";
 	F := Open(filename, "a");
 	fprintf F, "  - migration_id: %o \n", date;
 	fprintf F, "    mapping:\n";
 	for k in Keys(mapping) do 
-		fprintf F, "      FS_%o : FS_%o \n", k, mapping[k];
+		fprintf F, "      FS_%o : FS_%o \n", GetSmallFusionSystemFileName(order,k), GetSmallFusionSystemFileName(order,mapping[k]);
 	end for;
 	fprintf F, "\n";
 	delete F;
-end function;
+end procedure;
 
 
 
@@ -421,7 +489,7 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 			F := SmallFusionSystem(p^n, class[i]);
 			k := start_index + i - 1;
 			mapping[class[i]] := k;
-			file := new_dir cat Sprintf("/FS_%o", k);
+			file := new_dir cat "/" cat GetSmallFusionSystemFileName(order,k);
 			WriteFusionRecord(file, F);
 			print k;
 		end for;
@@ -429,7 +497,7 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 	end for;
 
 	// Now update the YAML file
-	UpdateIndexMigrationYAML(new_dir, mapping);
+	UpdateIndexMigrationYAML(new_dir, mapping, order);
 	UpdateLog("Migrated indices following isomorphism classes");
 end intrinsic;
 
