@@ -35,6 +35,22 @@ function GetSmallFusionSystemFilePath(order, i)
 	return filepath;
 end function;
 
+function GetAllpn()
+	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
+	p_list := Split(p_list, "\n");
+	p_list := [Split(x, "_")[2] : x in p_list];
+	all_list := AssociativeArray(p_list);
+	for p in p_list do 
+		path := Sprintf("data/SmallFusionSystems/%o", p);
+		// n_list = ["n_3", "n_4", ....]
+		n_list := Pipe("ls " cat path, "");
+		n_list := Split(n_list, "\n");
+		n_list := [Split(x, "_")[2] : x in n_list];
+		all_list[p] := all_list;
+	end for;
+	return all_list;
+end function;
+
 
 
 //////////////////////// Loading SmallFusionSystems /////////////////////////////////
@@ -408,6 +424,25 @@ intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> Seq
 	end if;
 	return duplicates;
 end intrinsic;
+
+
+
+/*
+intrinsic MaintainSmallFusionSystems()
+	{Performs some maintenance tasks and status tasks}
+	all_list := GetAllpn();
+	for p in Keys(all_list) do  
+		n_list := all_list[p];
+		for n in n_list do 
+			m := NumberSmallFusionSystems(p^n);
+
+	end for;
+end intrinsic;
+*/
+
+
+
+
 
 
 
