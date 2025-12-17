@@ -114,16 +114,39 @@ intrinsic AllSmallFusionSystems(S_order::RngIntElt) -> SeqEnum
 	return(FS);
 end intrinsic;
 
+intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
+	{Given a group fusion system find it in the SmallFusionSystem library and add the FusionGroup}
+	require assigned F`grpsystem : "F is not a group fusion system";
+	pair := IdentifyFusionSystem(F);
+	G := F`grpsystem;
+	// Replace G by G/O_{p'}(G)
+	if pair eq <0,0> then
+		message := Sprintf("Adding group fusion system of %o", GroupName(G));
+		UpdateLog(message);
+		AddSmallFusionSystem(F);
+	else
+		R := SmallFusionSystemRecord(pair[1], pair[2]);
+		if (assigned R`FusionGroup and overwrite eq true) or not assigned R`FusionGroup then
+			WriteFusionRecord(GetSmallFusionSystemFilePath(pair[1], pair[2]), F);
+			message := Sprintf("Added FusionGroup to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
+			UpdateLog(message);
+		else
+			printf "SmallFusionSystem(%o, %o) already has group %o attached", pair[1], pair[2], R`FusionGroup_name;
+		end if;
+	end if;
+	
+end intrinsic;
 
 
-intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1)
+
+intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := false, pPerfect := false)
     {Add all fusion systems over a group of given order}
     UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
     for i in [resume..NumberOfSmallGroups(order)] do
         m := Sprintf("Starting adding all fusion systems over SmallGroup(%o, %o)", order, i);
         UpdateLog(m);
         print m;
-        AddAllFusionSystems(SmallGroup(order,i));
+        AddAllFusionSystems(SmallGroup(order,i): OpTriv := OpTriv, pPerfect := pPerfect);
         m := Sprintf("Finished adding all fusion systems over SmallGroup(%o, %o)", order, i);
         UpdateLog(m);
         print m;
@@ -133,9 +156,9 @@ end intrinsic;
 
 
 
-intrinsic AddAllFusionSystems(S::Grp)
+intrinsic AddAllFusionSystems(S::Grp: OpTriv := false, pPerfect := false)
     {Adds all fusion systems possible to the SmallFusionSystems database}
-    FF := AllFusionSystems(S:OpTriv := false, pPerfect := false);
+    FF := AllFusionSystems(S:OpTriv := OpTriv, pPerfect := pPerfect);
     AddSmallFusionSystems(FF);
 end intrinsic;
 
@@ -297,7 +320,8 @@ intrinsic VerifyAllSmallFusionSystemRecords(resume::SeqEnum)
 		n_list := Pipe("ls " cat path, "");
 		n_list := Split(n_list, "\n");
 		// If p is the resume value then we need only resumed n
-		if StringToInteger(Split(p, "_")[2]) eq resume[1] then
+		p_int := StringToInteger(Split(p, "_")[2]);
+		if p_int eq resume[1] then
 			n_list := [x : x in n_list | StringToInteger(Split(x, "_")[2]) ge resume[2]];
 		end if;
 		for n in n_list do 
@@ -306,7 +330,8 @@ intrinsic VerifyAllSmallFusionSystemRecords(resume::SeqEnum)
 			// Get only file names with no extension
 			F_list := [x : x in F_list | #Split(x, ".") eq 1];
 			// If we are at (p,n) resume then get only those above resume
-			if StringToInteger(Split(p, "_")[2]) eq resume[1] and StringToInteger(Split(n, "_")[2]) eq resume[2] then
+			n_int := StringToInteger(Split(n, "_")[2]);
+			if p_int eq resume[1] and n_int eq resume[2] then
 				F_list := [x : x in F_list | StringToInteger(Split(x, "_")[2]) ge resume[3]];
 			end if;
 			for i in F_list do 
@@ -317,7 +342,7 @@ intrinsic VerifyAllSmallFusionSystemRecords(resume::SeqEnum)
 					printf "Verified %o \n", filename;
 				catch e
 					printf "Failed to load %o \n", filename;
-					Append(~errors);
+					Append(~errors, [p_int, n_int, StringToInteger(Split(i, "_")[2])]);
 				end try;
 			end for;
 		end for;
@@ -353,25 +378,62 @@ end intrinsic;
 
 
 
-intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
-	{Given a group fusion system find it in the SmallFusionSystem library and add the FusionGroup}
-	require assigned F`grpsystem : "F is not a group fusion system";
-	pair := IdentifyFusionSystem(F);
-	G := F`grpsystem;
-	// Replace G by G/O_{p'}(G)
-	if pair eq <0,0> then
-		message := Sprintf("Adding group fusion system of %o", GroupName(G));
-		UpdateLog(message);
-		AddSmallFusionSystem(F);
-	else
-		R := SmallFusionSystemRecord(pair[1], pair[2]);
-		if (assigned R`FusionGroup and overwrite eq true) or not assigned R`FusionGroup then
-			WriteFusionRecord(GetSmallFusionSystemFilePath(pair[1], pair[2]), F);
-			message := Sprintf("Added FusionGroup to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
-			UpdateLog(message);
-		else
-			printf "SmallFusionSystem(%o, %o) already has group %o attached", pair[1], pair[2], R`FusionGroup_name;
-		end if;
-	end if;
-	
+
+
+function UpdateIndexMigrationYAML(dir, mapping)
+	date := Trim(Pipe("date '+%Y-%m-%d %H:%M:%S'", ""));
+	filename := dir cat "/index_migration.yaml";
+	F := Open(filename, "a");
+	fprintf F, "  - migration_id: %o \n", date;
+	fprintf F, "    mapping:\n";
+	for k in Keys(mapping) do 
+		fprintf F, "      FS_%o : FS_%o \n", k, mapping[k];
+	end for;
+	fprintf F, "\n";
+	delete F;
+end function;
+
+
+
+intrinsic GroupByIsomorphismClass(order::RngIntElt)
+	{A procedure that rearranges the directories according to isomorphism classes of the underlying groups}
+	p := Factorisation(order)[1][1];
+	n := Factorisation(order)[1][2];
+	m := NumberSmallFusionSystems(p^n);
+	// Classes is the equivalence class of {1..m} under i ~ j iff FS_i`group ~ FS_j`group
+	classes := [];
+	temp := {1..m};
+	while not IsEmpty(temp) do 
+		S := SmallFusionSystemRecord(p^n, Minimum(temp))`S;
+		k, class := NumberSmallFusionSystems(S);
+		Append(~classes, class);
+		temp := temp diff Set(class);
+	end while;
+	print classes;
+	// Now we need to write all the files, we save them to a new directory rather than overwriting
+	new_dir := Sprintf("data/SmallFusionSystems/rearranged/p_%o/n_%o", p, n);
+	System(Sprintf("mkdir -p %o", new_dir));
+	start_index := 1;
+	// Mapping keeps track of which indices have been changed
+	mapping := AssociativeArray();
+	for class in classes do 
+		for i in [1..#class] do 
+			F := SmallFusionSystem(p^n, class[i]);
+			k := start_index + i - 1;
+			mapping[class[i]] := k;
+			file := new_dir cat Sprintf("/FS_%o", k);
+			WriteFusionRecord(file, F);
+			print k;
+		end for;
+		start_index := k + 1;
+	end for;
+
+	// Now update the YAML file
+	UpdateIndexMigrationYAML(new_dir, mapping);
+	UpdateLog("Migrated indices following isomorphism classes");
 end intrinsic;
+
+
+
+
+

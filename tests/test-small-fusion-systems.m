@@ -1,5 +1,6 @@
-// Test SmallFusionSystems package
+// Test SmallFusionSystems package. Use test_data if you want to test
 /*
+Test 1: Creating, identifying and saving
 Overview: Take a known small group fusion system, check that it is already in the database
 		  once we know it is in there delete it's file and re-add it. Reload it and check it
 		  is still isomorphic to the original
@@ -65,4 +66,50 @@ else
 	print "Fusion System was replaced";
 end if;
 
-print flag;
+printf "Test 1 result: %o \n", flag;
+
+
+
+
+/*
+Test 2: Verifying and updating
+Overview: Check that a corrupted file (2^3, 2) is found and adding all small fusion systems recovers it
+*/
+flag := true;
+VerifyAllSmallFusionSystemsRecords([0]);
+if errors eq [] then
+	flag := false;
+	print "Corrupted file was not found \n";
+elif [2,3,2] in errors then
+	print "Corrupted file found \n";
+	number := NumberSmallFusionSystems(8);
+	path := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", 2, 3, 2);
+	Pipe("rm " cat path, "");
+	Pipe("rm " cat path cat ".sig", "");
+	if not number-1 eq NumberSmallFusionSystems(8) then
+		flag := false;
+		print "File was not deleted";
+	else 
+		print "File deleted successfully";
+	end if;
+end if;
+
+
+// Fix the corrupted file, need to be careful about indexing
+FS := AllFusionSystems(2^3);
+for F in FS then
+	if IdentifyFusionSystem(F) eq <0,0> then
+		WriteFusionRecord(path, F);
+		print "Fixed corrupted fusion system \n";
+	end if;
+end for;
+
+// Check it is the original
+FF := LoadFusionSystem("data/SmallFusionSystems/FS_2_original");
+F := SmallFusionSystem(8,2);
+if not IsIsomorphic(F,FF) then
+	flag := false;
+	print "Test failed: recovered fusion system is not the same";
+end if;
+
+
