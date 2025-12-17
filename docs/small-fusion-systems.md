@@ -1,6 +1,6 @@
 ## Documentation: `small-fusion-systems.m`
 
-### Overview
+### Overview v.2.4.1
 
 This file contains commands for accessing specifically the SmallFusionSystem database, convert-to-database contains commands for generally saving a fusion system record and maintaining the database. The following table lists the orders that are currently available, whether they include fusion systems that do not have trivial core and are not perfect and whether all possible direct products that can be built from these fusion systems have been added (of course in theory for example all 2^3 x 2^3 should already be in the database), note as well that the core and focal subgroup are only really interesting to run once the non pPerfect and non OpTriv have been added.
 
