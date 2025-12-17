@@ -14,12 +14,25 @@ intrinsic SetSmallFusionSystemDirectory() -> MonStgElt
 	return GetCurrentDirectory();
 end intrinsic
 
+// Creates the name FS_pp_nn_i with i padded with 0s to width 5
+function GetSmallFusionSystemFileName(order, i)
+	p := Factorisation(order)[1][1];
+	n := Factorisation(order)[1][2];
+	padded := Sprint(i);
+	while #padded lt 5 do 
+		padded := "0" cat padded;
+	end while;
+	filename := Sprintf("FS_p%o_n%o_%o.m", p, n, padded);
+	return filename;
+end function;
 
+// Returns the full file path
 function GetSmallFusionSystemFilePath(order, i)
 	p := Factorisation(order)[1][1];
 	n := Factorisation(order)[1][2];
-	filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, i);
-	return filename;
+	filename := GetSmallFusionSystemFileName(order,i);
+	filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o/%o", p, n, filename);
+	return filepath;
 end function;
 
 
@@ -83,7 +96,8 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 		n := FactoredOrder(S)[1][2];
 		filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
 		System(Sprintf("mkdir -p %o", filepath));
-		filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
+		// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
+		filename := GetSmallFusionSystemFilePath(p^n, NumberSmallFusionSystems(#S) + 1);
 		WriteFusionRecord(filename, F);
 		print "Successfully added new fusion system \n";
 		UpdateLog(Sprintf(
@@ -184,7 +198,7 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt) -> RngIntElt
 		return 0;
 	end try;
     filelist := Split(files, "\n");
-    count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and #Split(s, ".") eq 1];
+    count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and Split(s, ".")[2] eq "m"];
     return(count);
 end intrinsic;
 
@@ -235,8 +249,8 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 	n := Factorisation(S_order)[1][2];
 	path := Sprintf("data/SmallFusionSystems/p_%o/n_%o/", p, n);
 	F_list := Split(Pipe("ls " cat path, ""), "\n");
-	// Get only file names with no extension
-	F_list := [x : x in F_list | #Split(x, ".") eq 1];
+	// Get only file names with correct extension
+	F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
 	for i in F_list do 
 		filename := path cat i;
 		UpdateFusionRecord(filename);
@@ -292,8 +306,8 @@ intrinsic UpdateAllSmallFusionSystems()
 		for n in n_list do 
 			n_path := path cat Sprintf("/%o/", n);
 			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
-			// Get only file names with no extension
-			F_list := [x : x in F_list | #Split(x, ".") eq 1];
+			// Get only file names with correct extension
+			F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
 			for i in F_list do 
 				filename := n_path cat i;
 				UpdateFusionRecord(filename);
@@ -380,18 +394,18 @@ end intrinsic;
 
 
 
-function UpdateIndexMigrationYAML(dir, mapping)
+procedure UpdateIndexMigrationYAML(dir, mapping, order)
 	date := Trim(Pipe("date '+%Y-%m-%d %H:%M:%S'", ""));
 	filename := dir cat "/index_migration.yaml";
 	F := Open(filename, "a");
 	fprintf F, "  - migration_id: %o \n", date;
 	fprintf F, "    mapping:\n";
 	for k in Keys(mapping) do 
-		fprintf F, "      FS_%o : FS_%o \n", k, mapping[k];
+		fprintf F, "      FS_%o : FS_%o \n", GetSmallFusionSystemFileName(order,k), GetSmallFusionSystemFileName(order,mapping[k]);
 	end for;
 	fprintf F, "\n";
 	delete F;
-end function;
+end procedure;
 
 
 
@@ -421,7 +435,7 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 			F := SmallFusionSystem(p^n, class[i]);
 			k := start_index + i - 1;
 			mapping[class[i]] := k;
-			file := new_dir cat Sprintf("/FS_%o", k);
+			file := new_dir cat "/" cat GetSmallFusionSystemFileName(order,k);
 			WriteFusionRecord(file, F);
 			print k;
 		end for;
@@ -429,7 +443,7 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 	end for;
 
 	// Now update the YAML file
-	UpdateIndexMigrationYAML(new_dir, mapping);
+	UpdateIndexMigrationYAML(new_dir, mapping, order);
 	UpdateLog("Migrated indices following isomorphism classes");
 end intrinsic;
 

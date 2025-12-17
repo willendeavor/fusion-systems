@@ -120,6 +120,13 @@ function FusionToRecord(FS)
 end function;
 
 
+function WriteFusionYAML(filename, R)
+	F := Open(filename cat ".yaml");
+end function;
+
+
+
+
 /* 
 A VERY VERY ugly intrinsic that creates a file which can be loaded.
 However MAGMA is very very awkward about loading files, ideally we would have 
@@ -359,7 +366,8 @@ end intrinsic;
 
 
 
-
+/* 
+A one time intrinsic that is no longer needed
 intrinsic ConvertDirectory(p::RngIntElt,n::RngIntElt)
 	{Converts a directory in database p_i n_j to the new format}
 	base_in := Sprintf("database/p_%o/n_%o", p,n);
@@ -388,6 +396,6 @@ intrinsic ConvertDirectory(p::RngIntElt,n::RngIntElt)
         WriteFusionRecord(outpath, FS);
     end for;
 end intrinsic;
-
+*/
 
 
