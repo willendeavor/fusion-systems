@@ -573,13 +573,14 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 	{A procedure that rearranges the directories according to isomorphism classes of the underlying groups}
 	p := Factorisation(order)[1][1];
 	n := Factorisation(order)[1][2];
-	m := NumberSmallFusionSystems(p^n);
+	m := NumberSmallFusionSystems(p^n: almost_reduced := false);
 	// Classes is the equivalence class of {1..m} under i ~ j iff FS_i`group ~ FS_j`group
 	classes := [];
 	temp := {1..m};
 	while not IsEmpty(temp) do 
+		print temp;
 		S := SmallFusionSystemRecord(p^n, Minimum(temp))`S;
-		k, class := NumberSmallFusionSystems(S);
+		k, class := NumberSmallFusionSystems(S: almost_reduced := false);
 		Append(~classes, class);
 		temp := temp diff Set(class);
 	end while;
@@ -602,6 +603,9 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 		start_index := k + 1;
 	end for;
 
+	if forall{mapping[i] eq i : i in [1..#mapping]} then
+		print "No changes made";
+	end if;
 	// Now update the YAML file
 	UpdateIndexMigrationYAML(new_dir, mapping, order);
 	UpdateLog("Migrated indices following isomorphism classes");
