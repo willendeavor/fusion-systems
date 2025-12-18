@@ -243,7 +243,8 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
         InvphiB := Inverse(thetaB)*Inverse(theta)*phi2;
     else
         B:= S1; 
-        B,phiB:= PCGroup(B); InvphiB := Inverse(phiB);
+        B,phiB:= PCGroup(B); 
+        InvphiB := Inverse(phiB);
     end if;
     S:= phiB(S1); 
     F`group:= S;    
@@ -258,7 +259,7 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
     for ix in [1..#Autos] do
         x:= F`essentials[ix];  
         XX:=sub<x`autogrp|[InvphiB*w*phiB:w in Generators(Autos[ix])]>; 
-        F`essentialautos:= Append(F`essentialautos,XX); 
+        Append(~F`essentialautos,XX); 
     end for;
     
     F`AutF:= AssociativeArray();
@@ -345,7 +346,7 @@ intrinsic  GroupFusionSystem(G::Grp,S::Grp)->FusionSystem
     F:=CreateFusionSystem(EEAA);
      
     F`grpsystem:=G;
-    F`FusionGroup := G;
+    F`fusion_group := G;
     F`saturated := true;
     return F;
 end intrinsic

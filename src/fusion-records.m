@@ -271,15 +271,18 @@ end intrinsic;
 intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	S := R`S;
+	PS := PowerGroup(S);
 	Autos := [];
 	for E_rec in R`EssentialData do 
-		E := E_rec`E;
+		E := PS!E_rec`E;
 		AE := AutomorphismGroup(E);
 		A := sub<AE | >;
+		gens := [];
 		for alpha in E_rec`AutFE_gens do
 			phi := AE!hom<E -> E | alpha>;
-			A := sub<AE | A, phi>;
+			Append(~gens, phi);
 		end for;
+		A := sub<AE | gens>;
 		Append(~Autos, A);
 	end for;
 	F := CreateFusionSystem(Autos);
