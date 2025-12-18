@@ -1,10 +1,21 @@
 // Implements a database similar to SmallGroups
 
+
+////////////////////// File path and log functions //////////////////////////////////////
+
 procedure UpdateLog(entry)
 	log_file := Open("data/update.log", "a");
 	date := Trim(Pipe("date '+%Y-%m-%d %H:%M:%S'", ""));
 	fprintf log_file, "\n %o: %o", date, entry;
 	delete log_file;
+end procedure;
+
+
+procedure ErrorLog(entry)
+	errors_log := Open("data/errors.log", "a");
+	date := Trim(Pipe("date '+%Y-%m-%d %H:%M:%S'", ""));
+	fprintf errors_log, "\n %o: %o", date, entry;
+	delete errors_log;
 end procedure;
 
 
@@ -41,12 +52,12 @@ function GetAllpn()
 	p_list := [Split(x, "_")[2] : x in p_list];
 	all_list := AssociativeArray(p_list);
 	for p in p_list do 
-		path := Sprintf("data/SmallFusionSystems/%o", p);
+		path := Sprintf("data/SmallFusionSystems/p_%o", p);
 		// n_list = ["n_3", "n_4", ....]
 		n_list := Pipe("ls " cat path, "");
 		n_list := Split(n_list, "\n");
 		n_list := [Split(x, "_")[2] : x in n_list];
-		all_list[p] := all_list;
+		all_list[p] := n_list;
 	end for;
 	return all_list;
 end function;
@@ -130,7 +141,7 @@ intrinsic AddSmallFusionSystems(FS::SeqEnum)
 end intrinsic;
 
 
-intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := false) -> SeqEnum
+intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := true) -> SeqEnum
 	{Given a group S return all small fusion systems over S}
 	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
 	FS := [LoadFusionSystem(SmallFusionSystemRecord(#S, i)) : i in indices];
@@ -138,7 +149,7 @@ intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := false) -> SeqEnum
 end intrinsic;
 
 
-intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := false) -> SeqEnum
+intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
 	{Return all small fusion systems on a p-group of S_order}
 	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
 	FS := [SmallFusionSystem(S_order,i) : i in indices];
@@ -172,7 +183,7 @@ end intrinsic;
 
 
 
-intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := false, pPerfect := false)
+intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPerfect := true)
     {Add all fusion systems over a group of given order}
     UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
     for i in [resume..NumberOfSmallGroups(order)] do
@@ -189,7 +200,7 @@ end intrinsic;
 
 
 
-intrinsic AddAllFusionSystems(S::Grp: OpTriv := false, pPerfect := false)
+intrinsic AddAllFusionSystems(S::Grp: OpTriv := true, pPerfect := true)
     {Adds all fusion systems possible to the SmallFusionSystems database}
     FF := AllFusionSystems(S:OpTriv := OpTriv, pPerfect := pPerfect);
     AddSmallFusionSystems(FF);
@@ -206,7 +217,7 @@ end intrinsic;
 
 
 
-intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := false) -> RngIntElt, SeqEnum
+intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> RngIntElt, SeqEnum
 	{Returns the number of small fusion systems over a group of order S_order and a list of their indices}
 	p := Factorisation(S_order)[1][1];
 	n := Factorisation(S_order)[1][2];
@@ -214,7 +225,7 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := false) 
 	try 
 		files := Pipe("ls" cat path, "");
 	catch e
-		return 0;
+		return 0, [];
 	end try;
     filelist := Split(files, "\n");
     count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and Split(s, ".")[2] eq "m"];
@@ -222,7 +233,7 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := false) 
     	indices := [];
     	for i in [1..count] do  
     		R := SmallFusionSystemRecord(S_order, i);
-    		if R`OpTriv eq true and R`pPerfect eq true then 
+    		if R`core_trivial eq true and R`pPerfect eq true then 
     			Append(~indices, i);
     		end if;
     	end for;
@@ -234,7 +245,7 @@ end intrinsic;
 
 
 
-intrinsic NumberSmallFusionSystems(S::Grp: almost_reduced := false) -> RngIntElt, SeqEnum
+intrinsic NumberSmallFusionSystems(S::Grp: almost_reduced := true) -> RngIntElt, SeqEnum
 	{Returns the number of small fusion systems over S and the indices of them}
 	p := FactoredOrder(S)[1][1];
 	n := FactoredOrder(S)[1][2];
@@ -251,7 +262,7 @@ end intrinsic;
 
 
 
-intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := false) -> SeqEnum
+intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
 	{Given S_order return a list of all groups which have a small fusion system}
 	grps := [];
 	m, indices := NumberSmallFusionSystems(S_order: almost_reduced := almost_reduced);
@@ -291,15 +302,31 @@ end intrinsic;
 
 
 
-intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt]: FusionGroup := false)
-	{Updates a given attribute e.g. Core in a fusion systems record}
-	F := SmallFusionSystem(order, i);
-	if "Core" in options or "OpTriv" in options then 
-		F`OpTriv, F`Core := Core(F);
+function NeedsUpdate(R, options, overwrite)
+	if overwrite then
+		return true;
+	else
+		return exists{x : x in options | not assigned R``x};
 	end if;
-	if "FocalSubgroup" in options or "pPerfect" in options then 
-		F`FocalSubgroup := FocalSubgroup(F);
-		F`pPerfect := F`FocalSubgroup eq F`group;
+end function;
+
+
+intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt]: FusionGroup := false, overwrite := false)
+	{Updates a given attribute e.g. core in a fusion systems record}
+	// Check first if we actually need to do anything
+	R := SmallFusionSystemRecord(order, i);
+	need_update := NeedsUpdate(R,options,overwrite);
+	if not need_update then
+		return;
+	end if;
+	// Else here comes the expensive calculations
+	F := SmallFusionSystem(order, i);
+	if "core" in options or "core_trivial" in options then 
+		F`core_trivial, F`core := Core(F);
+	end if;
+	if "focal_subgroup" in options or "pPerfect" in options then 
+		F`focal_subgroup := FocalSubgroup(F);
+		F`pPerfect := F`focal_subgroup eq F`group;
 	end if;
 	if "FusionGroup" in options and ISA(Type(FusionGroup), Grp) then
 		F`FusionGroup := FusionGroup;
@@ -311,18 +338,18 @@ end intrinsic;
 
 
 
-intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : FusionGroup := false)
-	{Updates a given attribute e.g. Core in a fusion systems record, single argument version}
-	UpdateSmallFusionSystemAttributes(order, i, [option] : FusionGroup := FusionGroup);
+intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : FusionGroup := false, overwrite := false)
+	{Updates a given attribute e.g. core in a fusion systems record, single argument version}
+	UpdateSmallFusionSystemAttributes(order, i, [option] : FusionGroup := FusionGroup, overwrite := overwrite);
 end intrinsic;
 
 
 
-intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEnum[MonStgElt] : resume := 1)
+intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEnum[MonStgElt] : resume := 1, overwrite := false)
 	{Update the attributes of all SmallFusionSystems of a particular order}
-	m := NumberSmallFusionSystems(order);
+	m := NumberSmallFusionSystems(order:almost_reduced := false);
 	for i in [resume..m] do 
-		UpdateSmallFusionSystemAttributes(order, i, options);
+		UpdateSmallFusionSystemAttributes(order, i, options: overwrite := overwrite);
 		message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
 		UpdateLog(message);
 	end for;
@@ -427,18 +454,42 @@ end intrinsic;
 
 
 
-/*
+
 intrinsic MaintainSmallFusionSystems()
 	{Performs some maintenance tasks and status tasks}
 	all_list := GetAllpn();
 	for p in Keys(all_list) do  
 		n_list := all_list[p];
 		for n in n_list do 
-			m := NumberSmallFusionSystems(p^n);
-
+			printf "Checking (p,n) = (%o, %o) \n", p,n;
+			pp := StringToInteger(p);
+			nn := StringToInteger(n);
+			m := NumberSmallFusionSystems(pp^nn: almost_reduced := false);
+			// Check that core_trivial or pPerfect has been assigned to all or none, partially assigned implies something has gone wrong
+			flags_op := {};
+			flags_pperf := {};
+			for i in [1..m] do 
+				F := SmallFusionSystemRecord(pp^nn,i);
+				Include(~flags_op, assigned F`core_trivial);
+				Include(~flags_pperf, assigned F`pPerfect);
+			end for;
+			if #flags_op gt 1 or #flags_pperf gt 1 then
+				message := Sprintf("Error: Partially assigned core_trivial or pPerfect in p_%o/n_%o, you should update these attributes for all FS", p,n);
+				ErrorLog(message);
+				print message cat "\n";
+			elif flags_op eq {false} then 
+				message := Sprintf("Advisory: core_trivial has not been assigned for p_%o/n_%o", p,n);
+				ErrorLog(message);
+				print message cat "\n";
+			elif flags_pperf eq {false} then 
+				message := Sprintf("Advisory: pPerfect has not been assigned for p_%o/n_%o", p,n);
+				ErrorLog(message);
+				print message cat "\n";
+			end if;
+		end for;
 	end for;
 end intrinsic;
-*/
+
 
 
 

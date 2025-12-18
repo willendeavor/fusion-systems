@@ -4,12 +4,12 @@
 
 function GetOptionalArgs()
 	optional := [
-    		"Core",
-    		"OpTriv",
+    		"core",
+    		"core_trivial",
     		"pPerfect",
-    		"FocalSubgroup",
-    		"FusionGroup",
-    		"FusionGroup_name"
+    		"focal_subgroup",
+    		"fusion_group",
+    		"fusion_group_name"
     	];
 	return optional;
 end function;
@@ -34,12 +34,12 @@ function FusionToRecord(FS)
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		Core: Grp, 
-		OpTriv : BoolElt,
+		core: Grp, 
+		core_trivial : BoolElt,
 		pPerfect: BoolElt,
-		FocalSubgroup : Grp,
-		FusionGroup_name : MonStgElt,
-		FusionGroup : Grp
+		focal_subgroup : Grp,
+		fusion_group_name : MonStgElt,
+		fusion_group : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -95,7 +95,7 @@ function FusionToRecord(FS)
     optional := GetOptionalArgs();
     for x in optional do  
     	// We deal with this outside this loop
-    	if x eq "FusionGroup_name" or x eq "FusionGroup" then 
+    	if x eq "fusion_group_name" or x eq "fusion_group" then 
     		continue;
     	end if;
     	if assigned FS``x then
@@ -107,14 +107,14 @@ function FusionToRecord(FS)
     	end if;
     end for;
     // For backwards compatability check for both and separate from other optionals
-    if assigned FS`grpsystem or assigned FS`FusionGroup then
+    if assigned FS`grpsystem or assigned FS`fusion_group then
     	if assigned FS`grpsystem then
-    		R`FusionGroup := FS`grpsystem;
+    		R`fusion_group := FS`grpsystem;
     	end if;
-    	if assigned FS`FusionGroup then 
-    		R`FusionGroup := FS`FusionGroup;
+    	if assigned FS`fusion_group then 
+    		R`fusion_group := FS`fusion_group;
     	end if;
-    	R`FusionGroup_name := GroupName(R`FusionGroup);
+    	R`fusion_group_name := GroupName(R`fusion_group);
     end if;
     return R;
 end function;
@@ -149,12 +149,12 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		Core: Grp, 
-		OpTriv : BoolElt,
+		core: Grp, 
+		core_trivial : BoolElt,
 		pPerfect: BoolElt,
-		FocalSubgroup : Grp,
-		FusionGroup_name : MonStgElt,
-		FusionGroup : Grp
+		focal_subgroup : Grp,
+		fusion_group_name : MonStgElt,
+		fusion_group : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -224,12 +224,12 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     			// If subgroup of S then we save it as a subgroup construction
     			if ISA(Type(R``i), GrpPC) and R``i subset S then 
     				info[i] := SubgroupToString(S,R``i);
-    			// Otherwise it must be the FusionGroup and we save it how MAGMA likes			
+    			// Otherwise it must be the fusion_group and we save it how MAGMA likes			
     			else
     				// We want it as a string so create a temp file
-    				PrintFileMagma("temp_FusionGroup.m", R``i);
-    				info[i] := Read("temp_FusionGroup.m");
-    				System("rm temp_FusionGroup.m");
+    				PrintFileMagma("temp_fusion_group.m", R``i);
+    				info[i] := Read("temp_fusion_group.m");
+    				System("rm temp_fusion_group.m");
     			end if;
     		// If string then surround in quotes so is string when defined
 			elif ISA(Type(R``i), MonStgElt) then
@@ -289,7 +289,7 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 		if x in GetAttributes(FusionSystem) and x in Names(R) then
 			if assigned R``x then
 				// If want a subgroup of S we need to transport it to the Borel group
-				if ISA(Type(R``x), Grp) and not x eq "FusionGroup" and R``x subset S then
+				if ISA(Type(R``x), Grp) and not x eq "fusion_group" and R``x subset S then
 					F``x := F`borelmap(R``x);
 				else
 					F``x := R``x;
