@@ -233,7 +233,7 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -
     	indices := [];
     	for i in [1..count] do  
     		R := SmallFusionSystemRecord(S_order, i);
-    		if R`OpTriv eq true and R`pPerfect eq true then 
+    		if R`core_trivial eq true and R`pPerfect eq true then 
     			Append(~indices, i);
     		end if;
     	end for;
@@ -312,7 +312,7 @@ end function;
 
 
 intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt]: FusionGroup := false, overwrite := false)
-	{Updates a given attribute e.g. Core in a fusion systems record}
+	{Updates a given attribute e.g. core in a fusion systems record}
 	// Check first if we actually need to do anything
 	R := SmallFusionSystemRecord(order, i);
 	need_update := NeedsUpdate(R,options,overwrite);
@@ -321,12 +321,12 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	end if;
 	// Else here comes the expensive calculations
 	F := SmallFusionSystem(order, i);
-	if "Core" in options or "OpTriv" in options then 
-		F`OpTriv, F`Core := Core(F);
+	if "core" in options or "core_trivial" in options then 
+		F`core_trivial, F`core := Core(F);
 	end if;
-	if "FocalSubgroup" in options or "pPerfect" in options then 
-		F`FocalSubgroup := FocalSubgroup(F);
-		F`pPerfect := F`FocalSubgroup eq F`group;
+	if "focal_subgroup" in options or "pPerfect" in options then 
+		F`focal_subgroup := FocalSubgroup(F);
+		F`pPerfect := F`focal_subgroup eq F`group;
 	end if;
 	if "FusionGroup" in options and ISA(Type(FusionGroup), Grp) then
 		F`FusionGroup := FusionGroup;
@@ -339,7 +339,7 @@ end intrinsic;
 
 
 intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : FusionGroup := false, overwrite := false)
-	{Updates a given attribute e.g. Core in a fusion systems record, single argument version}
+	{Updates a given attribute e.g. core in a fusion systems record, single argument version}
 	UpdateSmallFusionSystemAttributes(order, i, [option] : FusionGroup := FusionGroup, overwrite := overwrite);
 end intrinsic;
 
@@ -465,20 +465,20 @@ intrinsic MaintainSmallFusionSystems()
 			pp := StringToInteger(p);
 			nn := StringToInteger(n);
 			m := NumberSmallFusionSystems(pp^nn: almost_reduced := false);
-			// Check that OpTriv or pPerfect has been assigned to all or none, partially assigned implies something has gone wrong
+			// Check that core_trivial or pPerfect has been assigned to all or none, partially assigned implies something has gone wrong
 			flags_op := {};
 			flags_pperf := {};
 			for i in [1..m] do 
 				F := SmallFusionSystemRecord(pp^nn,i);
-				Include(~flags_op, assigned F`OpTriv);
+				Include(~flags_op, assigned F`core_trivial);
 				Include(~flags_pperf, assigned F`pPerfect);
 			end for;
 			if #flags_op gt 1 or #flags_pperf gt 1 then
-				message := Sprintf("Error: Partially assigned OpTriv or pPerfect in p_%o/n_%o, you should update these attributes for all FS", p,n);
+				message := Sprintf("Error: Partially assigned core_trivial or pPerfect in p_%o/n_%o, you should update these attributes for all FS", p,n);
 				ErrorLog(message);
 				print message cat "\n";
 			elif flags_op eq {false} then 
-				message := Sprintf("Advisory: OpTriv has not been assigned for p_%o/n_%o", p,n);
+				message := Sprintf("Advisory: core_trivial has not been assigned for p_%o/n_%o", p,n);
 				ErrorLog(message);
 				print message cat "\n";
 			elif flags_pperf eq {false} then 

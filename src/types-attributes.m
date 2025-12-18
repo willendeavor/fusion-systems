@@ -3,7 +3,7 @@ freeze;
 declare type FusionSystem;
 declare attributes  FusionSystem: prime, group, subgroups, borel, borelmap, centrics, 
 essentials, essentialautos, fusiongraph, maps, classes, AutF, saturated,
-grpsystem, Core, OpTriv, pPerfect, FocalSubgroup, FusionGroup;
+grpsystem, core, core_trivial, pPerfect, focal_subgroup, fusion_group;
 
 declare attributes GrpMat: autogrp,  autoperm, autopermmap,autF;
 declare attributes GrpPerm: autogrp, autoperm, autopermmap, autF;
