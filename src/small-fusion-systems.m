@@ -91,7 +91,7 @@ end intrinsic;
 intrinsic IdentifyFusionSystem(F::FusionSystem) -> SeqEnum
 	{If F is a small fusion system return its identifying pair}
 	S := F`group;
-	m := NumberSmallFusionSystems(#S);
+	m := NumberSmallFusionSystems(#S: almost_reduced := false);
 	for i in [1..m] do 
 		F_i := SmallFusionSystem(#S, i);
 		if IsIsomorphic(F_i, F) then
@@ -112,7 +112,7 @@ end intrinsic;
 intrinsic AddSmallFusionSystem(F::FusionSystem)
 	{Given a fusion system check if it is already in the database, otherwise add it}
 	S := F`group;
-	m, indices := NumberSmallFusionSystems(S);
+	m, indices := NumberSmallFusionSystems(S:almost_reduced := false);
 	new := true;
 	for i in indices do 
 		F_i := SmallFusionSystem(#S, i);
@@ -129,7 +129,7 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 		n := FactoredOrder(S)[1][2];
 		filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
 		System(Sprintf("mkdir -p %o", filepath));
-		i := NumberSmallFusionSystems(#S) + 1;
+		i := NumberSmallFusionSystems(#S:almost_reduced := false) + 1;
 		// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
 		filename := GetSmallFusionSystemFilePath(p^n, i);
 		WriteFusionRecord(filename, F);
@@ -493,11 +493,11 @@ end intrinsic;
 intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> SeqEnum
 	{Check if there are duplicates in the database}
 	duplicates := [];
-	for i in [resume..NumberSmallFusionSystems(order)] do 
+	for i in [resume..NumberSmallFusionSystems(order: almost_reduced := false)] do 
 		printf "Checking for duplicates of FS_%o", i;
 		R := SmallFusionSystemRecord(order,i);
 		S := R`S;
-		m, indices := NumberSmallFusionSystems(S);
+		m, indices := NumberSmallFusionSystems(S : almost_reduced := false);
 		// Get only those we haven't checked yet
 		checks := [x : x in indices | x gt i ];
 		for j in checks do  
