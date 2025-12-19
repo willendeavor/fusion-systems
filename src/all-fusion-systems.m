@@ -22,6 +22,133 @@ end procedure;
 
 
 
+
+// Get Borel candidates if AutSp is soluble
+function SolubleBorelCandidates(AutSp, p, OutFSOrders)
+    PAut, tt:= PCGroup(AutSp); 
+    H:=HallSubgroup(PAut,-p); 
+    // K is a list of subgroups of the Hall subgroup of Aut(S)
+    K:=[];
+    if OutFSOrders eq [] then 
+        K:= [wx`subgroup:wx in Subgroups(H)];
+    else  
+        // Get a list of subgroups with same orders as given by OutFSOrders
+        K := &cat [ 
+            [ wx`subgroup : wx in Subgroups(H : OrderEqual := x) ]
+            : x in OutFSOrders
+        ];
+    end if;
+    BCand:=[]; 
+    // Now add only conjugate representatives
+    for K1 in K do 
+        if forall{ K2 : K2 in BCand | not IsConjugate(PAut, K1, K2)} then
+            Append(~BCand, K1);
+        end if;
+    end for;
+    BCand:= [SubInvMap(tt, AutSp, K1):K1 in BCand];
+    return BCand;
+end function;
+
+
+// Get Borel candidates if AutSp is insoluble
+function InsolubleBorelCandidates(AutSp, InnSp, p, m, OutFSOrders)
+    if OutFSOrders eq [] then 
+        OutFSOrders:= [1..m]; 
+    end if;
+    SubsAutS := Subgroups(AutSp:OrderDividing:=m);   
+    // First get subgroups with correct p'-index
+    BCand := [
+        sub<AutSp|x`subgroup,InnSp>
+        : x in SubsAutS
+        |Index(x`subgroup,InnSp meet x`subgroup) mod p ne 0
+        ];
+    // Get a complement for Inn(S) as required by saturation
+    BCand := [Random(Complements(AA,InnSp)):AA in BCand];
+    BCand := [ AA:AA in BCand| #AA in OutFSOrders]; 
+    return BCand;
+end function;
+
+
+// Generate Borel candidates
+function BorelCandidates(AutSp, InnSp, p, m, OutFSOrders)
+    if IsSoluble(AutSp) then
+        return SolubleBorelCandidates(AutSp, p, OutFSOrders);
+    else
+        return InsolubleBorelCandidates(AutSp, InnSp, p, m, OutFSOrders);
+    end if;
+end function;
+
+
+// Given a Borel group B = S:C transport everything to it where phi:S -> T is an isomorphism and T is the image of S in B
+function BuildBorelPair(B,T, phi, ProtoEssentialAutClasses)
+    BB := [B,T];
+    // Transport the essential subgroups
+    for x in ProtoEssentialAutClasses do 
+        Append(~BB, SubMap(phi, T, x));
+    end for;
+    // Transport the essential automorphism groups
+    for i in [3..#BB] do 
+        // x is an essential in B and y is the same essential but pre-transporting
+        x := BB[i];
+        y := ProtoEssentialAutClasses[i-2];
+        MakeAutos(x);
+        x`autF := [
+            sub<x`autogrp | [Inverse(phi)*g*phi : g in Generators(A)]>
+            : A in y`autF
+            ];
+    end for;
+    return BB;
+end function;
+
+
+// Calculates all pairs (B,T) where B is a borel group and T is the image of S in B
+function ComputerAllBorelPairs(
+    S, AutS, AutSp, InnSp, map, p, OutFSOrders, ProtoEssentialAutClasses)
+    // m is the p'-part of |Aut(S)|
+    pVal:= Valuation(#AutSp,p); 
+    m:= #AutSp/p^pVal;
+    BorelsandS:=[];
+    // m ne 1 then the Borel is not S and we need candidates
+    if m ne 1  then
+        BCand := BorelCandidates(AutSp, InnSp, p, m, OutFSOrders);
+        for CC in BCand do
+            if not IsSoluble(CC) then 
+                error "Execution failed: The Borel group is not soluble";
+            end if;
+            // Get the Borel candidate as a subgroup of Aut(S)
+            f:=hom<CC->AutS|g:->Inverse(map) (g)>;
+            C:= SubMap(f,AutS,CC);  
+            if #C ne 1 then 
+                B,phiB:= Holomorph(GrpFP,S, sub<AutS|C>); 
+            else 
+                B,phiB:= Holomorph(S, sub<AutS|C>);  
+            end if;
+            T:= phiB(S);  
+            B, theta := PCGroup(B); 
+            T:= theta(T); //This will not work if B is not soluble.
+            _, alpha:= IsIsomorphic(S,T); //phiB*theta does not work when Holomorph is calculcated with FP group
+            BB := BuildBorelPair(B,T, alpha, ProtoEssentialAutClasses);
+            Append(~BorelsandS,BB);
+        end for;
+    // m = 1 i.e. S is the Borel group
+    else
+        T, theta := PCGroup(S);
+        BB := BuildBorelPair(T,T, theta, ProtoEssentialAutClasses);
+        Append(~BorelsandS,BB);
+    end if;
+    return BorelsandS;
+end function;
+
+
+
+
+
+
+
+
+
+
+
 intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[],OpTriv:=true,pPerfect:= true)-> SeqEnum
     {Makes all fusion systems with O_p(F)=1 and O^p(\F)= \F}  
     FNumber:=0; //This is to help when saving fusion systems
@@ -30,16 +157,17 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     p:= FactoredOrder(S)[1][1]; 
     nn:= Valuation(#S,p);
 
-    //Use that we know fusion systems with an abelian subgroup
-    if IsAbelian(S) then 
+    // Lemma 4.1: If S is abelian then O_p(F) = S
+    if IsAbelian(S) and OpTriv then 
         return FF; 
     end if;
-    ///Lemma~7.1 shows that $S:Z(S) \gt p^2 or |S|\le p^3
-    if Index(S,Centre(S)) le p^2 and #S ge p^4 then 
+
+    // Lemma 4.3: If O_p(F) = 1 and O^p(F) = F then $S:Z(S) \gt p^2 or |S|\le p^3
+    if Index(S,Centre(S)) le p^2 and #S ge p^4 and OpTriv and pPerfect then 
         return FF; 
     end if; 
      
-    //Here are automorphisms of S and centric subgroups of S
+    // Here are automorphisms of S and centric subgroups of S
     S:= PCGroup(S);
     MakeAutos(S);
     InnS:=Inn(S);
@@ -49,103 +177,23 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     InnSp:= SubMap(map,AutSp, InnS);
 
 
-    //We use Cor 6.2 from ANTONIO Diaz, ADAM GLESSER, NADIA MAZZA, AND SEJONG PARK
-    if p ge 5 and #FactoredOrder(S`autogrp) eq 1 then 
+    // Lemma 4.2: If p ge 5 and Aut_F(S) is a p-group then O^p(F) neq F
+    if p ge 5 and #FactoredOrder(S`autogrp) eq 1 and pPerfect then 
         return []; 
     end if; 
 
     // Good to proceed, first find the protoessentials
-    ProtoEssentialAutClasses:=AllProtoEssentials(S:OpTriv:=OpTriv, pPerfect := pPerfect, Printing:=Printing);
-    // If we have no protoessentials we are done
-    if ProtoEssentialAutClasses eq [] then 
+    ProtoEssentialAutClasses := AllProtoEssentials(S:OpTriv:=OpTriv, pPerfect := pPerfect, Printing:=Printing);
+    
+    // If we have no protoessentials then O_p(F) = S
+    if ProtoEssentialAutClasses eq [] and OpTriv then 
         return FF; 
     end if;  
 
 
+    
 
-    //We calculate the possible Borel subgroups and S pairs.
-
-
-    pVal:= Valuation(#AutSp,p); m:= ZZ!(#AutSp/p^pVal);
-    BorelsandS:=[];
-    if m ne 1  then
-        if IsSoluble(AutSp) then 
-            PAut, tt:= PCGroup(AutSp); 
-            H:=HallSubgroup(PAut,-p); 
-            K:=[];
-            if OutFSOrders eq [] then 
-             K:= [wx`subgroup:wx in Subgroups(H)];
-             else  
-            for x in OutFSOrders do K:= K cat [wx`subgroup:wx in 
-            Subgroups(H:OrderEqual:=x)]; 
-            end for; 
-            end if;
-            BCand:=[]; 
-           
-        for k:= 1 to #K do  
-            K1:= K[k]; 
-                for K2 in BCand do 
-                if IsConjugate(PAut,K1,K2) then   continue k;   end if;
-                end for; 
-            Append(~BCand,K1); 
-        end for;
-        BCand:= [SubInvMap(tt, AutSp, K1):K1 in BCand];
-     else
-      if OutFSOrders eq [] then OutFSOrders:= [1..m]; end if;
-        SubsAutS:= Subgroups(AutSp:OrderDividing:=m);   
-        BCand:=  [sub<AutSp|x`subgroup,InnSp>: x in SubsAutS|Index(x`subgroup,InnSp meet x`subgroup) mod p ne 0];
-        BCand:= [Random(Complements(AA,InnSp)):AA in BCand];
-        BCand:=[ AA:AA in BCand| #AA in OutFSOrders]; 
-     end if;
-     
-
-     
-        for CC in BCand do
-        if not IsSoluble(CC) then print "Execution failed: The Borel group is not soluble ";   return []; end if;
-            f:=hom<CC->AutS|g:->Inverse(map) (g)>;
-            C:= SubMap(f,AutS,CC);  
-            if #C ne 1 then B,phiB:= Holomorph(GrpFP,S, sub<AutS|C>); else B,phiB:= Holomorph(S, sub<AutS|C>);  end if; 
-           // B,phiB:= Holomorph(S, sub<AutS|C>);  
-            T:= phiB(S);  
-           
-             B, theta := PCGroup(B); T:= theta(T); ///This will not work if B is not soluble.
-            BB:=[B,T];
-            
-            a, alpha:= IsIsomorphic(S,T); //phiB*theta does not work when Holomorph is calculcated with FP group
-              for x in ProtoEssentialAutClasses do Append(~BB,SubMap(alpha,T,x)); end for;
-            for ii in [3..#BB] do 
-            xx:= BB[ii];
-            yy:= ProtoEssentialAutClasses[ii-2];
-            MakeAutos(xx);
-              
-                WW:=[];
-                for jj in   [1..#yy`autF] do 
-                Wx:= yy`autF[jj]; 
-                WGens :=[
-                Inverse(alpha)*gamma*alpha: gamma in  Generators(Wx)];
-                WW[jj]:=sub<xx`autogrp|WGens>; 
-                end for;
-                xx`autF:= WW;
-            end for;
-         Append(~BorelsandS,BB);
-    end for;
-    else
-     T, theta := PCGroup(S);
-        BB:=[T,T];
-        for x in ProtoEssentialAutClasses do Append(~BB,SubMap( theta,T,x)); end for;
-            for ii in [3..#BB] do 
-                xx:= BB[ii];yy:= ProtoEssentialAutClasses[ii-2]; MakeAutos(xx);WW:=[];
-                for jj in   [1..#yy`autF] do 
-                    WGens:=[]; Wx:= yy`autF[jj]; 
-                        for gamma in Generators(Wx) do  
-                            Append(~WGens,Inverse( theta)*gamma* theta); 
-                        end for;
-                    WW[jj]:=sub<xx`autogrp|WGens>; 
-                end for;
-                xx`autF:= WW; 
-            end for;
-         Append(~BorelsandS,BB);
-    end if;
+    BorelsandS := ComputerAllBorelPairs(S, AutS, AutSp, InnSp, map, p, OutFSOrders, ProtoEssentialAutClasses);
 
 
 
@@ -170,25 +218,27 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     S:= Bor[2];  
 
     //We use the fact that if $B=S$ and p ge 5 then $O^p(\F)<\F$.
-    if p ge 5 and B eq S then continue; end if;
+    if p ge 5 and B eq S and pPerfect then 
+        continue; 
+    end if;
     MakeAutos(S);
         
-            Bbar, bar:= B/Centre(S);
-        subsBS:= Subgroups(Bbar:OrderDividing:=#bar(S));
-        subsBS:= [Inverse(bar)(x`subgroup):x in subsBS];
-        S_centrics:= [x:x in subsBS|IsSCentric(S,x)]; 
-        AutFS:=AutYX(B,S);
-        InnS:=Inn(S);
-        AutS:= S`autogrp;
-        alpha:= S`autopermmap;
-        AutSp:= S`autoperm; 
-        InnSp:= SubMap(alpha,AutSp, InnS);
-        AutBS:= AutYX(B,S);
-        AutBp:= SubMap(alpha,AutSp, AutBS);
-     
-        NAutBp:= Normalizer(AutSp,AutBp);
-        NAutB:= SubInvMap(alpha,AutS,NAutBp);
-        ProtoEssentialAutClasses:=[Bor[j]:j in [3 ..#Bor]];
+    Bbar, bar:= B/Centre(S);
+    subsBS:= Subgroups(Bbar:OrderDividing:=#bar(S));
+    subsBS:= [Inverse(bar)(x`subgroup):x in subsBS];
+    S_centrics:= [x:x in subsBS|IsSCentric(S,x)]; 
+    AutFS:=AutYX(B,S);
+    InnS:=Inn(S);
+    AutS:= S`autogrp;
+    alpha:= S`autopermmap;
+    AutSp:= S`autoperm; 
+    InnSp:= SubMap(alpha,AutSp, InnS);
+    AutBS:= AutYX(B,S);
+    AutBp:= SubMap(alpha,AutSp, AutBS);
+ 
+    NAutBp:= Normalizer(AutSp,AutBp);
+    NAutB:= SubInvMap(alpha,AutS,NAutBp);
+    ProtoEssentialAutClasses:=[Bor[j]:j in [3 ..#Bor]];
 
     //We explode the autclasses to get all protoessentials and ajoin their potential autogrps.
     ProtoEssentials:=[];
