@@ -46,6 +46,8 @@ function GetSmallFusionSystemFilePath(order, i)
 	return filepath;
 end function;
 
+
+// Returns an associate array of p : [n_1, n_2, ..]
 function GetAllpn()
 	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
 	p_list := Split(p_list, "\n");
@@ -53,7 +55,6 @@ function GetAllpn()
 	all_list := AssociativeArray(p_list);
 	for p in p_list do 
 		path := Sprintf("data/SmallFusionSystems/p_%o", p);
-		// n_list = ["n_3", "n_4", ....]
 		n_list := Pipe("ls " cat path, "");
 		n_list := Split(n_list, "\n");
 		n_list := [Split(x, "_")[2] : x in n_list];
@@ -62,7 +63,12 @@ function GetAllpn()
 	return all_list;
 end function;
 
-
+procedure AddToVerificationQueue(order,i)
+	filename := "data/verification_queue.log";
+	F := Open(filename, "a");
+	fprintf F, " \n %o : %o", order,i;
+	delete F; 
+end procedure;
 
 //////////////////////// Loading SmallFusionSystems /////////////////////////////////
 
@@ -85,7 +91,7 @@ end intrinsic;
 intrinsic IdentifyFusionSystem(F::FusionSystem) -> SeqEnum
 	{If F is a small fusion system return its identifying pair}
 	S := F`group;
-	m := NumberSmallFusionSystems(#S);
+	m := NumberSmallFusionSystems(#S: almost_reduced := false);
 	for i in [1..m] do 
 		F_i := SmallFusionSystem(#S, i);
 		if IsIsomorphic(F_i, F) then
@@ -106,7 +112,7 @@ end intrinsic;
 intrinsic AddSmallFusionSystem(F::FusionSystem)
 	{Given a fusion system check if it is already in the database, otherwise add it}
 	S := F`group;
-	m, indices := NumberSmallFusionSystems(S);
+	m, indices := NumberSmallFusionSystems(S:almost_reduced := false);
 	new := true;
 	for i in indices do 
 		F_i := SmallFusionSystem(#S, i);
@@ -123,12 +129,14 @@ intrinsic AddSmallFusionSystem(F::FusionSystem)
 		n := FactoredOrder(S)[1][2];
 		filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
 		System(Sprintf("mkdir -p %o", filepath));
+		i := NumberSmallFusionSystems(#S:almost_reduced := false) + 1;
 		// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
-		filename := GetSmallFusionSystemFilePath(p^n, NumberSmallFusionSystems(#S) + 1);
+		filename := GetSmallFusionSystemFilePath(p^n, i);
 		WriteFusionRecord(filename, F);
 		print "Successfully added new fusion system \n";
+		AddToVerificationQueue(#S, i);
 		UpdateLog(Sprintf(
-			"Added SmallFusionSystem(%o^%o, %o)", p, n, NumberSmallFusionSystems(#S) + 1));
+			"Added SmallFusionSystem(%o^%o, %o)", p, n, i));
 	end if;
 end intrinsic;
 
@@ -277,6 +285,21 @@ intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := true
 end intrinsic;
 
 
+intrinsic GetSmallFusionSystemTotals()
+	{Returns the total number of almost reduced and all FS}
+	pn := GetAllpn();
+	print "(p,n) : Almost reduced (Total) \n";
+	for pp in Keys(pn) do 
+		for nn in pn[pp] do  
+			p := StringToInteger(pp);
+			n := StringToInteger(nn);
+			printf "(%o, %o) : %o (%o) \n", 
+				p,n, NumberSmallFusionSystems(p^n), NumberSmallFusionSystems(p^n : almost_reduced := false);
+		end for;
+	end for;
+end intrinsic
+
+
 
 
 ///////////////// Updating and verifying ////////////////////////////////////////////
@@ -296,7 +319,10 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 		filename := path cat i;
 		UpdateFusionRecord(filename);
 		printf "Updated %o \n", i;
-		UpdateLog(Sprintf("Updated SmallFusionSystem(%o, %o)", p^n, Split(i, "_")[2]));
+		j := Split(i, ".")[1];
+		j := StringToInteger(Split(j, "_")[4]);
+		AddToVerificationQueue(S_order, j);
+		UpdateLog(Sprintf("Updated SmallFusionSystem(%o, %o)", p^n, j));
 	end for;
 end intrinsic;
 
@@ -332,6 +358,7 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		F`FusionGroup := FusionGroup;
 	end if;
 	WriteFusionRecord(GetSmallFusionSystemFilePath(order, i), F);
+	AddToVerificationQueue(order,i);
 	message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
 	UpdateLog(message);
 end intrinsic;
@@ -350,9 +377,9 @@ intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEn
 	m := NumberSmallFusionSystems(order:almost_reduced := false);
 	for i in [resume..m] do 
 		UpdateSmallFusionSystemAttributes(order, i, options: overwrite := overwrite);
-		message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
-		UpdateLog(message);
 	end for;
+	message := Sprintf("Updated ALL SmallFusionSystem(%o, i) attributes %o", order, options);
+	UpdateLog(message);
 end intrinsic;
 
 
@@ -404,21 +431,22 @@ intrinsic VerifyAllSmallFusionSystemRecords(resume::SeqEnum)
 			n_path := path cat Sprintf("/%o/", n);
 			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
 			// Get only file names with no extension
-			F_list := [x : x in F_list | #Split(x, ".") eq 1];
+			F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
 			// If we are at (p,n) resume then get only those above resume
 			n_int := StringToInteger(Split(n, "_")[2]);
 			if p_int eq resume[1] and n_int eq resume[2] then
-				F_list := [x : x in F_list | StringToInteger(Split(x, "_")[2]) ge resume[3]];
+				F_list := [x : x in F_list | StringToInteger(Split(Split(x, "_")[4], ".")[1]) ge resume[3]];
 			end if;
 			for i in F_list do 
 				filename := n_path cat i;
-				print filename;
 				try 
 					F := LoadFusionSystem(filename);
 					printf "Verified %o \n", filename;
 				catch e
-					printf "Failed to load %o \n", filename;
-					Append(~errors, [p_int, n_int, StringToInteger(Split(i, "_")[2])]);
+					message := Sprintf("Failed to load %o \n", filename);
+					ErrorLog(message);
+					print message;
+					Append(~errors, [p_int, n_int, StringToInteger(Split(Split(i, "_")[4], ".")[1])]);
 				end try;
 			end for;
 		end for;
@@ -428,14 +456,48 @@ end intrinsic;
 
 
 
+intrinsic VerifyNewFusionSystemRecords()
+	{Verifies any new fusion systems that have been added since last verification}
+	queuefile := "data/verification_queue.log";
+	txt := Read(queuefile);
+	lines := [l : l in Split(txt, "\n") | l ne ""];
+	// Remove header
+	lines := lines[2..#lines];
+	keep := lines;
+	for l in lines do 
+		pair := Split(l, ":");
+		order := StringToInteger(pair[1]);
+		i := StringToInteger(pair[2]);
+		filename := GetSmallFusionSystemFilePath(order,i);
+		try 
+			F := LoadFusionSystem(filename);
+			printf "Verified %o \n", filename;
+			Exclude(~keep, l);
+		catch e 
+			message := Sprintf("Failed to load %o \n", filename);
+			ErrorLog(message);
+			print message;
+		end try;
+	end for;
+	// Rewrite file
+	F := Open(queuefile, "w");
+	fprintf F, "The following fusion systems need to be verified: \n";
+	for l in keep do 
+		fprintf F, "%o \n", l;
+	end for;
+	delete F;
+end intrinsic;
+
+
+
 intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> SeqEnum
 	{Check if there are duplicates in the database}
 	duplicates := [];
-	for i in [resume..NumberSmallFusionSystems(order)] do 
+	for i in [resume..NumberSmallFusionSystems(order: almost_reduced := false)] do 
 		printf "Checking for duplicates of FS_%o", i;
 		R := SmallFusionSystemRecord(order,i);
 		S := R`S;
-		m, indices := NumberSmallFusionSystems(S);
+		m, indices := NumberSmallFusionSystems(S : almost_reduced := false);
 		// Get only those we haven't checked yet
 		checks := [x : x in indices | x gt i ];
 		for j in checks do  
@@ -492,13 +554,6 @@ end intrinsic;
 
 
 
-
-
-
-
-
-
-
 procedure UpdateIndexMigrationYAML(dir, mapping, order)
 	date := Trim(Pipe("date '+%Y-%m-%d %H:%M:%S'", ""));
 	filename := dir cat "/index_migration.yaml";
@@ -518,13 +573,14 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 	{A procedure that rearranges the directories according to isomorphism classes of the underlying groups}
 	p := Factorisation(order)[1][1];
 	n := Factorisation(order)[1][2];
-	m := NumberSmallFusionSystems(p^n);
+	m := NumberSmallFusionSystems(p^n: almost_reduced := false);
 	// Classes is the equivalence class of {1..m} under i ~ j iff FS_i`group ~ FS_j`group
 	classes := [];
 	temp := {1..m};
 	while not IsEmpty(temp) do 
+		print temp;
 		S := SmallFusionSystemRecord(p^n, Minimum(temp))`S;
-		k, class := NumberSmallFusionSystems(S);
+		k, class := NumberSmallFusionSystems(S: almost_reduced := false);
 		Append(~classes, class);
 		temp := temp diff Set(class);
 	end while;
@@ -547,6 +603,9 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 		start_index := k + 1;
 	end for;
 
+	if forall{mapping[i] eq i : i in [1..#mapping]} then
+		print "No changes made";
+	end if;
 	// Now update the YAML file
 	UpdateIndexMigrationYAML(new_dir, mapping, order);
 	UpdateLog("Migrated indices following isomorphism classes");
