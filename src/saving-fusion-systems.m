@@ -7,12 +7,32 @@ intrinsic Print(F::FusionSystem)
 
 	E:= [(#F`essentialautos[i]*#Centre(F`essentials[i]))/#F`essentials[i]:i in [2.. #F`essentialautos]];
 	E1:= [#F`essentials[i]:i in [2.. #F`essentials]];
-	printf "Fusion System with %o", #F`essentials-1; printf "\ F-classes of essential subgroups", "\n"; 
-	printf "\nThey have orders: %o", E1, "\n"; 
-	printf "\Out_F(E)  have orders: %o", E; printf 
-	"\nOut_\F(S) has order  %o", #F`essentialautos[1]/#Inn(F`group);
-	if assigned(F`grpsystem) then
-	printf "\nThis is a group fusion system\n"; end if;
+	S := F`group;
+	try 
+		S_name := IdentifyGroup(F`group);
+	catch e
+		S_name := <0,0>;
+	end try;
+ 
+	if assigned F`saturated and F`saturated eq true then
+		printf "Saturated fusion system F over a p-group S of order %o^%o \n", FactoredOrder(S)[1][1], FactoredOrder(S)[1][2]; 
+	else
+		printf "Fusion system F over a p-group S of order %o^%o \n", FactoredOrder(S)[1][1], FactoredOrder(S)[1][2];
+	end if;
+	
+	if not S_name eq <0,0> then
+		printf "S is SmallGroup(%o, %o) and isomorphic to %o \n", S_name[1], S_name[2], GroupName(S); 
+	else
+		printf "S is isomorphic to %o \n", GroupName(S);
+	end if;
+
+	printf "F has %o classes of essential subgroups \n", #F`essentials-1;
+	printf "The orders of the essential subgroups are %o \n", E1;
+	printf "The orders of the Out_F(E) are %o \n", E;
+	printf "The order of Out_F(S) is %o", #F`essentialautos[1]/#Inn(F`group);
+	if assigned(F`fusion_group) then
+		printf "\n F is isomorphic to the group fusion system of %o", GroupName(F`fusion_group); 
+	end if;
 end intrinsic;
 
 

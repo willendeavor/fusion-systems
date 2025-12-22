@@ -2,23 +2,24 @@
 // and generally work directly with the record files
 
 
-// Given S and a subgroup of S return the string sub<S | gens >;
 function GetOptionalArgs()
 	optional := [
-    		"Core",
-    		"OpTriv",
+    		"core",
+    		"core_trivial",
     		"pPerfect",
-    		"FocalSubgroup"
+    		"focal_subgroup",
+    		"fusion_group",
+    		"fusion_group_name"
     	];
 	return optional;
 end function;
 
 
 
-
+// Given S and a subgroup of S return the string sub<S | gens >;
 function SubgroupToString(S,T)
 	rel := {S!w:w in PCGenerators(T)};
-	return(Sprintf("sub<S | %o>", rel));
+	return Sprintf("sub<S | %o>", rel);
 end function;
 
 
@@ -33,10 +34,12 @@ function FusionToRecord(FS)
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		Core: Grp, 
-		OpTriv : BoolElt,
+		core: Grp, 
+		core_trivial : BoolElt,
 		pPerfect: BoolElt,
-		FocalSubgroup : Grp
+		focal_subgroup : Grp,
+		fusion_group_name : MonStgElt,
+		fusion_group : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -82,7 +85,7 @@ function FusionToRecord(FS)
     // Add the minimum record information
     R := rec< FusionRecord |
         p                := p,
-        S   := S ,
+        S                := S,
         S_order          := S_order,
         S_name           := S_name,
         S_small_group_id := S_small_group_id,
@@ -91,6 +94,10 @@ function FusionToRecord(FS)
     // Now check any additional info
     optional := GetOptionalArgs();
     for x in optional do  
+    	// We deal with this outside this loop
+    	if x eq "fusion_group_name" or x eq "fusion_group" then 
+    		continue;
+    	end if;
     	if assigned FS``x then
     		// If FS``x is supposed to store a subgroup of S then get the PC presentation
     		if ISA(Type(FS``x), Grp) then
@@ -99,8 +106,25 @@ function FusionToRecord(FS)
     		R``x := FS``x;
     	end if;
     end for;
+    // For backwards compatability check for both and separate from other optionals
+    if assigned FS`grpsystem or assigned FS`fusion_group then
+    	if assigned FS`grpsystem then
+    		R`fusion_group := FS`grpsystem;
+    	end if;
+    	if assigned FS`fusion_group then 
+    		R`fusion_group := FS`fusion_group;
+    	end if;
+    	R`fusion_group_name := GroupName(R`fusion_group);
+    end if;
     return R;
 end function;
+
+
+function WriteFusionYAML(filename, R)
+	F := Open(filename cat ".yaml");
+end function;
+
+
 
 
 /* 
@@ -125,10 +149,12 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
 		EssentialData : SeqEnum,
-		Core: Grp, 
-		OpTriv : BoolElt,
+		core: Grp, 
+		core_trivial : BoolElt,
 		pPerfect: BoolElt,
-		FocalSubgroup : Grp
+		focal_subgroup : Grp,
+		fusion_group_name : MonStgElt,
+		fusion_group : Grp
 		>;
 
 	EssentialRecord := recformat< 
@@ -154,12 +180,11 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	ER := R`EssentialData[i];
     	E := ER`E;
     	A := ER`AutFE_gens;
-    	rel := {S!w:w in PCGenerators(E)};
-    	// We have to define E outside of the record
+    	// We have to define E outside of the record otherwise we lost subgroup information
     	fprintf F, "\n";
-    	fprintf F, "E := sub<S| %o>; \n", rel;
+    	fprintf F, "E := %o; \n", SubgroupToString(S,E);
         fprintf F, "ER := rec< EssentialRecord |\n";
-   		fprintf F, "E := sub<S| %o>, \n", rel;
+   		fprintf F, "E := %o, \n", SubgroupToString(S,E);
    		fprintf F, "E_order := %o, \n", ER`E_order;
    		fprintf F, "E_name := \"%o\", \n", ER`E_name;
    		fprintf F, "AutFE_order := %o, \n", ER`AutFE_order;
@@ -168,6 +193,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
         fprintf F, "	>; \n";
         fprintf F, "Append(~EssentialData, ER); \n";
     end for;
+
+    
+   
 
     fprintf F, "R := rec< FusionRecord |\n";
     fprintf F, "p := %o,\n", R`p;
@@ -193,7 +221,20 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	info := AssociativeArray(options);
     	for i in options do
     		if ISA(Type(R``i), Grp) then
-    			info[i] := SubgroupToString(S,R``i);
+    			// If subgroup of S then we save it as a subgroup construction
+    			if ISA(Type(R``i), GrpPC) and R``i subset S then 
+    				info[i] := SubgroupToString(S,R``i);
+    			// Otherwise it must be the fusion_group and we save it how MAGMA likes			
+    			else
+    				// We want it as a string so create a temp file
+    				PrintFileMagma("temp_fusion_group.m", R``i);
+    				info[i] := Read("temp_fusion_group.m");
+    				System("rm temp_fusion_group.m");
+    			end if;
+    		// If string then surround in quotes so is string when defined
+			elif ISA(Type(R``i), MonStgElt) then
+				info[i] := Sprintf("\"%o\"", R``i);
+    		// Otherwise straightforward saving	
     		else
     			info[i] := R``i;
     		end if;
@@ -230,22 +271,33 @@ end intrinsic;
 intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	S := R`S;
+	PS := PowerGroup(S);
 	Autos := [];
 	for E_rec in R`EssentialData do 
-		E := E_rec`E;
+		E := PS!E_rec`E;
 		AE := AutomorphismGroup(E);
 		A := sub<AE | >;
+		gens := [];
 		for alpha in E_rec`AutFE_gens do
 			phi := AE!hom<E -> E | alpha>;
-			A := sub<AE | A, phi>;
+			Append(~gens, phi);
 		end for;
+		A := sub<AE | gens>;
 		Append(~Autos, A);
 	end for;
 	F := CreateFusionSystem(Autos);
+	// If we can assign the optionals then do so
 	optional := GetOptionalArgs();
 	for x in optional do 
-		if x in Names(R) and assigned R``x then 
-			F``x := R``x;
+		if x in GetAttributes(FusionSystem) and x in Names(R) then
+			if assigned R``x then
+				// If want a subgroup of S we need to transport it to the Borel group
+				if ISA(Type(R``x), Grp) and not x eq "fusion_group" and R``x subset S then
+					F``x := F`borelmap(R``x);
+				else
+					F``x := R``x;
+				end if;
+			end if; 
 		end if;
 	end for;
 	return F;
@@ -317,7 +369,8 @@ end intrinsic;
 
 
 
-
+/* 
+A one time intrinsic that is no longer needed
 intrinsic ConvertDirectory(p::RngIntElt,n::RngIntElt)
 	{Converts a directory in database p_i n_j to the new format}
 	base_in := Sprintf("database/p_%o/n_%o", p,n);
@@ -346,6 +399,6 @@ intrinsic ConvertDirectory(p::RngIntElt,n::RngIntElt)
         WriteFusionRecord(outpath, FS);
     end for;
 end intrinsic;
-
+*/
 
 

@@ -1,0 +1,1 @@
+# Generates the JSON files that stores various data
