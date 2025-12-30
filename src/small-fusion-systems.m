@@ -191,10 +191,17 @@ end intrinsic;
 
 
 
-intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPerfect := true)
+intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPerfect := true, id_list := [])
     {Add all fusion systems over a group of given order}
-    UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
-    for i in [resume..NumberOfSmallGroups(order)] do
+    if resume eq 1 and id_list eq [] then
+    	UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
+    end if;
+
+    if id_list eq [] then
+    	id_list := [resume..NumberOfSmallGroups(order)];
+    end if;
+
+    for i in id_list do
         m := Sprintf("Starting adding all fusion systems over SmallGroup(%o, %o)", order, i);
         UpdateLog(m);
         print m;
