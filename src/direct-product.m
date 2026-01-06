@@ -24,10 +24,40 @@ intrinsic MakeDirectProductGroup(G_factors::SeqEnum[Grp]) -> DirectProductGroup
 	return G;
 end intrinsic;
 
+
 intrinsic MakeDirectProductGroup(G_1::Grp, G_2::Grp) -> DirectProductGroup
 	{two argument version}
 	return MakeDirectProductGroup([G_1, G_2]);
 end intrinsic;
+
+intrinsic TransportDirectProductGroup(D::DirectProductGroup, phi::Map) -> DirectProductGroup
+	{Given a DirectProductGroup D and a phi: D -> G remake phi(D) in G}
+	G := New(DirectProductGroup);
+	G`group := phi(D`group);
+	G_emb := [];
+	G_proj := [];
+	for emb in D`embed do 
+		D_i := Image(emb);
+		G_i := phi(D_i);
+	end for;
+end intrinsic;
+
+intrinsic AutEltRestriction(phi::GrpAutoElt, H::Grp) -> GrpAutoElt
+	{Given phi an automorphism of some G normalising H le G return the restriction}
+	require phi(H) eq H : "phi does not normalise H";
+	MakeAutos(H);
+	phi_H := H`autogrp!hom<H -> H | x :-> phi(x)>;
+	return phi_H;
+end intrinsic;
+
+
+intrinsic AutRestriction(A::GrpAuto, H::Grp) -> GrpAuto
+	{Given A leq N_Aut(G)(H) and H leq G return A restricted to H}
+	gens := [AutEltRestriction(phi, H) : phi in Generators(A)];
+	A_H := sub<H`autogrp | gens>;
+	return A_H;
+end intrinsic;
+
 
 
 // Unused but might be handy if we ever want to calculate hands on
@@ -119,7 +149,9 @@ intrinsic FusionDirectProduct(F_1::FusionSystem, F_2:: FusionSystem) -> FusionSy
 	end for;
 	F := CreateFusionSystem(aut_seq);
 	F`factors := F_factors;
-	F`directproductgrp := S;
+	// Move the factors to the borel so they are subgroups of F`group
+	S_factors_new := [F`borelmap(Image(S`embed[i])) : i in [1..#S`factors]];
+	F`directproductgrp := MakeDirectProductGroup(S_factors_new);
 	return F;
 end intrinsic;
 
@@ -143,4 +175,71 @@ end intrinsic;
 
 
 
+//////// Is Indecomposable //////////////////////////////////
 
+/*
+Ideas: Start with just for a reduced fusion systems
+(1): Decompose S as a direct product of p-groups S_1 x ... x S_n, each of order at least p^3 (otherwise not reduced)
+(1a): Do this recursively, 
+(2): For each candidate of the i-th factor, find one that is strongly closed in F, repeat for all i
+(3): Since O^{p'}(F) = F it must now split so just need to calculate the factor fusion systems either as F|_{S_i} or a different
+*/
+
+
+
+function DecomposeGroup(S)
+	
+end function;
+
+
+
+intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return_decomposition := false) -> Bool, SeqEnum
+	{Given a reduced fusion system over S and a list of internal subgroups S_factors such that S = \prod S_factors determine if F splits}
+	// Importantly this is not F`directproductgrp for a direct product
+	S := F`group;
+	if not S eq sub<S | S_factors> then
+		print "S is not a direct product of the given factors";
+		return false;
+	end if;
+
+	for S_i in S_factors do 
+		if not IsStronglyClosed(F, S_i) then
+			printf "The %o-th factor is not strongly closed", Index(S_factors, S_i);
+			return false;
+		end if;
+	end for;
+
+	if not return_decomposition then
+		return true;
+	end if;
+
+	// Now we obtain the fusion subsystems over each S_i using the fact that an essential is of the form S_i^* x (E cap S_i)
+	F_factors := [];
+	to_be_sorted := [2..#F`essentials];
+	for i in [1..#S_factors] do 
+		print #to_be_sorted;
+		S_i := S_factors[i];
+		S_i_star := sub<S | [S_factors[j] : j in [x : x in [1..#S_factors] | x ne i]]>;
+		// Get essentials (indices) that contain S_i_star
+		essentials_i := [];
+		for j in to_be_sorted do 
+			if S_i_star subset F`essentials[j] then
+				Append(~essentials_i, j);
+			end if;
+		end for;
+		// Remove these so we don't repeatedly search them
+		to_be_sorted := [x : x in to_be_sorted | not x in essentials_i];
+
+		// Now calculate the restrictions, first element is of course Aut_F_i(S_i)
+		essentialautos_i := [AutRestriction(F`essentialautos[1], S_i)];
+		for k in essentials_i do  
+			E := F`essentials[k];
+			E_i := E meet S_i;
+			AE := F`essentialautos[k];
+			AE_i := AutRestriction(AE, E_i);
+			Append(~essentialautos_i, AE_i);
+		end for;
+		Append(~F_factors, CreateFusionSystem(essentialautos_i));
+	end for;
+	return true, F_factors;
+end intrinsic;

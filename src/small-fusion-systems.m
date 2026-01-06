@@ -1,7 +1,7 @@
 // Implements a database similar to SmallGroups
 
 
-////////////////////// File path and log functions //////////////////////////////////////
+////////////////////// File path and log functions //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 procedure UpdateLog(entry)
 	log_file := Open("data/update.log", "a");
@@ -70,7 +70,7 @@ procedure AddToVerificationQueue(order,i)
 	delete F; 
 end procedure;
 
-//////////////////////// Loading SmallFusionSystems /////////////////////////////////
+//////////////////////// Loading SmallFusionSystems //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 intrinsic SmallFusionSystem(order::RngIntElt, i::RngIntElt) -> FusionSystem
@@ -106,7 +106,7 @@ end intrinsic;
 
 
 
-////////////////////////////// Adding fusion systems ///////////////////////////////////////////////////////
+////////////////////////////// Adding fusion systems ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 intrinsic AddSmallFusionSystem(F::FusionSystem)
@@ -191,10 +191,17 @@ end intrinsic;
 
 
 
-intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPerfect := true)
+intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPerfect := true, id_list := [])
     {Add all fusion systems over a group of given order}
-    UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
-    for i in [resume..NumberOfSmallGroups(order)] do
+    if resume eq 1 and id_list eq [] then
+    	UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
+    end if;
+
+    if id_list eq [] then
+    	id_list := [resume..NumberOfSmallGroups(order)];
+    end if;
+
+    for i in id_list do
         m := Sprintf("Starting adding all fusion systems over SmallGroup(%o, %o)", order, i);
         UpdateLog(m);
         print m;
@@ -221,7 +228,7 @@ end intrinsic;
 
 
 
-//////////////// Loading information about all fusion systems ////////////////////////////
+//////////////// Loading information about all fusion systems /////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -302,7 +309,7 @@ end intrinsic
 
 
 
-///////////////// Updating and verifying ////////////////////////////////////////////
+///////////////// Updating and verifying ///////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -490,14 +497,16 @@ end intrinsic;
 
 
 
-intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> SeqEnum
-	{Check if there are duplicates in the database}
+intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1, almost_reduced := true) -> SeqEnum
+	{Check if there are duplicates in the database, of course most important for the almost_reduced}
 	duplicates := [];
-	for i in [resume..NumberSmallFusionSystems(order: almost_reduced := false)] do 
-		printf "Checking for duplicates of FS_%o", i;
+	_, id_list := NumberSmallFusionSystems(order: almost_reduced := almost_reduced);
+	id_list := [x : x in id_list | x ge resume];
+	for i in id_list do 
+		printf "Checking for duplicates of FS_%o \n", i;
 		R := SmallFusionSystemRecord(order,i);
 		S := R`S;
-		m, indices := NumberSmallFusionSystems(S : almost_reduced := false);
+		m, indices := NumberSmallFusionSystems(S : almost_reduced := almost_reduced);
 		// Get only those we haven't checked yet
 		checks := [x : x in indices | x gt i ];
 		for j in checks do  
@@ -602,7 +611,6 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 		end for;
 		start_index := k + 1;
 	end for;
-
 	if forall{mapping[i] eq i : i in [1..#mapping]} then
 		print "No changes made";
 	end if;
