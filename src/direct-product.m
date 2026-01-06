@@ -187,9 +187,36 @@ Ideas: Start with just for a reduced fusion systems
 
 
 
-function DecomposeGroup(S)
-	
+
+function AllSplittings(S)
+	// Returns the list of factorisations of a group into a direct product of two groups or false if group is indecomposable
+	p := FactoredOrder(S)[1];
+	n := FactoredOrder(S)[1][2];
+	Ns := NormalSubgroups(S);
+	all_normal := [r`subgroup : r in Ns | #(r`subgroup) ne 1 and #(r`subgroup) ne #S ];
+	pairs := [];
+	for S_1 in all_normal do 
+		cands := [x : x in all_normal | #x eq #S/#S_1];
+		for S_2 in cands do  
+			if IsTrivial(S_1 meet S_2) then  
+				Append(~pairs, [S_1, S_2]);			
+			end if;
+		end for;
+	end for;
+
+	return pairs;
 end function;
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -198,19 +225,19 @@ intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return
 	// Importantly this is not F`directproductgrp for a direct product
 	S := F`group;
 	if not S eq sub<S | S_factors> then
-		print "S is not a direct product of the given factors";
-		return false;
+		print "S is not a direct product of the given factors \n";
+		return false,_;
 	end if;
 
 	for S_i in S_factors do 
 		if not IsStronglyClosed(F, S_i) then
-			printf "The %o-th factor is not strongly closed", Index(S_factors, S_i);
-			return false;
+			printf "The %o-th factor is not strongly closed \n", Index(S_factors, S_i);
+			return false,_;
 		end if;
 	end for;
 
 	if not return_decomposition then
-		return true;
+		return true, _;
 	end if;
 
 	// Now we obtain the fusion subsystems over each S_i using the fact that an essential is of the form S_i^* x (E cap S_i)
@@ -242,4 +269,24 @@ intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return
 		Append(~F_factors, CreateFusionSystem(essentialautos_i));
 	end for;
 	return true, F_factors;
+end intrinsic;
+
+
+intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false) -> Bool, SeqEnum
+	{Determine if F splits as F_1 x F_2}
+	pairs := AllSplittings(F`group);
+	if pairs eq [] then 
+		return true;
+	end if;
+
+	for pair in pairs do 
+		decomp_true, decomp := FusionSystemDecomposition(F, pair: return_decomposition := return_decomposition);
+		if decomp_true then
+			if return_decomposition then 
+				return not decomp_true, decomp;
+			else
+				return not decomp_true,_;
+			end if;
+		end if;
+	end for;
 end intrinsic;
