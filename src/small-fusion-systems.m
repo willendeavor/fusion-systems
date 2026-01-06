@@ -19,11 +19,11 @@ procedure ErrorLog(entry)
 end procedure;
 
 
-
 intrinsic SetSmallFusionSystemDirectory() -> MonStgElt
 	{Returns the path to the database}
 	return GetCurrentDirectory();
 end intrinsic
+
 
 // Creates the name FS_pp_nn_i with i padded with 0s to width 5
 function GetSmallFusionSystemFileName(order, i)
@@ -497,14 +497,16 @@ end intrinsic;
 
 
 
-intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> SeqEnum
-	{Check if there are duplicates in the database}
+intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1, almost_reduced := true) -> SeqEnum
+	{Check if there are duplicates in the database, of course most important for the almost_reduced}
 	duplicates := [];
-	for i in [resume..NumberSmallFusionSystems(order: almost_reduced := false)] do 
-		printf "Checking for duplicates of FS_%o", i;
+	_, id_list := NumberSmallFusionSystems(order: almost_reduced := almost_reduced);
+	id_list := [x : x in id_list | x ge resume];
+	for i in id_list do 
+		printf "Checking for duplicates of FS_%o \n", i;
 		R := SmallFusionSystemRecord(order,i);
 		S := R`S;
-		m, indices := NumberSmallFusionSystems(S : almost_reduced := false);
+		m, indices := NumberSmallFusionSystems(S : almost_reduced := almost_reduced);
 		// Get only those we haven't checked yet
 		checks := [x : x in indices | x gt i ];
 		for j in checks do  
@@ -609,7 +611,6 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 		end for;
 		start_index := k + 1;
 	end for;
-
 	if forall{mapping[i] eq i : i in [1..#mapping]} then
 		print "No changes made";
 	end if;

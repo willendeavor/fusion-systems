@@ -96,7 +96,9 @@ intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
     RO2:=[#x :x in F2`essentialautos];
     Sort(~RO1);
     Sort(~RO2);
-    if RO1 ne RO2 then   return false; end if; 
+    if RO1 ne RO2 then   
+        return false; 
+    end if; 
      
      
 
@@ -152,19 +154,18 @@ intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
                     gen in  Generators(ImAutEssentials[XXct][ii])}>;
         end for;
     end for;
-                
-     
-            jj:= {1..#F2`essentials};
-            for ii in [1..#ImAutEssentials] do 
-                kk:= jj;
-                for mm in ImAutEssentials[ii] do
-                    for aa in jj do
-                        if mm eq F2`essentialautos[aa] then kk:= kk diff {aa}; end if;
-                    end for; 
-                 if #kk eq 0 then return true;end if;
-                end for;
+    print ImAutEssentials;
+    jj:= {1..#F2`essentials};
+    for ii in [1..#ImAutEssentials] do 
+        kk:= jj;
+        for mm in ImAutEssentials[ii] do
+            for aa in jj do
+                if mm eq F2`essentialautos[aa] then kk:= kk diff {aa}; end if;
             end for; 
-     return false;
+        if #kk eq 0 then return true;end if;
+        end for;
+    end for; 
+    return false;
 end intrinsic;
 
 
