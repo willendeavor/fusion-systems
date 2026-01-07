@@ -70,6 +70,37 @@ procedure AddToVerificationQueue(order,i)
 	delete F; 
 end procedure;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //////////////////////// Loading SmallFusionSystems //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -106,6 +137,27 @@ end intrinsic;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////////////////////////////// Adding fusion systems /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -113,16 +165,22 @@ intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
 	{Given a fusion system check if it is already in the database, otherwise add it, returns whether a new one has been added}
 	S := F`group;
 	m, indices := NumberSmallFusionSystems(S:almost_reduced := false);
-
+	// Compare records only for a drastic improvement in speed in certain cases
+	WriteFusionRecord("temp_candidate.m", F);
+	R := LoadFusionSystemRecord("temp_candidate.m");
 	for i in indices do 
-		F_i := SmallFusionSystem(#S, i);
+		R_i := SmallFusionSystemRecord(#S, i);
 		printf "Checking if F is isomorphic to fusion system %o \n", i;
-		if IsIsomorphic(F_i, F) then
+		if IsIsomorphicFusionRecords(R_i, R: preloaded := F) then
+			delete R;
+			System("rm temp_*");
 			print "Fusion system is already in database \n";
 			return false, [#S, i];
 			break;
 		end if;
 	end for;
+	delete R;
+	System("rm temp_*");
 
 	p := FactoredOrder(S)[1][1];
 	n := FactoredOrder(S)[1][2];
@@ -251,6 +309,30 @@ end intrinsic;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //////////////// Loading information about all fusion systems //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -328,6 +410,32 @@ intrinsic GetSmallFusionSystemTotals()
 		end for;
 	end for;
 end intrinsic
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

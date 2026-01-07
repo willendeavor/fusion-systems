@@ -118,43 +118,43 @@ intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
     for mu in Trans do
     ImEssentials:= Append(ImEssentials,[mu(theta(x)):x in F1`essentials] ); 
     end for;
-
     ImAutEssentials:= AssociativeArray({1..#Trans});
-
     for zz in [1..#ImEssentials] do 
         ImEssentialsCalc:= ImEssentials[zz]; 
         mu:= Trans[zz];// theta. mu maps xin F1 essentials to a subgroup of F2`group
-           //Initialize the automorphism group of the images
-            for ii in [1..#ImEssentialsCalc] do  
-                x:= ImEssentialsCalc[ii]; 
-                x`autogrp :=AutomorphismGroup(x); 
-                x`autopermmap, x`autoperm:= PermutationRepresentation(x`autogrp); 
-            end for;     
+       //Initialize the automorphism group of the images
+        for ii in [1..#ImEssentialsCalc] do  
+            x:= ImEssentialsCalc[ii]; 
+            x`autogrp :=AutomorphismGroup(x); 
+            x`autopermmap, x`autoperm:= PermutationRepresentation(x`autogrp); 
+        end for;     
         ImAutEssentialsCalc:=[];
         for x in ImEssentialsCalc do 
                 AutF1:= F1`essentialautos[Index(ImEssentialsCalc,x)];
                 XX:=[Inverse(mu)*Inverse(theta)*gen*theta*mu:gen in Generators(AutF1)];
                 ImAutEssentialsCalc:=Append(ImAutEssentialsCalc, sub<x`autogrp| XX>); 
-        end for;
-        
-    ImAutEssentials[zz]:=ImAutEssentialsCalc;
+        end for;        
+        ImAutEssentials[zz]:=ImAutEssentialsCalc;
+    end for;
     MakeAllSubgroups(F2);
-    end for;
-    for XXct in [1..#ImEssentials] do XX:=ImEssentials[XXct];
-        for ii in [1..#XX] do e:= XX[ii]; if e in F2`subgroups then continue; end if;
-                jj:= IdentifyBClass(F2,e);
-                P:= F2`subgroups[jj];
-                MakeAutos(P);
-                a,b :=IsConjugate(F2`borel,e,P);
-                bb:= ConjtoHom(e,P,b); 
-                bbb:= ConjtoHom(P,e,b^-1);    
-                XX[ii]:=P;
-                ImAutEssentials[XXct][ii]:= sub<P`autogrp|
-                    {hom<P->P|gg:-> bb(gen(bbb(gg)))>:
-                    gen in  Generators(ImAutEssentials[XXct][ii])}>;
+    for XXct in [1..#ImEssentials] do 
+        XX:=ImEssentials[XXct];
+        for ii in [1..#XX] do 
+            e:= XX[ii]; 
+            if e in F2`subgroups then continue; end if;
+            jj:= IdentifyBClass(F2,e);
+            P:= F2`subgroups[jj];
+            MakeAutos(P);
+            a,b :=IsConjugate(F2`borel,e,P);
+            bb:= ConjtoHom(e,P,b); 
+            bbb:= ConjtoHom(P,e,b^-1);    
+            XX[ii]:=P;
+            ImAutEssentials[XXct][ii]:= sub<P`autogrp|
+                {hom<P->P|gg:-> bb(gen(bbb(gg)))>:
+                gen in  Generators(ImAutEssentials[XXct][ii])}>;
         end for;
     end for;
-    print ImAutEssentials;
+    delete F2`subgroups;
     jj:= {1..#F2`essentials};
     for ii in [1..#ImAutEssentials] do 
         kk:= jj;
