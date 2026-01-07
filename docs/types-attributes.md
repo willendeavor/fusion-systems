@@ -21,8 +21,12 @@ The fusion system has the following attributes
 | `classes`        | `SeqEnum[SetEnum]`                    | Connected components of the fusion graph, equivalent to $\mathcal{F}$-conjugacy classes of subgroups        |
 | `AutF`           | `Assoc` mapping `Grp → GrpAuto`       | Stores $\mathrm{Aut}_{\mathcal{F}}(P)$ for a subgroup $P$ once computed                   |
 | `saturated`      | `BoolElt`                             | Boolean indicating whether the fusion system is saturated once computed     |
-| `grpsystem`      | `Grp` 								   | The group $G$ if $\mathcal{F} = \mathcal{F}_S(G)$                          |
-
+| `grpsystem` (deprecated)      | `Grp` 								   | The group $G$ if $\mathcal{F} = \mathcal{F}_S(G)$                          |
+| `core` | `Grp` | Stores the core $O_p(\mathcal{F})$|
+| `core_trivial`| `BoolElt` | True if $O_p(\mathcal{F}) = 1$ and false otherwise
+|`pPerfect` | `BoolElt` | True if $O^p(\mathcal{F}) = \mathcal{F}$ and false otherwise |
+|`focal_subgroup`| `Grp` | Stores the focal subgroup $\mathfrak{foc}(\mathcal{F})$ |
+|`fusion_group` | `Grp` | The group $G$ if $\mathcal{F} = \mathcal{F}_S(G)$ |
 
 ### Group Attributes
 

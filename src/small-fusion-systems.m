@@ -19,11 +19,11 @@ procedure ErrorLog(entry)
 end procedure;
 
 
-
 intrinsic SetSmallFusionSystemDirectory() -> MonStgElt
 	{Returns the path to the database}
 	return GetCurrentDirectory();
 end intrinsic
+
 
 // Creates the name FS_pp_nn_i with i padded with 0s to width 5
 function GetSmallFusionSystemFileName(order, i)
