@@ -1,7 +1,7 @@
 // Implements a database similar to SmallGroups
 
 
-////////////////////// File path and log functions //////////////////////////////////////
+////////////////////// File path and log functions //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 procedure UpdateLog(entry)
 	log_file := Open("data/update.log", "a");
@@ -70,7 +70,7 @@ procedure AddToVerificationQueue(order,i)
 	delete F; 
 end procedure;
 
-//////////////////////// Loading SmallFusionSystems /////////////////////////////////
+//////////////////////// Loading SmallFusionSystems //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 intrinsic SmallFusionSystem(order::RngIntElt, i::RngIntElt) -> FusionSystem
@@ -91,8 +91,8 @@ end intrinsic;
 intrinsic IdentifyFusionSystem(F::FusionSystem) -> SeqEnum
 	{If F is a small fusion system return its identifying pair}
 	S := F`group;
-	m := NumberSmallFusionSystems(#S: almost_reduced := false);
-	for i in [1..m] do 
+	m, indices := NumberSmallFusionSystems(S: almost_reduced := false);
+	for i in indices do 
 		F_i := SmallFusionSystem(#S, i);
 		if IsIsomorphic(F_i, F) then
 			index := <#S, i>;
@@ -106,38 +106,37 @@ end intrinsic;
 
 
 
-////////////////////////////// Adding fusion systems ///////////////////////////////////////////////////////
+////////////////////////////// Adding fusion systems /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-intrinsic AddSmallFusionSystem(F::FusionSystem)
-	{Given a fusion system check if it is already in the database, otherwise add it}
+intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
+	{Given a fusion system check if it is already in the database, otherwise add it, returns whether a new one has been added}
 	S := F`group;
 	m, indices := NumberSmallFusionSystems(S:almost_reduced := false);
-	new := true;
+
 	for i in indices do 
 		F_i := SmallFusionSystem(#S, i);
 		printf "Checking if F is isomorphic to fusion system %o \n", i;
 		if IsIsomorphic(F_i, F) then
 			print "Fusion system is already in database \n";
-			new := false;
+			return false, [#S, i];
 			break;
 		end if;
 	end for;
 
-	if new then
-		p := FactoredOrder(S)[1][1];
-		n := FactoredOrder(S)[1][2];
-		filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
-		System(Sprintf("mkdir -p %o", filepath));
-		i := NumberSmallFusionSystems(#S:almost_reduced := false) + 1;
-		// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
-		filename := GetSmallFusionSystemFilePath(p^n, i);
-		WriteFusionRecord(filename, F);
-		print "Successfully added new fusion system \n";
-		AddToVerificationQueue(#S, i);
-		UpdateLog(Sprintf(
-			"Added SmallFusionSystem(%o^%o, %o)", p, n, i));
-	end if;
+	p := FactoredOrder(S)[1][1];
+	n := FactoredOrder(S)[1][2];
+	filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
+	System(Sprintf("mkdir -p %o", filepath));
+	i := NumberSmallFusionSystems(#S:almost_reduced := false) + 1;
+	// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
+	filename := GetSmallFusionSystemFilePath(p^n, i);
+	WriteFusionRecord(filename, F);
+	print "Successfully added new fusion system \n";
+	AddToVerificationQueue(#S, i);
+	UpdateLog(Sprintf(
+		"Added SmallFusionSystem(%o^%o, %o)", p, n, i));
+	return true, [#S, i];
 end intrinsic;
 
 
@@ -223,12 +222,36 @@ end intrinsic;
 
 
 
+intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume := [1,1])
+	{Create all direct products of all small fs starting at SFS(order_1, resume[1]) and SFS(order_2, resume[2])}
+	for i in [resume[1]..NumberSmallFusionSystems(order_1: almost_reduced := false)] do 
+		if order_1 eq order_2 then
+			range := [i..NumberSmallFusionSystems(order_1:almost_reduced := false)];
+		else
+			range := [resume[2]..NumberSmallFusionSystems(order_2:almost_reduced := false)];
+		end if;
+		for j in range do  
+			F_1 := SmallFusionSystem(order_1, i);
+			F_2 := SmallFusionSystem(order_2, j);
+			F := FusionDirectProduct(F_1, F_2);
+			F`factors := [<order_1, i>, <order_2, j>];
+			F`indecomposable := false;
+			new, ind := AddSmallFusionSystem(F);
+			if not new then
+				print "Adding factors to existing entry \n";
+				UpdateSmallFusionSystem(ind[1], ind[2]);
+				UpdateSmallFusionSystemAttribute(ind[1], ind[2], "factors" : factors := F`factors);
+			end if;
+		end for;
+	end for;
+end intrinsic;
 
 
 
 
 
-//////////////// Loading information about all fusion systems ////////////////////////////
+
+//////////////// Loading information about all fusion systems //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -309,7 +332,7 @@ end intrinsic
 
 
 
-///////////////// Updating and verifying ////////////////////////////////////////////
+///////////////// Updating and verifying /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -344,12 +367,13 @@ function NeedsUpdate(R, options, overwrite)
 end function;
 
 
-intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt]: FusionGroup := false, overwrite := false)
+intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt]: FusionGroup := false, overwrite := false, factors := [])
 	{Updates a given attribute e.g. core in a fusion systems record}
 	// Check first if we actually need to do anything
 	R := SmallFusionSystemRecord(order, i);
 	need_update := NeedsUpdate(R,options,overwrite);
 	if not need_update then
+		print "Record does not need updating \n";
 		return;
 	end if;
 	// Else here comes the expensive calculations
@@ -364,6 +388,10 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	if "FusionGroup" in options and ISA(Type(FusionGroup), Grp) then
 		F`FusionGroup := FusionGroup;
 	end if;
+	if "factors" in options and not factors eq [] then
+		F`factors := factors;
+		F`indecomposable := false;
+	end if;
 	WriteFusionRecord(GetSmallFusionSystemFilePath(order, i), F);
 	AddToVerificationQueue(order,i);
 	message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
@@ -372,9 +400,9 @@ end intrinsic;
 
 
 
-intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : FusionGroup := false, overwrite := false)
+intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : FusionGroup := false, overwrite := false, factors := [])
 	{Updates a given attribute e.g. core in a fusion systems record, single argument version}
-	UpdateSmallFusionSystemAttributes(order, i, [option] : FusionGroup := FusionGroup, overwrite := overwrite);
+	UpdateSmallFusionSystemAttributes(order, i, [option] : FusionGroup := FusionGroup, overwrite := overwrite, factors := factors);
 end intrinsic;
 
 
@@ -389,6 +417,16 @@ intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEn
 	UpdateLog(message);
 end intrinsic;
 
+
+
+intrinsic UpdateSmallFusionSystem(order::RngIntElt, i::RngIntElt)
+	{Updates a small fusion system to reflect any changes in record format}
+	filename := GetSmallFusionSystemFilePath(order,i);
+	UpdateFusionRecord(filename);
+	message := Sprintf("Updated SmallFusionSystem(%o, %o)", order, i);
+	print message cat "\n";
+	UpdateLog(message);
+end intrinsic;
 
 
 intrinsic UpdateAllSmallFusionSystems()

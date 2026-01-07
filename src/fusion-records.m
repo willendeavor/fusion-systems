@@ -9,7 +9,9 @@ function GetOptionalArgs()
     		"pPerfect",
     		"focal_subgroup",
     		"fusion_group",
-    		"fusion_group_name"
+    		"fusion_group_name",
+    		"indecomposable",
+    		"factors"
     	];
 	return optional;
 end function;
@@ -39,7 +41,9 @@ function FusionToRecord(FS)
 		pPerfect: BoolElt,
 		focal_subgroup : Grp,
 		fusion_group_name : MonStgElt,
-		fusion_group : Grp
+		fusion_group : Grp,
+		indecomposable : BoolElt,
+		factors : SeqEnum
 		>;
 
 	EssentialRecord := recformat< 
@@ -91,6 +95,7 @@ function FusionToRecord(FS)
         S_small_group_id := S_small_group_id,
         EssentialData    := EssentialSeq
     >;
+
     // Now check any additional info
     optional := GetOptionalArgs();
     for x in optional do  
@@ -106,6 +111,7 @@ function FusionToRecord(FS)
     		R``x := FS``x;
     	end if;
     end for;
+
     // For backwards compatability check for both and separate from other optionals
     if assigned FS`grpsystem or assigned FS`fusion_group then
     	if assigned FS`grpsystem then
@@ -154,7 +160,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		pPerfect: BoolElt,
 		focal_subgroup : Grp,
 		fusion_group_name : MonStgElt,
-		fusion_group : Grp
+		fusion_group : Grp,
+		indecomposable : BoolElt,
+		factors : SeqEnum
 		>;
 
 	EssentialRecord := recformat< 
@@ -207,6 +215,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     // Essentials
     fprintf F, "EssentialData := EssentialData";
 
+
     // Optional info
     optional := GetOptionalArgs();
     // If no optionals defined closed records assignment
@@ -220,6 +229,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	// Not using an actual list since types vary
     	info := AssociativeArray(options);
     	for i in options do
+    		// Deal with groups
     		if ISA(Type(R``i), Grp) then
     			// If subgroup of S then we save it as a subgroup construction
     			if ISA(Type(R``i), GrpPC) and R``i subset S then 
@@ -231,6 +241,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     				info[i] := Read("temp_fusion_group.m");
     				System("rm temp_fusion_group.m");
     			end if;
+
     		// If string then surround in quotes so is string when defined
 			elif ISA(Type(R``i), MonStgElt) then
 				info[i] := Sprintf("\"%o\"", R``i);

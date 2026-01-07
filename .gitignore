@@ -1,8 +1,5 @@
 *.ffs_db
-<<<<<<< Updated upstream
 /database
-=======
->>>>>>> Stashed changes
 data_v1.zip
 /data
 /data
@@ -21,3 +18,8 @@ tools/data_summary_v2683_u43332.info
 /tools/data_v1942_u28170
 /tools/data_v2683_u43332
 tools/data_v1942_u28170.zip
+/tools/data_new
+/tools/data_old
+tools/data_v1942_u28170.zip
+/tools/data_v1942_u28170
+/tools/data_v2683_u43332
