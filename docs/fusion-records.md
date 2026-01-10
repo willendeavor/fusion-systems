@@ -12,12 +12,12 @@
 | S_name           	| MonStgElt 	| GroupName of S                                             	|
 | S_small_group_id 	| Tup       	| If S is in the SmallGroup database then this is <order, i> 	|
 | EssentialData    	| SeqEnum   	| A list of records of the format EssentialRecord            	|
-| Core             	| Grp       	| The F-core                                                 	|
-| OpTriv           	| BoolElt   	| Stores whether Core is trivial or not                      	|
-| FocalSubgroup    	| Grp       	| The focal subgroup of F                                    	|
+| core             	| Grp       	| The F-core                                                 	|
+| core_trivial           	| BoolElt   	| Stores whether Core is trivial or not                      	|
+| focal_subgroup    	| Grp       	| The focal subgroup of F                                    	|
 | pPerfect         	| BoolElt   	| Stores whether O^p(F) = F or not                           	|
-| FusionGroup      	| Grp       	| If F is a group fusion system F_S(G) then this stores G    	|
-| FusionGroup_name 	| MonStgElt 	| GroupName of FusionGroup                                   	|
+| fusion_group      	| Grp       	| If F is a group fusion system F_S(G) then this stores G    	|
+| fusion_group_name 	| MonStgElt 	| GroupName of FusionGroup                                   	|
 ---
 
 #### EssentialRecord
