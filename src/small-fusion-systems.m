@@ -131,7 +131,7 @@ intrinsic IdentifyFusionSystem(F::FusionSystem) -> SeqEnum
 			return index;
 		end if;
 	end for;
-	print "Fusion is not a small fusion system";
+	print "Fusion system is not a small fusion system";
 	return <0,0>;
 end intrinsic;
 
@@ -224,7 +224,7 @@ end intrinsic;
 
 
 intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
-	{Given a group fusion system find it in the SmallFusionSystem library and add the FusionGroup}
+	{Given a group fusion system find it in the SmallFusionSystem library and add the fusion_group}
 	require assigned F`grpsystem : "F is not a group fusion system";
 	pair := IdentifyFusionSystem(F);
 	G := F`grpsystem;
@@ -235,15 +235,94 @@ intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 		AddSmallFusionSystem(F);
 	else
 		R := SmallFusionSystemRecord(pair[1], pair[2]);
-		if (assigned R`FusionGroup and overwrite eq true) or not assigned R`FusionGroup then
-			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["FusionGroup"] : FusionGroup := G);
-			message := Sprintf("Added FusionGroup to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
+		if (assigned R`fusion_group and overwrite eq true) or not assigned R`fusion_group then
+			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["fusion_group"] : fusion_group := G);
+			message := Sprintf("Added fusion_group to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
 			UpdateLog(message);
 		else
-			printf "SmallFusionSystem(%o, %o) already has group %o attached", pair[1], pair[2], R`FusionGroup_name;
+			printf "SmallFusionSystem(%o, %o) already has group %o attached \n", pair[1], pair[2], R`fusion_group_name;
 		end if;
 	end if;
-	
+end intrinsic;
+
+
+intrinsic AddAllGroupFusionSystems(G::Grp) 
+	{Given a group G add every group fusion system it yields}
+	bounds := [
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8],
+		[3,3], [3,4], [3,5], [3,6], [3,7],
+		[5,3], [5,4], [5,5], [5,6],
+		[7,3], [7,4], [7,5]
+		];
+	divisors := FactoredOrder(G);
+	for factor in divisors do 
+		p := factor[1];
+		n := factor[2];
+		if [p,n] in bounds then 
+			printf "Making the fusion system over (p,n) = (%o,%o) \n", p,n;
+			F := GroupFusionSystem(G,p);
+			AddGroupFusionSystem(F);
+		end if; 
+	end for;
+end intrinsic;
+
+
+intrinsic AddAllSimpleGroupFusionSystems(resume::RngIntElt: skips := false)
+	{Add every possible group fusion system from the simple groups database}
+	for i in [resume..NumberOfSimpleGroups()] do 
+		printf "Adding SimpleGroupId(%o) \n", i;
+		try
+			G := SimpleGroup(SimpleGroupId(i));
+			name := GroupName(G);
+			print name;
+			if "PSL(2," in name
+					or "2A(2," in name and skips then
+				continue;
+			end if;
+			message := Sprintf("Making all fusion systems of SimpleGroup(%o): %o", i, name);
+			print message;
+			UpdateLog(message);
+		catch e 
+			message := Sprintf("Could not load SimpleGroupId(%o)", i);
+			print message;
+			ErrorLog(message);
+			continue;
+		end try;
+		AddAllGroupFusionSystems(G);
+	end for;
+end intrinsic;
+
+
+intrinsic AddAllGroupFusionSystemsLieType(max_order)
+	{Adds all group fusion systems from groups of lie type of bounded order}
+	bounds := [
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8],
+		[3,3], [3,4], [3,5], [3,6], [3,7],
+		[5,3], [5,4], [5,5], [5,6],
+		[7,3], [7,4], [7,5]
+		];
+	ns := [2,3,4,5];
+	lies := ["B", "C", "D", "E", "F", "G", "2A", "2B", "2C", "2D", "2E", "2F", "2G", "3D"];
+	for n in ns do 
+		for bound in bounds do  
+			for lie in lies do 
+				q := bound[1]^bound[2];
+				name := lie cat Sprintf("(%o, %o)", n,q);
+				try 				
+					G := SimpleGroup(name);
+				catch e 
+					continue;
+				end try;
+				if #G gt max_order then
+					continue;
+				end if;
+				message := Sprintf("Adding all fusion systems of %o", name);
+				print(message);
+				UpdateLog(message);
+				AddAllGroupFusionSystems(G);
+			end for;
+		end for;
+	end for;
 end intrinsic;
 
 
@@ -476,7 +555,7 @@ function NeedsUpdate(R, options, overwrite)
 end function;
 
 
-intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt]: FusionGroup := false, overwrite := false, factors := [])
+intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, options::SeqEnum[MonStgElt]: fusion_group := false, overwrite := false, factors := [])
 	{Updates a given attribute e.g. core in a fusion systems record}
 	// Check first if we actually need to do anything
 	R := SmallFusionSystemRecord(order, i);
@@ -494,8 +573,8 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		F`focal_subgroup := FocalSubgroup(F);
 		F`pPerfect := F`focal_subgroup eq F`group;
 	end if;
-	if "FusionGroup" in options and ISA(Type(FusionGroup), Grp) then
-		F`FusionGroup := FusionGroup;
+	if "fusion_group" in options and ISA(Type(fusion_group), Grp) then
+		F`fusion_group := fusion_group;
 	end if;
 	if "factors" in options and not factors eq [] then
 		F`factors := factors;
@@ -509,9 +588,9 @@ end intrinsic;
 
 
 
-intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : FusionGroup := false, overwrite := false, factors := [])
+intrinsic UpdateSmallFusionSystemAttribute(order :: RngIntElt, i::RngIntElt, option::MonStgElt : fusion_group := false, overwrite := false, factors := [])
 	{Updates a given attribute e.g. core in a fusion systems record, single argument version}
-	UpdateSmallFusionSystemAttributes(order, i, [option] : FusionGroup := FusionGroup, overwrite := overwrite, factors := factors);
+	UpdateSmallFusionSystemAttributes(order, i, [option] : fusion_group := fusion_group, overwrite := overwrite, factors := factors);
 end intrinsic;
 
 
@@ -524,6 +603,18 @@ intrinsic UpdateAllSmallFusionSystemsAttributes(order::RngIntElt, options::SeqEn
 	end for;
 	message := Sprintf("Updated ALL SmallFusionSystem(%o, i) attributes %o", order, options);
 	UpdateLog(message);
+end intrinsic;
+
+
+
+intrinsic UpdateAllSmallFusionSystemsAttributes(options::SeqEnum[MonStgElt])
+	{Runs UpdateAllSmallFusionSystemsAttributes on all orders}
+	pn := GetAllpn();
+	for p in pn do 
+		for n in pn[p] do 
+			UpdateAllSmallFusionSystemsAttributes(p^n, options);
+		end for;
+	end for;
 end intrinsic;
 
 
@@ -770,6 +861,7 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 	UpdateIndexMigrationYAML(new_dir, mapping, order);
 	UpdateLog("Migrated indices following isomorphism classes");
 end intrinsic;
+
 
 
 
