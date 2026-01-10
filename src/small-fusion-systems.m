@@ -291,6 +291,7 @@ intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume :
 		for j in range do  
 			F_1 := SmallFusionSystem(order_1, i);
 			F_2 := SmallFusionSystem(order_2, j);
+			printf "Calculating direct product of (%o, %o) and (%o, %o)", order_1,i, order_2, j;
 			F := FusionDirectProduct(F_1, F_2);
 			F`factors := [<order_1, i>, <order_2, j>];
 			F`indecomposable := false;
@@ -481,7 +482,7 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	R := SmallFusionSystemRecord(order, i);
 	need_update := NeedsUpdate(R,options,overwrite);
 	if not need_update then
-		print "Record does not need updating \n";
+		printf "Record (%o,%o) does not need updating \n", order, i;
 		return;
 	end if;
 	// Else here comes the expensive calculations
@@ -667,6 +668,11 @@ intrinsic CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1, almost
 		print "No duplicates found";
 	end if;
 	return duplicates;
+end intrinsic;
+
+
+intrinsic CheckDuplicatesAll()
+	{Run check duplicates on all fusion systems}
 end intrinsic;
 
 

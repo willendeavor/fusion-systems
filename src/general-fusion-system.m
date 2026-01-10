@@ -64,7 +64,7 @@ end intrinsic;
 
 
 
-
+// Note F2 will have all subgroups generated but F1 will not
 intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
     a, theta := IsIsomorphic(F1`borel,F2`borel);
     if a eq false then 
@@ -136,6 +136,7 @@ intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
         end for;        
         ImAutEssentials[zz]:=ImAutEssentialsCalc;
     end for;
+
     MakeAllSubgroups(F2);
     for XXct in [1..#ImEssentials] do 
         XX:=ImEssentials[XXct];
@@ -154,7 +155,7 @@ intrinsic IsIsomorphic (F1::FusionSystem,F2::FusionSystem)->Bool{}
                 gen in  Generators(ImAutEssentials[XXct][ii])}>;
         end for;
     end for;
-    delete F2`subgroups;
+
     jj:= {1..#F2`essentials};
     for ii in [1..#ImAutEssentials] do 
         kk:= jj;

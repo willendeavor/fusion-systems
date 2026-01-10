@@ -332,8 +332,8 @@ end intrinsic;
 
 
 
-// Preloaded if you already have a fusion system loaded, helpful to avoid calling subgroups many times
-intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec : preloaded := false) -> Bool
+// Preloaded if you already have a fusion system loaded, helpful to avoid calling subgroups many times, corresponds to second entry
+intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec : preloaded := 0) -> Bool
 	{Given two fusion records return if they are potentially isomorphic without constructing the fusion systems}
 	// Trivial case
 	if R_1 cmpeq R_2 then 
