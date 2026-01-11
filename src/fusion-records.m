@@ -120,7 +120,9 @@ function FusionToRecord(FS)
     	if assigned FS`fusion_group then 
     		R`fusion_group := FS`fusion_group;
     	end if;
-    	R`fusion_group_name := GroupName(R`fusion_group);
+    	if assigned FS`fusion_group_name then 
+    		R`fusion_group_name := FS`fusion_group_name;
+    	end if;
     end if;
     return R;
 end function;

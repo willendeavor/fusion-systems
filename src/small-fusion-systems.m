@@ -266,9 +266,9 @@ end intrinsic;
 
 intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 	{Given a group fusion system find it in the SmallFusionSystem library and add the fusion_group}
-	require assigned F`grpsystem : "F is not a group fusion system";
+	require assigned F`fusion_group : "F is not a group fusion system (or at least it is not assigned)";
 	pair := IdentifyFusionSystem(F);
-	G := F`grpsystem;
+	G := F`fusion_group;
 	// Replace G by G/O_{p'}(G)
 	if pair eq <0,0> then
 		message := Sprintf("Adding group fusion system of %o", GroupName(G));
