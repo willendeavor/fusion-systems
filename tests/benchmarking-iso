@@ -1,0 +1,8 @@
+time IsIsomorphic(SmallFusionSystem(5^6,1), SmallFusionSystem(5^6,2));
+time IsIsomorphicFusionRecords(SmallFusionSystemRecord(5^6,1), SmallFusionSystemRecord(5^6,2));
+F_2 := SmallFusionSystem(5^6,2);
+time IsIsomorphicFusionRecords(SmallFusionSystemRecord(5^6,1), SmallFusionSystemRecord(5^6,2) : preloaded := F_2);
+
+AttachSpec("spec");
+F := SmallFusionSystem(5^6, 37);
+time AddSmallFusionSystem(F);

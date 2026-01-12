@@ -30,6 +30,7 @@ intrinsic MakeDirectProductGroup(G_1::Grp, G_2::Grp) -> DirectProductGroup
 	return MakeDirectProductGroup([G_1, G_2]);
 end intrinsic;
 
+
 intrinsic TransportDirectProductGroup(D::DirectProductGroup, phi::Map) -> DirectProductGroup
 	{Given a DirectProductGroup D and a phi: D -> G remake phi(D) in G}
 	G := New(DirectProductGroup);
@@ -41,6 +42,7 @@ intrinsic TransportDirectProductGroup(D::DirectProductGroup, phi::Map) -> Direct
 		G_i := phi(D_i);
 	end for;
 end intrinsic;
+
 
 intrinsic AutEltRestriction(phi::GrpAutoElt, H::Grp) -> GrpAutoElt
 	{Given phi an automorphism of some G normalising H le G return the restriction}
@@ -210,16 +212,6 @@ end function;
 
 
 
-
-
-
-
-
-
-
-
-
-
 intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return_decomposition := false) -> Bool, SeqEnum
 	{Given a reduced fusion system over S and a list of internal subgroups S_factors such that S = \prod S_factors determine if F splits}
 	// Importantly this is not F`directproductgrp for a direct product
@@ -244,7 +236,6 @@ intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return
 	F_factors := [];
 	to_be_sorted := [2..#F`essentials];
 	for i in [1..#S_factors] do 
-		print #to_be_sorted;
 		S_i := S_factors[i];
 		S_i_star := sub<S | [S_factors[j] : j in [x : x in [1..#S_factors] | x ne i]]>;
 		// Get essentials (indices) that contain S_i_star

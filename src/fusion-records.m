@@ -120,7 +120,9 @@ function FusionToRecord(FS)
     	if assigned FS`fusion_group then 
     		R`fusion_group := FS`fusion_group;
     	end if;
-    	R`fusion_group_name := GroupName(R`fusion_group);
+    	if assigned FS`fusion_group_name then 
+    		R`fusion_group_name := FS`fusion_group_name;
+    	end if;
     end if;
     return R;
 end function;
@@ -279,7 +281,7 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec
 end intrinsic;
 
 
-intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
+intrinsic LoadFusionSystem(R::Rec : load_group := false) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	S := R`S;
 	PS := PowerGroup(S);
@@ -305,6 +307,10 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 				// If want a subgroup of S we need to transport it to the Borel group
 				if ISA(Type(R``x), Grp) and not x eq "fusion_group" and R``x subset S then
 					F``x := F`borelmap(R``x);
+				elif x eq "fusion_group" then
+					if load_group then
+						F``x := R``x;
+					end if;
 				else
 					F``x := R``x;
 				end if;
@@ -316,10 +322,10 @@ end intrinsic;
 
 
 
-intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
+intrinsic LoadFusionSystem(filename::MonStgElt: load_group := false) -> FusionSystem
 	{Creates a fusion system from a database entry}
 	R := LoadFusionSystemRecord(filename);
-	return(LoadFusionSystem(R));
+	return(LoadFusionSystem(R: load_group:=load_group));
 end intrinsic;
 
 
@@ -332,8 +338,8 @@ end intrinsic;
 
 
 
-
-intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec) -> Bool
+// Preloaded if you already have a fusion system loaded, helpful to avoid calling subgroups many times, corresponds to second entry
+intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec : preloaded := 0) -> Bool
 	{Given two fusion records return if they are potentially isomorphic without constructing the fusion systems}
 	// Trivial case
 	if R_1 cmpeq R_2 then 
@@ -366,7 +372,13 @@ intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec) -> Bool
 	end for;
 
 	// Finally perform isomorphism test of the fusion systems
-	return IsIsomorphic(LoadFusionSystem(R_1), LoadFusionSystem(R_2));
+	if preloaded cmpeq 0 then
+		F_2 := LoadFusionSystem(R_2);
+	else
+		F_2 := preloaded;
+	end if;
+	F_1 := LoadFusionSystem(R_1);
+	return IsIsomorphic(F_1, F_2);
 end intrinsic;
 
 
