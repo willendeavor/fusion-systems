@@ -281,7 +281,7 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec
 end intrinsic;
 
 
-intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
+intrinsic LoadFusionSystem(R::Rec : load_group := false) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	S := R`S;
 	PS := PowerGroup(S);
@@ -307,6 +307,10 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 				// If want a subgroup of S we need to transport it to the Borel group
 				if ISA(Type(R``x), Grp) and not x eq "fusion_group" and R``x subset S then
 					F``x := F`borelmap(R``x);
+				elif x eq "fusion_group" then
+					if load_group then
+						F``x := R``x;
+					end if;
 				else
 					F``x := R``x;
 				end if;
@@ -318,10 +322,10 @@ end intrinsic;
 
 
 
-intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
+intrinsic LoadFusionSystem(filename::MonStgElt: load_group := false) -> FusionSystem
 	{Creates a fusion system from a database entry}
 	R := LoadFusionSystemRecord(filename);
-	return(LoadFusionSystem(R));
+	return(LoadFusionSystem(R: load_group:=load_group));
 end intrinsic;
 
 

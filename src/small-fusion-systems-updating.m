@@ -58,6 +58,7 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	end if;
 	if "fusion_group" in options and ISA(Type(fusion_group), Grp) then
 		F`fusion_group := fusion_group;
+		F`fusion_group_name := GroupName(fusion_group);
 	end if;
 	if "factors" in options and not factors eq [] then
 		F`factors := factors;

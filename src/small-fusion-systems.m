@@ -80,10 +80,10 @@ end procedure;
 //////////////////////// Loading SmallFusionSystems //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-intrinsic SmallFusionSystem(order::RngIntElt, i::RngIntElt) -> FusionSystem
+intrinsic SmallFusionSystem(order::RngIntElt, i::RngIntElt :load_group := false) -> FusionSystem
 	{Return the i-th fusion system on a group of given order}
 	// Recall that loading the fusion system record does not load the fusion system
-	return LoadFusionSystem(GetSmallFusionSystemFilePath(order, i));
+	return LoadFusionSystem(GetSmallFusionSystemFilePath(order, i) :load_group := load_group);
 end intrinsic;
 
 
@@ -133,6 +133,9 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -
     	indices := [];
     	for i in [1..count] do  
     		R := SmallFusionSystemRecord(S_order, i);
+    		if not assigned R`core_trivial or not assigned R`pPerfect then
+    			continue;
+    		end if;
     		if R`core_trivial eq true and R`pPerfect eq true then 
     			Append(~indices, i);
     		end if;
@@ -161,6 +164,21 @@ intrinsic NumberSmallFusionSystems(S::Grp: almost_reduced := true) -> RngIntElt,
 end intrinsic;
 
 
+intrinsic NumberGroupFusionSystems(order::RngIntElt) -> RngIntElt, SeqEnum
+	{Returns the number of fusion systems that have a group attached}
+	p := Factorisation(order)[1][1];
+	n := Factorisation(order)[1][2];
+	indices := [];
+	for i in [1..NumberSmallFusionSystems(order: almost_reduced:=false)] do  
+		R := SmallFusionSystemRecord(order,i);
+		if assigned R`fusion_group or assigned R`fusion_group_name then 
+			Append(~indices, i);
+		end if;
+	end for;
+	return #indices, indices;
+	end intrinsic;
+
+
 
 intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
 	{Given S_order return a list of all groups which have a small fusion system}
@@ -180,13 +198,13 @@ end intrinsic;
 intrinsic GetSmallFusionSystemTotals()
 	{Returns the total number of almost reduced and all FS}
 	pn := GetAllpn();
-	print "(p,n) : Almost reduced (Total) \n";
+	print "(p,n) : Almost reduced (Total) [Groups] \n";
 	for pp in Keys(pn) do 
 		for nn in pn[pp] do  
 			p := StringToInteger(pp);
 			n := StringToInteger(nn);
-			printf "(%o, %o) : %o (%o) \n", 
-				p,n, NumberSmallFusionSystems(p^n), NumberSmallFusionSystems(p^n : almost_reduced := false);
+			printf "(%o, %o) : %o (%o) [%o] \n", 
+				p,n, NumberSmallFusionSystems(p^n), NumberSmallFusionSystems(p^n : almost_reduced := false), NumberGroupFusionSystems(p^n);
 		end for;
 	end for;
 end intrinsic
