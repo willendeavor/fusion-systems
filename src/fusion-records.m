@@ -339,7 +339,7 @@ end intrinsic;
 
 
 // Preloaded if you already have a fusion system loaded, helpful to avoid calling subgroups many times, corresponds to second entry
-intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec : preloaded := 0) -> Bool
+intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec : preloaded := 0, printing := false) -> Bool
 	{Given two fusion records return if they are potentially isomorphic without constructing the fusion systems}
 	// Trivial case
 	if R_1 cmpeq R_2 then 
@@ -348,25 +348,37 @@ intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec : preloaded := 0) -> Bool
 
 	// Check orders of everything first
 	if not #R_1`EssentialData eq #R_2`EssentialData then 
+		if printing then 
+			print "Different number of essentials";
+		end if;
 		return false;
 	end if;
 	// We've already checked they have the same number of essentials so worry about duplicate orders
 	orders_1 := {X`E_order : X in R_1`EssentialData};
 	orders_2 := {X`E_order : X in R_2`EssentialData};
 	if not orders_1 eq orders_2 then 
+		if printing then 
+			print "Essentials have different orders";
+		end if;
 		return false;
 	end if;
 	// Now check isomorphism of the essential subgroups
 	for E_1 in R_1`EssentialData do 
 		E := E_1`E;
-		if forall{E_2`E : E_2 in R_2`EssentialData | IsIsomorphic(E, E_2`E)} then
+		if not exists{E_2`E : E_2 in R_2`EssentialData | IsIsomorphic(E, E_2`E)} then
+			if printing then 
+				print "Non isomorphic essentials [1]";
+			end if;
 			return false;
 		end if;
 	end for;
 
 	for E_2 in R_2`EssentialData do 
 		E := E_2`E;
-		if forall{E_1`E : E_1 in R_1`EssentialData | IsIsomorphic(E, E_1`E)} then 
+		if not exists{E_1`E : E_1 in R_1`EssentialData | IsIsomorphic(E, E_1`E)} then 
+			if printing then 
+				print "Non isomorphic essentials [2]";
+			end if;
 			return false;
 		end if;
 	end for;

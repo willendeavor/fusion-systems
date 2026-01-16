@@ -47,7 +47,7 @@ function GetSmallFusionSystemFilePath(order, i)
 end function;
 
 
-// Returns an associate array of p : [n_1, n_2, ..]
+// Returns an associate array of p : [n_1, n_2, ..], note they are returned as strings
 function GetAllpn()
 	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
 	p_list := Split(p_list, "\n");
@@ -62,6 +62,23 @@ function GetAllpn()
 	end for;
 	return all_list;
 end function;
+
+
+// Returns a list [(2^3,1), (2^3,2), ....] of all entries
+function GetAllIndices()
+	pn := GetAllpn();
+	indices := [];
+	for pp in Keys(pn) do 
+		for nn in pn[nn] do  
+			p := StringToInteger(pp);
+			n := StringToInteger(nn);
+			all := [[p^n, i] : i in [1..NumberSmallFusionSystems(p^n : almost_reduced := false)]];
+			Append(~indices, all);
+		end for;
+	end for;
+	return indices;
+end function;
+
 
 procedure AddToVerificationQueue(order,i)
 	filename := "data/verification_queue.log";

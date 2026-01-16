@@ -1,5 +1,6 @@
 import "small-fusion-systems.m" : ErrorLog, UpdateLog, AddToVerificationQueue, 
-									GetAllpn, GetSmallFusionSystemFilePath, GetSmallFusionSystemFileName;
+									GetAllpn, GetSmallFusionSystemFilePath, GetSmallFusionSystemFileName,
+									GetAllIndices;
 
 
 
@@ -250,6 +251,50 @@ end intrinsic;
 
 intrinsic CheckDuplicatesAll()
 	{Run check duplicates on all fusion systems}
+	pn := GetAllpn();
+	for pp in Keys(pn) do  
+		for nn in pn[pp] do 
+			p := StringToInteger(pp);
+			n := StringToInteger(nn);
+			dup := CheckDuplicatesSmallFusionSystem(p^n:almost_reduced:=false);
+			if not IsEmpty(dup) then 
+				message := Sprintf("(%o,%o) contains duplicates", p, n);
+				print message;
+				ErrorLog(message);
+			end if;
+		end for;
+	end for;
+end intrinsic;
+
+
+
+intrinsic TestIsomorphismWorking() -> BoolElt
+	{test}
+	pn := GetAllpn();
+	for pp in Keys(pn) do 
+		for nn in pn[pp] do
+			p := StringToInteger(pp);
+			n := StringToInteger(nn);
+			print p,n;
+			indices := [1..NumberSmallFusionSystems(p^n:almost_reduced := false)];
+			for i in indices do 
+				for j in [i+1..#indices] do  
+					print i,j;
+					F := SmallFusionSystem(p^n, i);
+					FF := SmallFusionSystem(p^n, j);
+					R := SmallFusionSystemRecord(p^n, i);
+					RR := SmallFusionSystemRecord(p^n, j);
+					a := IsIsomorphic(F,FF);
+					b := IsIsomorphicFusionRecords(R,RR);
+					if not a eq b then
+						print p,n, i,j;
+						return false;
+					end if;
+				end for;
+			end for;
+		end for;
+	end for;
+	return true;
 end intrinsic;
 
 
