@@ -6,7 +6,16 @@ This is mostly a project to bring myself up to speed with Git and writing docume
 
 ## Installation and execution
 
-For the most recent code clone the main branch, extract the data.zip to the root directory (should be data/SmallFusionSystems) and run `AttachSpec("spec")` from the root directory, otherwise the releases should be fairly stable and tested and the code can be downloaded there. Importantly the SmallFusionSystems functionality references paths from the root directory, at some point I will add the option to set a directory but for now MAGMA must be run from the root directory. Note as well this uses OS commands that may or may not be specific to the OS.
+For the most recent code clone the main branch, extract the data.zip to the root directory so the directory at a minimum looks like
+```
+.
+└── fusion-systems/
+    ├── -src/
+    ├── -data/
+    │   └── SmallFusionSystems/
+    └── -spec
+```
+and run `AttachSpec("spec")` from the root directory `fusion-systems/`, otherwise the releases should be fairly stable and tested and the code can be downloaded there. Importantly the SmallFusionSystems functionality references paths from the root directory, at some point I will add the option to set a directory but for now MAGMA must be run from the root directory. Note as well this uses OS commands that may or may not be specific to the OS.
 
 
 ## Usage and an example (v.1.0.0)

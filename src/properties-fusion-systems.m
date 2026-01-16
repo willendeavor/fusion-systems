@@ -90,9 +90,15 @@ end intrinsic;
 intrinsic Core(F::FusionSystem)->Grp
     {Returns  F core }
     FF:= F`group; 
-
-    FC:= sub<FF|>; AA:=Append(F`essentials,FF);
-    for x in F`essentials do FF := FF meet x; end for;
+    // If S is the only essential then F = N_F(S)
+    if #F`essentials eq 1 then 
+        return false, FF;
+    end if;
+    FC:= sub<FF|>; 
+    AA:=Append(F`essentials,FF);
+    for x in F`essentials do 
+        FF := FF meet x; 
+    end for;
     SF:=[x`subgroup:x in  NormalSubgroups(FF)];
     SF:= Reverse(SF);
 
@@ -110,8 +116,6 @@ intrinsic Core(F::FusionSystem)->Grp
         end for;
         FC:= sub<FF|x>; break;
      end for;
-     
-     
     return #FC eq 1, FC;
 end intrinsic;
 
