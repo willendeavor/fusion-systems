@@ -1,10 +1,14 @@
 // Functions related to properties of a subgroup within the fusion system
+import "properties-fusion-systems.m" : MakeAllSubgroups;
+
+
 
 
 intrinsic IdentifyBClass(F::FusionSystem,P::Grp)->RngIntElt,GrpElt
     {Identifies a AutFS-conjugacy class}
-     
-     SS:= F`subgroups; B:= F`borel;
+     MakeAllSubgroups(F);
+     SS:= F`subgroups; 
+     B:= F`borel;
      for ii := 1 to #SS do 
         aa,bbb:=IsConjugate(B,P,SS[ii]);
         if aa then return ii,bbb; end if; 
@@ -27,6 +31,7 @@ intrinsic IdentifyFOrbit(F::FusionSystem,P::Grp)->SetEnum
       if assigned(F`fusiongraph) eq false then 
           F`fusiongraph, F`maps:= FusionGraph(F); 
       end if;   F`classes:= ConnectedComponents(F`fusiongraph);
+        MakeAllSubgroups(F);
       ii:= Index(F`subgroups,P);
                 for C in F`classes do
                     if ii in C then D:= C; break; end if;
@@ -38,6 +43,7 @@ end intrinsic;
 
 intrinsic ConjugacyClass(F::FusionSystem,P:Grp)-> SetEnum
    {Determines the F-conjugacy class of a subgroup}
+    MakeAllSubgroups(F);
    SS:= F`subgroups;S:= F`group;
        if assigned(F`fusiongraph) eq false then 
            F`fusiongraph,F`maps:= FusionGraph(F);  
@@ -58,7 +64,7 @@ end intrinsic;
 
 intrinsic IsConjugate(F::FusionSystem, P::Grp,Q::Grp)->Bool,Map 
    {returns a homomorphism and true if the groups are F-conjugate}
-
+    MakeAllSubgroups(F);
    SS:= F`subgroups; S:= F`group; B:= F`borel; 
    if assigned(F`fusiongraph) eq false then 
        F`fusiongraph,F`maps:= FusionGraph(F);  
@@ -154,7 +160,7 @@ end intrinsic;
 
 intrinsic IsCentric(F::FusionSystem,P::Grp)->Bool
    {Returns true if P is F-centric}
-
+    MakeAllSubgroups(F);
    SS:= F`subgroups; S:= F`group; B:= F`borel; 
    if assigned(F`fusiongraph) eq false then 
        F`fusiongraph,F`maps:= FusionGraph(F); 
@@ -176,6 +182,7 @@ intrinsic IsCentric(F::FusionSystem,P::Grp)->Bool
 
 intrinsic IsFullyNormalized(F::FusionSystem, P::Grp)->Bool
    {Is the subgroup full F-Normalized}
+    MakeAllSubgroups(F);
    SS:= F`subgroups; S:= F`group; B:= F`borel; 
    if assigned(F`fusiongraph) eq false then 
    F`fusiongraph,F`maps:= FusionGraph(F);  
@@ -202,6 +209,7 @@ end intrinsic;
 
 
 intrinsic IsFullyCentralized(F::FusionSystem, P::Grp)->Bool{Is the subgroup full F-Centralized}
+ MakeAllSubgroups(F);
    SS:= F`subgroups; S:= F`group; B:= F`borel; 
    if assigned(F`fusiongraph) eq false then F`fusiongraph,F`maps:=FusionGraph(F);  
    end if;
@@ -274,7 +282,7 @@ intrinsic SurjectivityProperty(F::FusionSystem,P::Grp:saturationtest)->Bool, Boo
     return F`saturated, F`saturated; end if;
 
     require IsCentric(F,P):"subgroup not F-centric";
-
+     MakeAllSubgroups(F);
     SS:= F`subgroups; 
     S:= F`group; 
     B:= F`borel; 
@@ -342,10 +350,10 @@ end intrinsic;
 
 intrinsic IsWeaklyClosed(F::FusionSystem, P::Grp)->Bool
     {Returns true if the subgroups is weakly closed}
-    WC:= false;
-    if IsNormal(F`borel,P) eq false then return false; end if;
-    if #ConjugacyClass(F,P) eq 1 then WC := true; end if;
-    return WC;
+    if IsNormal(F`borel,P) eq false then 
+        return false; 
+    end if;
+    return #ConjugacyClass(F,P) eq 1;
 end intrinsic;
 
 
@@ -353,13 +361,16 @@ end intrinsic;
 intrinsic IsStronglyClosed(F::FusionSystem, P::Grp)->Bool
     {Returns true if the subgroups is strongly closed}
     SC:= true;
-    if IsWeaklyClosed(F,P) eq false then return false; end if;
-
+    if IsWeaklyClosed(F,P) eq false then 
+        return false; 
+    end if;
     X:= {x`subgroup: x in Subgroups(P)};
     for x in X do 
         xC:= ConjugacyClass(F,x);  
         for w in xC do
-            if w subset P eq false then return false; end if; 
+            if w subset P eq false then 
+                return false; 
+            end if; 
         end for;
     end for; 
     return SC;
@@ -369,6 +380,7 @@ end intrinsic;
 
 intrinsic AutomorphismGroup(F::FusionSystem,P::Grp)-> GrpAuto
     {Calculates the automorphism group of P}
+     MakeAllSubgroups(F);
     SS:= F`subgroups;
     Essentials:= F`essentials;
     B:= F`borel;
@@ -385,7 +397,7 @@ intrinsic AutomorphismGroup(F::FusionSystem,P::Grp)-> GrpAuto
     ComponentP:= Setseq(IdentifyFOrbit(F,P));
      
     for x in ComponentP do MakeAutos(SS[Index(x)]); end for;
-
+    MakeAutos(P);
     AutP:= P`autogrp;
 
     AP := sub<AutP|>;
@@ -489,5 +501,41 @@ end intrinsic;
 
 
 
+intrinsic IsNormal(F::FusionSystem, P::Grp) -> Bool 
+    {Determine if P is a normal subgroup of the fusion system}
+    // For each essential E test if P is in E and P is Aut_F(E)-invariant
+    for i in [1..#F`essentials] do 
+        E := F`essentials[i];
+        if not P subset E then 
+            return false;
+        end if;
+        if not IsInvariant(F`essentialautos[i], E, P) then
+            return false;
+        end if;
+    end for;
+    return true;
+end intrinsic;
 
 
+// Using definition
+intrinsic IsCentral(F::FusionSystem, P::Grp) -> Bool 
+    {Determine if P is a central subgroup of the fusion system}
+    for x in P do 
+        if not #FConjugacyClass(F,x) eq 1 then
+            return false;
+        end if;
+    end for;
+    return true;
+end intrinsic;
+
+
+
+/*
+// Using essentials? Haven't proven this formally
+intrinsic IsCentralTemp(F::FusionSystem, P::Grp) -> Bool
+    {Determine if P is a central subgroup of the fusion system}
+    for i in [1..#F`essentials] do 
+
+    end for;
+end intrinsic;
+*/

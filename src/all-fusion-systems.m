@@ -1,3 +1,7 @@
+
+
+
+
 // Puts the essentials in order according to Group Name
 procedure OrderEssentials(S, ~Autos)
     p := FactoredOrder(S)[1][1];
@@ -14,6 +18,8 @@ procedure OrderEssentials(S, ~Autos)
         Reverse(~Autos); 
     end if; 
 end procedure;
+
+
 
 
 intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[],OpTriv:=true,pPerfect:= true)-> SeqEnum
@@ -49,7 +55,7 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
     end if; 
 
     // Good to proceed, first find the protoessentials
-    ProtoEssentialAutClasses:=AllProtoEssentials(S:OpTriv, pPerfect, Printing);
+    ProtoEssentialAutClasses:=AllProtoEssentials(S:OpTriv:=OpTriv, pPerfect := pPerfect, Printing:=Printing);
     // If we have no protoessentials we are done
     if ProtoEssentialAutClasses eq [] then 
         return FF; 
@@ -148,18 +154,19 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
 
 
 
-    if Printing then print "This group has ", #BorelsandS, " Borel groups";end if;
+    if Printing then 
+        print "This group has ", #BorelsandS, " Borel groups";
+    end if;
 
     count:=0;
     for Bor in BorelsandS do
-       
-
-        count := count+1;  
-    print "**********************************************";
-    print " Borel", count, "of", #BorelsandS, FactoredOrder(Bor[1]);
-    print "**********************************************";
-     
-      B:= Bor[1];    
+       count := count+1; 
+        if Printing then
+            print "**********************************************";
+            print " Borel", count, "of", #BorelsandS, FactoredOrder(Bor[1]);
+            print "**********************************************";
+        end if;
+    B:= Bor[1];    
     S:= Bor[2];  
 
     //We use the fact that if $B=S$ and p ge 5 then $O^p(\F)<\F$.

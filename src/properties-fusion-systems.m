@@ -1,6 +1,32 @@
 // Functions that determine properties of a given fusion system
 
 
+
+
+procedure MakeAllSubgroups(F)
+    // Assigns all subgroups of a fusion system
+    if not assigned(F`subgroups) then
+        B := F`borel;
+        subsBS:=Subgroups(B: OrderDividing:=#F`group);
+        F`subgroups:=[x`subgroup:x in subsBS];
+        // The following code makes sure our essentials are the representatives in F`subgroups
+        for ii := 1 to #F`essentials do
+            X:= F`essentials[ii];
+            if X in F`subgroups eq false then 
+                for jj in [1..#F`subgroups] do
+                    w:= F`subgroups[jj];
+                    if IsConjugate(B,w , X) then   F`subgroups[jj]:= X; break jj; end if;
+                end for;
+            end if;
+        end for;
+    end if;
+
+
+end procedure;
+
+
+
+
 // Duplicated in the original file
 intrinsic AutFCore(Es::SeqEnum,AutE::SeqEnum)->Grp,GrpAuto
     {calculates F core and action on it}
@@ -64,9 +90,15 @@ end intrinsic;
 intrinsic Core(F::FusionSystem)->Grp
     {Returns  F core }
     FF:= F`group; 
-
-    FC:= sub<FF|>; AA:=Append(F`essentials,FF);
-    for x in F`essentials do FF := FF meet x; end for;
+    // If S is the only essential then F = N_F(S)
+    if #F`essentials eq 1 then 
+        return false, FF;
+    end if;
+    FC:= sub<FF|>; 
+    AA:=Append(F`essentials,FF);
+    for x in F`essentials do 
+        FF := FF meet x; 
+    end for;
     SF:=[x`subgroup:x in  NormalSubgroups(FF)];
     SF:= Reverse(SF);
 
@@ -84,8 +116,6 @@ intrinsic Core(F::FusionSystem)->Grp
         end for;
         FC:= sub<FF|x>; break;
      end for;
-     
-     
     return #FC eq 1, FC;
 end intrinsic;
 
@@ -95,69 +125,86 @@ intrinsic FocalSubgroup(F::FusionSystem)->Grp
     {Creates the focal subgroup of the fusion system}
     S:= F`group;  
     Foc:=sub<S| >;
-    for e in F`essentials do 
-        i:= Index(F`essentials,e);
+    for E in F`essentials do 
+        i:= Index(F`essentials,E);
         AutFE:= F`essentialautos[i];
-        Foc:= sub<S|Foc, {x^-1*aa(x): x in e, aa in Generators(AutFE)}>;
+        Foc:= sub<S|Foc, [x^-1*aa(x): x in Generators(E), aa in Generators(AutFE)]>;
     end for;
     return Foc;
-end  intrinsic;
+end intrinsic;
 
+
+intrinsic HyperFocalSubgroup(F::FusionSystem) -> Grp 
+    {Creates the hyperfocal subgroup of the fusion system}
+    hyp := sub<F`group| >;
+    p := GetPrime(F`group);
+    for i in [1..#F`essentials] do 
+        E := F`essentials[i];
+        permmap := E`autopermmap;
+        AutFE := F`essentialautos[i];
+        OpAutFE := pResidual(permmap(AutFE), p);
+        hyp := sub<F`group| hyp, {x^-1*Inverse(permmap)(alpha)(x) : x in E, alpha in Generators(OpAutFE)}>;
+    end for;
+    return hyp;
+end intrinsic;
 
 
 intrinsic FusionGraph(F::FusionSystem)->GrphUnd, Assoc
-{Returns the labeled fusion graph}
+    {Returns the labeled fusion graph}
 
-if assigned(F`fusiongraph)  then return F`fusiongraph,F`maps; end if;
-
-Essentials := F`essentials;
-SS:= F`subgroups;
-S:= F`group;
-B:=F`borel;
-Gamma := Graph<#SS|>;
-SSxSS:= [[n,m]:n in [1..#SS],m in [1..#SS]];
-Maps:=AssociativeArray(SSxSS);
+    if assigned(F`fusiongraph)  then return F`fusiongraph,F`maps; end if;
 
 
-for E in Essentials do 
-        if E eq S then continue E; end if; 
-    
-    NBE := Normalizer(B,E);
-        SubsE := Subgroups(NBE:OrderDividing:= #E);
-        SSSE:={x`subgroup:x in SubsE|x`subgroup subset E};
-        while #SSSE ne 0 do
-        Q:= Rep(SSSE);
-        for X in SS do
-            a,h:= IsConjugate(B,X,Q); 
-            if a then
-                v:= Index(SS,X); 
-                g:=ConjtoHom( SS[v], Q,h); 
-                g1 :=ConjtoHom(Q, SS[v],h^-1); 
-                break;
-            end if;
-        end for;
-        Orb, NN, Elt := AutOrbit(E,Q,F`essentialautos[Index(F`essentials,E)]);
-        for x in Orb do 
-            if IsConjugate(B,Q,x) then continue; 
-            end if;
-            for y in SS do
-                a,b:= IsConjugate(B,x,y);
-                if a  then w:= Index(SS,y); namex:= Index(Orb,x);
-                theta := g*Elt[namex]*ConjtoHom(x,y,b);
-                theta1:= ConjtoHom(y,x,b^-1)*Elt[namex]^-1*g1;
-                break; end if;
+
+    Essentials := F`essentials;
+    SS:= F`subgroups;
+    S:= F`group;
+    B:=F`borel;
+    Gamma := Graph<#SS|>;
+    SSxSS:= [[n,m]:n in [1..#SS],m in [1..#SS]];
+    Maps:=AssociativeArray(SSxSS);
+
+
+
+    for E in Essentials do 
+            if E eq S then continue E; end if; 
+        
+        NBE := Normalizer(B,E);
+            SubsE := Subgroups(NBE:OrderDividing:= #E);
+            SSSE:={x`subgroup:x in SubsE|x`subgroup subset E};
+            while #SSSE ne 0 do
+            Q:= Rep(SSSE);
+            for X in SS do
+                a,h:= IsConjugate(B,X,Q); 
+                if a then
+                    v:= Index(SS,X); 
+                    g:=ConjtoHom( SS[v], Q,h); 
+                    g1 :=ConjtoHom(Q, SS[v],h^-1); 
+                    break;
+                end if;
             end for;
-            if v ne w then
-                AddEdge(~Gamma,v,w);
-                Maps[[v,w]]:= theta;
-                //Maps[[w,v]]:= theta^-1;
-            Maps[[w,v]]:= theta1;
-            end if;
-         end for;
-         SSSE := SSSE diff Set(Orb);
-        end while;
-end for;
-return  Gamma, Maps;
+            Orb, NN, Elt := AutOrbit(E,Q,F`essentialautos[Index(F`essentials,E)]);
+            for x in Orb do 
+                if IsConjugate(B,Q,x) then continue; 
+                end if;
+                for y in SS do
+                    a,b:= IsConjugate(B,x,y);
+                    if a  then w:= Index(SS,y); namex:= Index(Orb,x);
+                    theta := g*Elt[namex]*ConjtoHom(x,y,b);
+                    theta1:= ConjtoHom(y,x,b^-1)*Elt[namex]^-1*g1;
+                    break; end if;
+                end for;
+                if v ne w then
+                    AddEdge(~Gamma,v,w);
+                    Maps[[v,w]]:= theta;
+                    //Maps[[w,v]]:= theta^-1;
+                Maps[[w,v]]:= theta1;
+                end if;
+             end for;
+             SSSE := SSSE diff Set(Orb);
+            end while;
+    end for;
+    return  Gamma, Maps;
 end intrinsic;
 
 
@@ -171,6 +218,7 @@ intrinsic FusionGraphSCentrics(F::FusionSystem)->GrphUnd, Assoc
 
     S:= F`group;
     B:=F`borel;
+    MakeAllSubgroups(F);
     SS:=  F`subgroups;
     Gamma := Graph<#SS|>;
     SSxSS:= [[n,m]:n in [1..#SS],m in [1..#SS]];
@@ -251,6 +299,7 @@ intrinsic MakeAllAutFCentric(FF::FusionSystem:saturationtest)->Assoc, Bool
     {Makes all AutF for centric subgroups unless parameter saturated test eq true in which case it stops early when the system is not saturated .}
 
     ZZ:=Integers();
+    MakeAllSubgroups(FF);
     SS:= FF`subgroups;
     S:= FF`group; 
     B:= FF`borel; 
@@ -397,7 +446,7 @@ intrinsic IsSaturated(F::FusionSystem)-> Bool
     {Determines if F is saturated}
 
     if assigned(F`saturated) then return F`saturated; end if;
-     
+    MakeAllSubgroups(F);
     SS:= F`subgroups; 
     S:= F`group; 
     B:= F`borel; 

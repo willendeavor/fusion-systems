@@ -1,0 +1,18 @@
+{
+	src
+	{
+		types-attributes.m
+		general-group.m
+		general-fusion-system.m
+		properties-fusion-systems.m
+		group-properties-fusion-system.m
+		all-proto-essentials.m
+		generating-fusion-systems.m
+		saving-fusion-systems.m
+		all-fusion-systems.m
+		fusion-records.m
+		small-fusion-systems.m
+		small-fusion-systems-updating.m
+		direct-product.m
+	}
+}
