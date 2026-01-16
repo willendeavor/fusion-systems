@@ -47,7 +47,7 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		printf "Record (%o,%o) does not need updating \n", order, i;
 		return;
 	end if;
-	// Else here comes the expensive calculations
+	// Else here comes the (potentially) expensive calculations
 	F := SmallFusionSystem(order, i);
 	if "core" in options or "core_trivial" in options then 
 		F`core_trivial, F`core := Core(F);
@@ -58,6 +58,9 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	end if;
 	if "fusion_group" in options and ISA(Type(fusion_group), Grp) then
 		F`fusion_group := fusion_group;
+		F`fusion_group_name := GroupName(fusion_group);
+	end if;
+	if "fusion_group_name" in options and assigned F`fusion_group then
 		F`fusion_group_name := GroupName(fusion_group);
 	end if;
 	if "factors" in options and not factors eq [] then

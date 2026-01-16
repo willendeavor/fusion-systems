@@ -170,6 +170,7 @@ function ExpandProtoEssentials(B,S, ProtoEssentialAutClasses, S_centrics)
             end for; 
         end if;
     end for;
+    return ProtoEssentials;
 end function;
 
 
@@ -260,7 +261,7 @@ intrinsic AllFusionSystems(S::Grp:SaveEach:=false,Printing:=false,OutFSOrders:=[
         NAutB:= SubInvMap(alpha,AutS,NAutBp);
         ProtoEssentialAutClasses:=[Bor[j]:j in [3 ..#Bor]];
         // Explode proto essentials
-        ExpandProtoEssentials(B,S, ProtoEssentialAutClasses, S_centrics)
+        ProtoEssentials := ExpandProtoEssentials(B,S, ProtoEssentialAutClasses, S_centrics);
         
 
 

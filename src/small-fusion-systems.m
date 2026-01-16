@@ -298,6 +298,8 @@ intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["fusion_group"] : fusion_group := G);
 			message := Sprintf("Added fusion_group to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
 			UpdateLog(message);
+		elif assigned R`fusion_group and not assigned R`fusion_group_name then
+			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["fusion_group_name"]);
 		else
 			printf "SmallFusionSystem(%o, %o) already has group %o attached \n", pair[1], pair[2], R`fusion_group_name;
 		end if;
@@ -308,10 +310,10 @@ end intrinsic;
 intrinsic AddAllGroupFusionSystems(G::Grp) 
 	{Given a group G add every group fusion system it yields}
 	bounds := [
-		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8],
-		[3,3], [3,4], [3,5], [3,6], [3,7],
-		[5,3], [5,4], [5,5], [5,6],
-		[7,3], [7,4], [7,5]
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
+		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
+		[5,3], [5,4], [5,5], [5,6], [5,7],
+		[7,3], [7,4], [7,5], [7,6]
 		];
 	divisors := FactoredOrder(G);
 	for factor in divisors do 
@@ -355,12 +357,12 @@ end intrinsic;
 intrinsic AddAllGroupFusionSystemsLieType(min_order, max_order)
 	{Adds all group fusion systems from groups of lie type of bounded order}
 	bounds := [
-		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8],
-		[3,3], [3,4], [3,5], [3,6], [3,7],
-		[5,3], [5,4], [5,5], [5,6],
-		[7,3], [7,4], [7,5]
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
+		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
+		[5,3], [5,4], [5,5], [5,6], [5,7],
+		[7,3], [7,4], [7,5], [7,6]
 		];
-	ns := [2,3,4,5];
+	ns := [2,3,4,5,6];
 	lies := ["B", "C", "D", "E", "F", "G", "2A", "2B", "2C", "2D", "2E", "2F", "2G", "3D"];
 	for lie in lies do 
 		for bound in bounds do  
