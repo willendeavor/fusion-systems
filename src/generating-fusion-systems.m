@@ -262,6 +262,8 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
         Append(~F`essentialautos,XX); 
     end for;
     
+
+    
     F`AutF:= AssociativeArray();
     for x in F`essentials do 
        F`AutF[x] := F`essentialautos[Index(F`essentials,x)]; 

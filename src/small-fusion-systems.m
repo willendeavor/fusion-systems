@@ -362,9 +362,9 @@ intrinsic AddAllGroupFusionSystemsLieType(min_order, max_order)
 		];
 	ns := [2,3,4,5];
 	lies := ["B", "C", "D", "E", "F", "G", "2A", "2B", "2C", "2D", "2E", "2F", "2G", "3D"];
-	for lie in lies do 
+	for n in ns do 
 		for bound in bounds do  
-			for n in ns do 
+			for lie in lies do 
 				q := bound[1]^bound[2];
 				name := lie cat Sprintf("(%o, %o)", n,q);
 				try 				
