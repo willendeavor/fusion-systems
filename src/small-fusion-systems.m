@@ -298,6 +298,10 @@ intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["fusion_group"] : fusion_group := G);
 			message := Sprintf("Added fusion_group to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
 			UpdateLog(message);
+		elif not assigned R`fusion_group_name then 
+			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["fusion_group"] : fusion_group := G);
+			message := Sprintf("Added fusion_group_name to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
+			UpdateLog(message);
 		else
 			printf "SmallFusionSystem(%o, %o) already has group %o attached \n", pair[1], pair[2], R`fusion_group_name;
 		end if;
@@ -308,9 +312,9 @@ end intrinsic;
 intrinsic AddAllGroupFusionSystems(G::Grp) 
 	{Given a group G add every group fusion system it yields}
 	bounds := [
-		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8],
-		[3,3], [3,4], [3,5], [3,6], [3,7],
-		[5,3], [5,4], [5,5], [5,6],
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
+		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
+		[5,3], [5,4], [5,5], [5,6], [5,7],
 		[7,3], [7,4], [7,5]
 		];
 	divisors := FactoredOrder(G);
@@ -320,6 +324,7 @@ intrinsic AddAllGroupFusionSystems(G::Grp)
 		if [p,n] in bounds then 
 			printf "Making the fusion system over (p,n) = (%o,%o) \n", p,n;
 			F := GroupFusionSystem(G,p);
+			print "made";
 			AddGroupFusionSystem(F);
 		end if; 
 	end for;
@@ -355,18 +360,31 @@ end intrinsic;
 intrinsic AddAllGroupFusionSystemsLieType(min_order, max_order)
 	{Adds all group fusion systems from groups of lie type of bounded order}
 	bounds := [
-		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8],
-		[3,3], [3,4], [3,5], [3,6], [3,7],
-		[5,3], [5,4], [5,5], [5,6],
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
+		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
+		[5,3], [5,4], [5,5], [5,6], [5,7],
 		[7,3], [7,4], [7,5]
 		];
+	qs := [x : x in [1..100] | #Factorisation(x) eq 1];
 	ns := [2,3,4,5];
 	lies := ["B", "C", "D", "E", "F", "G", "2A", "2B", "2C", "2D", "2E", "2F", "2G", "3D"];
 	for n in ns do 
-		for bound in bounds do  
+		for q in qs do  
 			for lie in lies do 
-				q := bound[1]^bound[2];
+				completed_log := Open("data/lie_added.info", "r");
+				lines := [];
+				while true do
+				    line := Gets(completed_log); 
+				    if IsEof(line) then
+				        break;
+				    end if;
+				    Append(~lines, line);
+				end while;
+				delete completed_log;
 				name := lie cat Sprintf("(%o, %o)", n,q);
+				if name in lines then
+					continue;
+				end if;
 				try 				
 					G := SimpleGroup(name);
 				catch e 
@@ -379,6 +397,9 @@ intrinsic AddAllGroupFusionSystemsLieType(min_order, max_order)
 				print(message);
 				UpdateLog(message);
 				AddAllGroupFusionSystems(G);
+				completed_log := Open("data/lie_added.info", "a");
+				fprintf completed_log, "%o\n", name;
+				delete completed_log;
 			end for;
 		end for;
 	end for;
