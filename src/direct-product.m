@@ -190,6 +190,24 @@ Ideas: Start with just for a reduced fusion systems
 
 
 
+intrinsic IsIndecomposablee(G::Grp) -> BoolElt, SeqEnum
+	{Determines if a group is indecomposable into two factors}
+	Ns := NormalSubgroups(G);
+	all_normal := [r`subgroup : r in Ns | #(r`subgroup) ne 1 and #(r`subgroup) ne #G ];
+	for G_1 in all_normal do 
+		complement_candidates := [x : x in all_normal | #x eq #G/#G_1];
+		for G_2 in complement_candidates do  
+			if IsTrivial(G_1 meet G_2) then  
+				return false, [G_1, G_2];	
+			end if;
+		end for;
+	end for;
+	return true;
+end intrinsic;
+
+
+
+
 function AllSplittings(S)
 	// Returns the list of factorisations of a group into a direct product of two groups or false if group is indecomposable
 	p := FactoredOrder(S)[1];
@@ -205,10 +223,30 @@ function AllSplittings(S)
 			end if;
 		end for;
 	end for;
-
 	return pairs;
 end function;
 
+
+
+function GetOneSidedEssentials(F, S_factors, i)
+	S_i := S_factors[i];
+	S_i_star := sub<F`group | [S_factors[j] : j in [x : x in [1..#S_factors] | x ne i]]>;
+	essentials_i := [];
+	for j in [2..#F`essentials] do 
+		if S_i_star subset F`essentials[j] then
+			Append(~essentials_i, j);
+		end if;
+	end for;
+	return essentials_i;
+end function;
+
+
+intrinsic OneSidedFusionSystem(F::FusionSystem, S_factors::SeqEnum, i::RngIntElt) -> FusionSystem
+	{Creates F_i^bullet = <Aut_F(S), Aut_F(E) | E = S_i^* x E_i>}
+	aut_seq_i := [F`essentialautos[j] : j in GetOneSidedEssentials(F, S_factors, i)];
+	aut_seq := [F`essentialautos[1]] cat aut_seq_i;
+	return CreateFusionSystem(aut_seq);
+end intrinsic;
 
 
 
@@ -247,7 +285,6 @@ intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return
 		end for;
 		// Remove these so we don't repeatedly search them
 		to_be_sorted := [x : x in to_be_sorted | not x in essentials_i];
-
 		// Now calculate the restrictions, first element is of course Aut_F_i(S_i)
 		essentialautos_i := [AutRestriction(F`essentialautos[1], S_i)];
 		for k in essentials_i do  
@@ -265,19 +302,27 @@ end intrinsic;
 
 intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false) -> Bool, SeqEnum
 	{Determine if F splits as F_1 x F_2}
+	if IsIndecomposable(F`group) then  
+		print "S is indecomposable";
+		return true;
+	end if;
+
 	pairs := AllSplittings(F`group);
 	if pairs eq [] then 
+		print "S in indecomposable";
 		return true;
 	end if;
 
 	for pair in pairs do 
-		decomp_true, decomp := FusionSystemDecomposition(F, pair: return_decomposition := return_decomposition);
-		if decomp_true then
+		decomposable, decomp := FusionSystemDecomposition(F, pair: return_decomposition := return_decomposition);
+		if decomposable then
 			if return_decomposition then 
-				return not decomp_true, decomp;
+				return not decomposable, decomp;
 			else
-				return not decomp_true,_;
+				return not decomposable,_;
 			end if;
 		end if;
 	end for;
+	return true;
 end intrinsic;
+
