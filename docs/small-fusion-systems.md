@@ -6,27 +6,27 @@ This file contains commands for accessing specifically the SmallFusionSystem dat
 
 Also note that as detailed in [#92](https://github.com/willendeavor/fusion-systems/issues/92) running AllFusionSystems(S:OpTriv := false, pPerfect := false) does not quite return all fusion systems, in particular if S is abelian then it returns with no fusion systems. I will work on fixing this but it is important to note that while the list of almost_reduced fusion systems is complete it is unlikely that the list of ALL saturated fusion systems will be ever complete. I would like to fix this so if subsystems and direct products are added then we can recognise them quickly by just checking the library.
 
-
-| $p$ 	| $n$ 	| Number | Grouped by isomorphism class 	| Added non-almost-reduced 						| Added direct products 	| Added core and focal subgroup |
-|-----	|-----	|--------|------------------------------	|----------------------------------------------------------------------	|-----------------------	| ----------------|
-| 2   	| 3   	| 2      |	+Y			| Y                                                                    	|                       	| Y
-|     	| 4   	| 7      |	+Y			| Y                                                                    	|                       	| Y
-|     	| 5   	| 37     |	+Y			| Y                                                                    	|                       	| Y
-|     	| 6   	| 209    |	+Y			| Y                                                                    	|                       	| Y
-|     	| 7   	| 487    |				| Up to SmallGroup(2^7, 1000)                                           |                       	| + Y
-|	| 8	| +?	 |				| + Reduced up to SmallGroup(2^8, 8000)					|				|
-| 3   	| 3   	| 6      |	+Y			| Y                                                                     |                       	| Y
-|     	| 4   	| 28     |	+Y			| Y                                                                     |                       	| Y
-|     	| 5   	| 194    |	+Y			| Y                                                                     |                       	| Y
-|     	| 6   	| 70     |				| + Up to SmallGroup(3^6, 276)                                          |                       	| + Y
-|     	| 7   	| 88     |				|                                                                      	|                       	| + Y
-| 5   	| 3   	| 6      |	+Y			| Y                                                                     |                       	| Y
-|     	| 4   	| 43     |	+Y			| Y                                                                     |                       	| Y
-|     	| 5   	| 58     |				|                                                                      	|                       	| + Y
-|     	| 6   	| 37     |				|                                                                      	|                       	| + Y
-| 7     | 3     | 17      |	+Y			| Y                                                                     |                        	| Y
-|       | 4     | 24      |	+Y			| Y                                                                     |                        	| Y
-|       | 5     | 11      |				| + Up to SmallGroup(7^5,40)     		                        |                        	|
+| $p$ | $n$ | Almost Reduced FS (Total) | Grouped by iso class | Added non-almost-reduced              | Added direct products | Added core and focal subgroup |
+|-----|-----|---------------------------|----------------------|---------------------------------------|-----------------------|-------------------------------|
+| 2   | 3   | 1 (2)                     | +Y                   | Y                                     | 2^3, 2^4, 2^5 (2,15)  | Y                             |
+|     | 4   | 2 (7)                     | +Y                   | Y                                     |                       | Y                             |
+|     | 5   | 3 (37)                    | +Y                   | Y                                     |                       | Y                             |
+|     | 6   | 9 (209)                   | +Y                   | Y                                     |                       | Y                             |
+|     | 7   | 13 (487)                  |                      | Up to SmallGroup(2^7, 1000)           |                       | + Y                           |
+|     | 8   | 12 (?)                    |                      | + Reduced up to SmallGroup(2^8, 8000) |                       |                               |
+| 3   | 3   | 4 (6)                     | +Y                   | Y                                     | 3^3, 3^4              | Y                             |
+|     | 4   | 15 (28)                   | +Y                   | Y                                     |                       | Y                             |
+|     | 5   | 16 (194)                  | +Y                   | Y                                     |                       | Y                             |
+|     | 6   | 74* (255)                 |                      | + Up to SmallGroup(3^6, 452)          |                       |   Y                           |
+|     | 7   | 88 (?)                    |                      |                                       |                       | + Y                           |
+|     | 8   | 1 (1)                     |                      |                                       |                       | + Y                           |
+| 5   | 3   | 3 (6)                     | +Y                   | Y                                     | 5^3, 5^4 (1,30)       | Y                             |
+|     | 4   | 30 (43)                   | +Y                   | Y                                     |                       | Y                             |
+|     | 5   | 58 (419)                  | +Y                   | Y                                     |                       | + Y                           |
+|     | 6   | 37 (?)                    |                      | + Up to SmallGroup(5^6, 64)           |                       | + Y                           |
+| 7   | 3   | 13 (17)                   | +Y                   | Y                                     |                       | Y                             |
+|     | 4   | 8 (24)                    | +Y                   | Y                                     |                       | Y                             |
+|     | 5   | 11 (75)                   |                      | + Up to SmallGroup(7^5,40)            |                       |                               |
 
 ---
 
