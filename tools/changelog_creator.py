@@ -1,5 +1,7 @@
 # Given two data directories compares them and creates a changelog of sorts
 
+
+
 import glob, re, datetime
 
 # E.g. root = "data_old"
@@ -66,14 +68,15 @@ for pair in new_count:
 	lines.append(pn)
 
 
-with open(f"data_summary_{new_id}.info", "a") as f:
+with open(f"/data_new/data_summary_{new_id}.info", "a") as f:
 	for line in lines:
 		f.write(line)
 		f.write("\n")
 
 
-with open(f"changes_{new_id}.info", "a") as f:
+with open(f"/data_new/changes_{new_id}.info", "a") as f:
 	for line in log_new[len(log_old):]:
 		f.write(line)
 		f.write("\n")
+
 

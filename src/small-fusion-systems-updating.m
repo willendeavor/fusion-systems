@@ -32,6 +32,8 @@ end intrinsic;
 function NeedsUpdate(R, options, overwrite)
 	if overwrite then
 		return true;
+	elif options eq ["fusion_group_name"] then 
+		return assigned fusion_group;
 	else
 		return exists{x : x in options | not assigned R``x};
 	end if;
@@ -48,7 +50,11 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		return;
 	end if;
 	// Else here comes the expensive calculations
-	F := SmallFusionSystem(order, i);
+	if "fusion_group_name" in options then
+		F := SmallFusionSystem(order, i: load_group := true);
+	else
+		F := SmallFusionSystem(order, i);
+	end if;
 	if "core" in options or "core_trivial" in options then 
 		F`core_trivial, F`core := Core(F);
 	end if;
@@ -60,10 +66,14 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		F`fusion_group := fusion_group;
 		F`fusion_group_name := GroupName(fusion_group);
 	end if;
+	if "fusion_group_name" in options and assigned F`fusion_group then 
+		F`fusion_group_name := GroupName(F`fusion_group);
+	end if;
 	if "factors" in options and not factors eq [] then
 		F`factors := factors;
 		F`indecomposable := false;
 	end if;
+
 	WriteFusionRecord(GetSmallFusionSystemFilePath(order, i), F);
 	AddToVerificationQueue(order,i);
 	message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
@@ -268,10 +278,16 @@ intrinsic MaintainSmallFusionSystems()
 			// Check that core_trivial or pPerfect has been assigned to all or none, partially assigned implies something has gone wrong
 			flags_op := {};
 			flags_pperf := {};
+			flags_name := {};
 			for i in [1..m] do 
 				F := SmallFusionSystemRecord(pp^nn,i);
 				Include(~flags_op, assigned F`core_trivial);
 				Include(~flags_pperf, assigned F`pPerfect);
+				if assigned F`fusion_group and not assigned F`fusion_group_name then
+					message := Sprintf("Advisory: fusion_group_name missing from (%o,%o)", pp^nn, i);
+					print message cat "\n";
+					ErrorLog(message);
+				end if;
 			end for;
 			if #flags_op gt 1 or #flags_pperf gt 1 then
 				message := Sprintf("Error: Partially assigned core_trivial or pPerfect in p_%o/n_%o, you should update these attributes for all FS", p,n);

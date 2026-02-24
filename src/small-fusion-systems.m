@@ -37,6 +37,7 @@ function GetSmallFusionSystemFileName(order, i)
 	return filename;
 end function;
 
+
 // Returns the full file path
 function GetSmallFusionSystemFilePath(order, i)
 	p := Factorisation(order)[1][1];
