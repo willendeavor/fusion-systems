@@ -1,8 +1,5 @@
 *.ffs_db
-<<<<<<< Updated upstream
 /database
-=======
->>>>>>> Stashed changes
 data_v1.zip
 /data
 /data
@@ -10,3 +7,25 @@ data_v1.zip
 /tests/test_data
 /tools/SmallFusionSystems
 tools/SmallFusionSystems.zip
+/tools/data
+tools/data(1).zip
+/tools/data_new
+/tools/data_old
+tools/data_comparison.log
+tools/changes_v2683_u43332.info
+tools/data_summary_v2683_u43332.info
+/tools/data_new - Copy
+/tools/data_v1942_u28170
+/tools/data_v2683_u43332
+tools/data_v1942_u28170.zip
+/tools/data_new
+/tools/data_old
+tools/data_v1942_u28170.zip
+/tools/data_v1942_u28170
+/tools/data_v2683_u43332
+/tools/archived_zips
+data_v1942_u28170.zip
+data.zip
+/tools/data_v2962_u50630
+/tools/data_backup
+tools/data_backup.tar

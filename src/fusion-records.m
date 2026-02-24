@@ -9,7 +9,9 @@ function GetOptionalArgs()
     		"pPerfect",
     		"focal_subgroup",
     		"fusion_group",
-    		"fusion_group_name"
+    		"fusion_group_name",
+    		"indecomposable",
+    		"factors"
     	];
 	return optional;
 end function;
@@ -39,7 +41,9 @@ function FusionToRecord(FS)
 		pPerfect: BoolElt,
 		focal_subgroup : Grp,
 		fusion_group_name : MonStgElt,
-		fusion_group : Grp
+		fusion_group : Grp,
+		indecomposable : BoolElt,
+		factors : SeqEnum
 		>;
 
 	EssentialRecord := recformat< 
@@ -91,6 +95,7 @@ function FusionToRecord(FS)
         S_small_group_id := S_small_group_id,
         EssentialData    := EssentialSeq
     >;
+
     // Now check any additional info
     optional := GetOptionalArgs();
     for x in optional do  
@@ -106,6 +111,7 @@ function FusionToRecord(FS)
     		R``x := FS``x;
     	end if;
     end for;
+
     // For backwards compatability check for both and separate from other optionals
     if assigned FS`grpsystem or assigned FS`fusion_group then
     	if assigned FS`grpsystem then
@@ -114,7 +120,9 @@ function FusionToRecord(FS)
     	if assigned FS`fusion_group then 
     		R`fusion_group := FS`fusion_group;
     	end if;
-    	R`fusion_group_name := GroupName(R`fusion_group);
+    	if assigned FS`fusion_group_name then 
+    		R`fusion_group_name := FS`fusion_group_name;
+    	end if;
     end if;
     return R;
 end function;
@@ -154,7 +162,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		pPerfect: BoolElt,
 		focal_subgroup : Grp,
 		fusion_group_name : MonStgElt,
-		fusion_group : Grp
+		fusion_group : Grp,
+		indecomposable : BoolElt,
+		factors : SeqEnum
 		>;
 
 	EssentialRecord := recformat< 
@@ -207,6 +217,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     // Essentials
     fprintf F, "EssentialData := EssentialData";
 
+
     // Optional info
     optional := GetOptionalArgs();
     // If no optionals defined closed records assignment
@@ -220,6 +231,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	// Not using an actual list since types vary
     	info := AssociativeArray(options);
     	for i in options do
+    		// Deal with groups
     		if ISA(Type(R``i), Grp) then
     			// If subgroup of S then we save it as a subgroup construction
     			if ISA(Type(R``i), GrpPC) and R``i subset S then 
@@ -231,6 +243,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     				info[i] := Read("temp_fusion_group.m");
     				System("rm temp_fusion_group.m");
     			end if;
+
     		// If string then surround in quotes so is string when defined
 			elif ISA(Type(R``i), MonStgElt) then
 				info[i] := Sprintf("\"%o\"", R``i);
@@ -268,7 +281,7 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec
 end intrinsic;
 
 
-intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
+intrinsic LoadFusionSystem(R::Rec : load_group := false) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	S := R`S;
 	PS := PowerGroup(S);
@@ -294,6 +307,10 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 				// If want a subgroup of S we need to transport it to the Borel group
 				if ISA(Type(R``x), Grp) and not x eq "fusion_group" and R``x subset S then
 					F``x := F`borelmap(R``x);
+				elif x eq "fusion_group" then
+					if load_group then
+						F``x := R``x;
+					end if;
 				else
 					F``x := R``x;
 				end if;
@@ -305,10 +322,10 @@ end intrinsic;
 
 
 
-intrinsic LoadFusionSystem(filename::MonStgElt) -> FusionSystem
+intrinsic LoadFusionSystem(filename::MonStgElt: load_group := false) -> FusionSystem
 	{Creates a fusion system from a database entry}
 	R := LoadFusionSystemRecord(filename);
-	return(LoadFusionSystem(R));
+	return(LoadFusionSystem(R: load_group:=load_group));
 end intrinsic;
 
 
@@ -321,8 +338,8 @@ end intrinsic;
 
 
 
-
-intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec) -> Bool
+// Preloaded if you already have a fusion system loaded, helpful to avoid calling subgroups many times, corresponds to second entry
+intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec : preloaded := 0) -> Bool
 	{Given two fusion records return if they are potentially isomorphic without constructing the fusion systems}
 	// Trivial case
 	if R_1 cmpeq R_2 then 
@@ -355,7 +372,13 @@ intrinsic IsIsomorphicFusionRecords(R_1::Rec, R_2::Rec) -> Bool
 	end for;
 
 	// Finally perform isomorphism test of the fusion systems
-	return IsIsomorphic(LoadFusionSystem(R_1), LoadFusionSystem(R_2));
+	if preloaded cmpeq 0 then
+		F_2 := LoadFusionSystem(R_2);
+	else
+		F_2 := preloaded;
+	end if;
+	F_1 := LoadFusionSystem(R_1);
+	return IsIsomorphic(F_1, F_2);
 end intrinsic;
 
 
