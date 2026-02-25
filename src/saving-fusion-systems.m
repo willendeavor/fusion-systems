@@ -14,6 +14,11 @@ intrinsic Print(F::FusionSystem)
 		S_name := <0,0>;
 	end try;
  
+	if assigned F`small_id then
+		printf "F is SmallFusionSystem(%o, %o) \n", #S, F`small_id[2];
+	end if; 
+
+
 	if assigned F`saturated and F`saturated eq true then
 		printf "Saturated fusion system F over a p-group S of order %o^%o \n", FactoredOrder(S)[1][1], FactoredOrder(S)[1][2]; 
 	else
@@ -29,9 +34,9 @@ intrinsic Print(F::FusionSystem)
 	printf "F has %o classes of essential subgroups \n", #F`essentials-1;
 	printf "The orders of the essential subgroups are %o \n", E1;
 	printf "The orders of the Out_F(E) are %o \n", E;
-	printf "The order of Out_F(S) is %o", #F`essentialautos[1]/#Inn(F`group);
+	printf "The order of Out_F(S) is %o \n", #F`essentialautos[1]/#Inn(F`group);
 	if assigned(F`fusion_group_name) then
-		printf "\nF is isomorphic to the group fusion system of %o", F`fusion_group_name; 
+		printf "F is isomorphic to the group fusion system of %o", F`fusion_group_name; 
 	end if;
 end intrinsic;
 

@@ -84,7 +84,9 @@ end procedure;
 intrinsic SmallFusionSystem(order::RngIntElt, i::RngIntElt :load_group := false) -> FusionSystem
 	{Return the i-th fusion system on a group of given order}
 	// Recall that loading the fusion system record does not load the fusion system
-	return LoadFusionSystem(GetSmallFusionSystemFilePath(order, i) :load_group := load_group);
+	F := LoadFusionSystem(GetSmallFusionSystemFilePath(order, i) :load_group := load_group);
+	F`small_id := <order, i>;
+	return F;
 end intrinsic;
 
 
@@ -180,6 +182,21 @@ intrinsic NumberGroupFusionSystems(order::RngIntElt) -> RngIntElt, SeqEnum
 	end intrinsic;
 
 
+intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := true) -> SeqEnum
+	{Given a group S return all small fusion systems over S}
+	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystem(#S,i) : i in indices];
+	return(FS);
+end intrinsic;
+
+
+intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
+	{Return all small fusion systems on a p-group of S_order}
+	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystem(S_order,i) : i in indices];
+	return(FS);
+end intrinsic;
+
 
 intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
 	{Given S_order return a list of all groups which have a small fusion system}
@@ -264,23 +281,6 @@ intrinsic AddSmallFusionSystems(FS::SeqEnum)
 		AddSmallFusionSystem(F);
 	end for;
 end intrinsic;
-
-
-intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := true) -> SeqEnum
-	{Given a group S return all small fusion systems over S}
-	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
-	FS := [LoadFusionSystem(SmallFusionSystemRecord(#S, i)) : i in indices];
-	return(FS);
-end intrinsic;
-
-
-intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
-	{Return all small fusion systems on a p-group of S_order}
-	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
-	FS := [SmallFusionSystem(S_order,i) : i in indices];
-	return(FS);
-end intrinsic;
-
 
 
 intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
