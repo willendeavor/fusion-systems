@@ -53,7 +53,7 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	if "fusion_group_name" in options then
 		F := SmallFusionSystem(order, i: load_group := true);
 	else
-		F := SmallFusionSystem(order, i);
+		F := SmallFusionSystem(order, i: load_group := true);
 	end if;
 	if "core" in options or "core_trivial" in options then 
 		F`core_trivial, F`core := Core(F);
@@ -285,6 +285,11 @@ intrinsic MaintainSmallFusionSystems()
 				Include(~flags_pperf, assigned F`pPerfect);
 				if assigned F`fusion_group and not assigned F`fusion_group_name then
 					message := Sprintf("Advisory: fusion_group_name missing from (%o,%o)", pp^nn, i);
+					print message cat "\n";
+					ErrorLog(message);
+				end if;
+				if assigned F`fusion_group_name and not assigned F`fusion_group then
+					message := Sprintf("Advisory: fusion_group missing from (%o,%o)", pp^nn, i);
 					print message cat "\n";
 					ErrorLog(message);
 				end if;

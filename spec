@@ -14,5 +14,6 @@
 		small-fusion-systems.m
 		small-fusion-systems-updating.m
 		direct-product.m
+		fusion-subsystems.m
 	}
 }

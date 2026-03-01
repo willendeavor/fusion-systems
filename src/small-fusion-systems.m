@@ -64,6 +64,7 @@ function GetAllpn()
 	return all_list;
 end function;
 
+
 procedure AddToVerificationQueue(order,i)
 	filename := "data/verification_queue.log";
 	F := Open(filename, "a");
@@ -84,7 +85,9 @@ end procedure;
 intrinsic SmallFusionSystem(order::RngIntElt, i::RngIntElt :load_group := false) -> FusionSystem
 	{Return the i-th fusion system on a group of given order}
 	// Recall that loading the fusion system record does not load the fusion system
-	return LoadFusionSystem(GetSmallFusionSystemFilePath(order, i) :load_group := load_group);
+	F := LoadFusionSystem(GetSmallFusionSystemFilePath(order, i) :load_group := load_group);
+	F`small_id := <order, i>;
+	return F;
 end intrinsic;
 
 
@@ -180,6 +183,21 @@ intrinsic NumberGroupFusionSystems(order::RngIntElt) -> RngIntElt, SeqEnum
 	end intrinsic;
 
 
+intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := true) -> SeqEnum
+	{Given a group S return all small fusion systems over S}
+	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystem(#S,i) : i in indices];
+	return(FS);
+end intrinsic;
+
+
+intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
+	{Return all small fusion systems on a p-group of S_order}
+	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystem(S_order,i) : i in indices];
+	return(FS);
+end intrinsic;
+
 
 intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
 	{Given S_order return a list of all groups which have a small fusion system}
@@ -266,23 +284,6 @@ intrinsic AddSmallFusionSystems(FS::SeqEnum)
 end intrinsic;
 
 
-intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := true) -> SeqEnum
-	{Given a group S return all small fusion systems over S}
-	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
-	FS := [LoadFusionSystem(SmallFusionSystemRecord(#S, i)) : i in indices];
-	return(FS);
-end intrinsic;
-
-
-intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
-	{Return all small fusion systems on a p-group of S_order}
-	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
-	FS := [SmallFusionSystem(S_order,i) : i in indices];
-	return(FS);
-end intrinsic;
-
-
-
 intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 	{Given a group fusion system find it in the SmallFusionSystem library and add the fusion_group}
 	require assigned F`fusion_group : "F is not a group fusion system (or at least it is not assigned)";
@@ -356,6 +357,69 @@ intrinsic AddAllSimpleGroupFusionSystems(resume::RngIntElt: skips := false)
 		AddAllGroupFusionSystems(G);
 	end for;
 end intrinsic;
+
+
+
+
+function GetAlmostSimpleGroups(S)
+	// Given S simple get all the almost simple groups S < G < Aut(S)
+	MakeAutos(S);
+	I := sub<S`autoperm | {S`autopermmap(x) : x in Generators(Inn(S))}>;
+	OutS, pi := S`autoperm/I;
+	GroupName(OutS);
+	CC := SubgroupClasses(OutS);
+	subs := [Inverse(pi)(C`subgroup) : C in CC];
+	return subs;
+end function;
+
+
+
+
+
+intrinsic AddAllOuterAutomorphismGroupFusionSystems(G::Grp)
+	{Add all group fusion systems of H where G < H < Aut(G)}
+	almost_simples := GetAlmostSimpleGroups(G);
+	almost_simples;
+	for H in almost_simples do 
+		GroupName(H);
+		AddAllGroupFusionSystems(H);
+	end for;
+end intrinsic;
+
+
+
+intrinsic AddAllAlmostSimpleGroupFusionSystems(resume::RngIntElt: skips := false)
+	{Add every possible group fusion system from almost simple groups}
+	for i in [resume..NumberOfSimpleGroups()] do 
+		printf "Adding SimpleGroupId(%o) \n", i;
+		try
+			G := SimpleGroup(SimpleGroupId(i));
+			name := GroupName(G);
+			print name;
+			if "PSL(2," in name
+					or "2A(2," in name and skips then
+				continue;
+			end if;
+			message := Sprintf("Making all fusion systems over Almost Simple groups of SimpleGroup(%o): %o", i, name);
+			print message;
+			UpdateLog(message);
+		catch e 
+			message := Sprintf("Could not load SimpleGroupId(%o)", i);
+			print message;
+			ErrorLog(message);
+			continue;
+		end try;
+		almost_simples := GetAlmostSimpleGroups(G);
+		for H in almost_simples do 
+			printf "Doing it for %o", GroupName(H);
+			AddAllGroupFusionSystems(H);
+		end for;
+	end for;
+end intrinsic;
+
+
+
+
 
 
 intrinsic AddAllGroupFusionSystemsLieType(min_order, max_order)

@@ -190,7 +190,7 @@ Ideas: Start with just for a reduced fusion systems
 
 
 
-intrinsic IsIndecomposablee(G::Grp) -> BoolElt, SeqEnum
+intrinsic GroupDecomposition(G::Grp) -> BoolElt, SeqEnum
 	{Determines if a group is indecomposable into two factors}
 	Ns := NormalSubgroups(G);
 	all_normal := [r`subgroup : r in Ns | #(r`subgroup) ne 1 and #(r`subgroup) ne #G ];
@@ -250,7 +250,29 @@ end intrinsic;
 
 
 
-intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return_decomposition := false) -> Bool, SeqEnum
+intrinsic FindExamples() -> SeqEnum
+	{temp}
+	X := ExtraSpecialGroup(3,1);
+	S := DirectProduct(X,X);
+	FS := AllSmallFusionSystems(S: almost_reduced := false);
+	examples := [];
+	for F in FS do 
+		S := F`group;
+		dummy, S_factors := GroupDecomposition(S);
+		if (#GetOneSidedEssentials(F, S_factors, 1) eq #F`essentials - 1) 
+			or (#GetOneSidedEssentials(F, S_factors, 2) eq #F`essentials - 1) then 
+			Append(~examples, F);
+			print "Found one";
+		end if;
+	end for;
+	return examples;
+end intrinsic;
+
+
+
+
+
+intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return_decomposition := false) -> Bool, SeqEnumwxh
 	{Given a reduced fusion system over S and a list of internal subgroups S_factors such that S = \prod S_factors determine if F splits}
 	// Importantly this is not F`directproductgrp for a direct product
 	S := F`group;
