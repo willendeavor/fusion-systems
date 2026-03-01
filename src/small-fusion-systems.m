@@ -358,6 +358,69 @@ intrinsic AddAllSimpleGroupFusionSystems(resume::RngIntElt: skips := false)
 end intrinsic;
 
 
+
+
+function GetAlmostSimpleGroups(S)
+	// Given S simple get all the almost simple groups S < G < Aut(S)
+	MakeAutos(S);
+	I := sub<S`autoperm | {S`autopermmap(x) : x in Generators(Inn(S))}>;
+	OutS, pi := S`autoperm/I;
+	GroupName(OutS);
+	CC := SubgroupClasses(OutS);
+	subs := [Inverse(pi)(C`subgroup) : C in CC];
+	return subs;
+end function;
+
+
+
+
+
+intrinsic AddAllOuterAutomorphismGroupFusionSystems(G::Grp)
+	{Add all group fusion systems of H where G < H < Aut(G)}
+	almost_simples := GetAlmostSimpleGroups(G);
+	almost_simples;
+	for H in almost_simples do 
+		GroupName(H);
+		AddAllGroupFusionSystems(H);
+	end for;
+end intrinsic;
+
+
+
+intrinsic AddAllAlmostSimpleGroupFusionSystems(resume::RngIntElt: skips := false)
+	{Add every possible group fusion system from almost simple groups}
+	for i in [resume..NumberOfSimpleGroups()] do 
+		printf "Adding SimpleGroupId(%o) \n", i;
+		try
+			G := SimpleGroup(SimpleGroupId(i));
+			name := GroupName(G);
+			print name;
+			if "PSL(2," in name
+					or "2A(2," in name and skips then
+				continue;
+			end if;
+			message := Sprintf("Making all fusion systems over Almost Simple groups of SimpleGroup(%o): %o", i, name);
+			print message;
+			UpdateLog(message);
+		catch e 
+			message := Sprintf("Could not load SimpleGroupId(%o)", i);
+			print message;
+			ErrorLog(message);
+			continue;
+		end try;
+		almost_simples := GetAlmostSimpleGroups(G);
+		for H in almost_simples do 
+			printf "Doing it for %o", GroupName(H);
+			AddAllGroupFusionSystems(H);
+		end for;
+	end for;
+end intrinsic;
+
+
+
+
+
+
 intrinsic AddAllGroupFusionSystemsLieType(min_order, max_order)
 	{Adds all group fusion systems from groups of lie type of bounded order}
 	bounds := [
