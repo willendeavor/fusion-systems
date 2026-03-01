@@ -64,6 +64,7 @@ function GetAllpn()
 	return all_list;
 end function;
 
+
 procedure AddToVerificationQueue(order,i)
 	filename := "data/verification_queue.log";
 	F := Open(filename, "a");

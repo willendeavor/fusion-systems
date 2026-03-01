@@ -34,9 +34,9 @@ intrinsic Print(F::FusionSystem)
 	printf "F has %o classes of essential subgroups \n", #F`essentials-1;
 	printf "The orders of the essential subgroups are %o \n", E1;
 	printf "The orders of the Out_F(E) are %o \n", E;
-	printf "The order of Out_F(S) is %o \n", #F`essentialautos[1]/#Inn(F`group);
+	printf "The order of Out_F(S) is %o", #F`essentialautos[1]/#Inn(F`group);
 	if assigned(F`fusion_group_name) then
-		printf "F is isomorphic to the group fusion system of %o", F`fusion_group_name; 
+		printf "\n F is isomorphic to the group fusion system of %o", F`fusion_group_name; 
 	end if;
 end intrinsic;
 
