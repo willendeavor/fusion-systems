@@ -1,4 +1,4 @@
-import "small-fusion-systems.m" : ErrorLog, UpdateLog, AddToVerificationQueue, 
+import "small-fusion-systems.m" : ErrorLog, UpdateLog, AddToVerificationQueue, GetAllpnIntegers,
 									GetAllpn, GetSmallFusionSystemFilePath, GetSmallFusionSystemFileName;
 
 
@@ -28,15 +28,20 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 end intrinsic;
 
 
-
 function NeedsUpdate(R, options, overwrite)
 	if overwrite then
 		return true;
-	elif options eq ["fusion_group_name"] then 
-		return assigned fusion_group;
+	elif options eq ["fusion_group_name"] and not assigned R`fusion_group_name then 
+		return assigned R`fusion_group;
 	else
 		return exists{x : x in options | not assigned R``x};
 	end if;
+end function;
+
+
+function GetAttributeTotals(options)
+	attributes := ["fusion_group", "fusion_group_name", "core", "focal_subgroup", "core_trivial", "pPerfect", "factors", "indecomposable"];
+	return [NumberSmallFusionSystemsWithAttribute(x) : x in attributes | not x in options];
 end function;
 
 
@@ -49,6 +54,10 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		printf "Record (%o,%o) does not need updating \n", order, i;
 		return;
 	end if;
+	// Checks to ensure attributes are not lost
+	print "here";
+	initial_totals := GetAttributeTotals(options);
+	print "done";
 	// Else here comes the expensive calculations
 	if "fusion_group_name" in options then
 		F := SmallFusionSystem(order, i: load_group := true);
@@ -78,6 +87,9 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	AddToVerificationQueue(order,i);
 	message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
 	UpdateLog(message);
+	if not initial_totals eq GetAttributeTotals(options) then
+		print "Error: Attributes have been lost";
+	end if; 
 end intrinsic;
 
 
@@ -125,6 +137,7 @@ intrinsic UpdateSmallFusionSystem(order::RngIntElt, i::RngIntElt)
 end intrinsic;
 
 
+
 intrinsic UpdateAllSmallFusionSystems()
 	{Update every single file in the SmallFusionSystems database}
 	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
@@ -146,6 +159,46 @@ intrinsic UpdateAllSmallFusionSystems()
 		end for;
 	end for;
 	UpdateLog("Updated all SmallFusionSystems");
+end intrinsic;
+
+
+intrinsic UpdateDirectProductOfGroupFusionSystems(order::RngIntElt, i::RngIntElt)
+	{If fusion system is decomposable and both factors are group fusion systems then update fusion_group}
+	R := SmallFusionSystemRecord(order,i);
+	try
+		factors := R`factors;
+	catch e 
+		print "Fusion system is not decomposable";
+		return;
+	end try;
+	R_1 := SmallFusionSystemRecord(factors[1][1], factors[1][2]);
+	R_2 := SmallFusionSystemRecord(factors[2][1], factors[2][2]);
+	try
+		if assigned R_1`fusion_group and assigned R_2`fusion_group then
+			G_1 := R_1`fusion_group;
+			G_2 := R_2`fusion_group;
+			UpdateSmallFusionSystemAttribute(order,i,"fusion_group" : fusion_group := DirectProduct(G_1, G_2));
+		end if;
+	catch e 
+		print "One factor is not a group fusion systems";
+	end try;
+end intrinsic;
+
+
+
+intrinsic UpdateAllDirectProductOfGroupFusionSystems()
+	{Finds all decomposable fusion systems which are a product of realisable groups and updates}
+	pn := GetAllpnIntegers();
+	for p in Keys(pn) do 
+		for n in pn[p] do 
+			for i in [1..NumberSmallFusionSystems(p^n:almost_reduced := false)] do  
+				UpdateDirectProductOfGroupFusionSystems(p^n, i);
+			end for;
+			message := Sprintf("Updated fusion_group for decomposables for (p,n) = (%o, %o)", p, n);
+			UpdateLog(message);
+		end for;
+	end for;
+
 end intrinsic;
 
 
