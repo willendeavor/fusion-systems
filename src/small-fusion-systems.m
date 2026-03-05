@@ -48,7 +48,7 @@ function GetSmallFusionSystemFilePath(order, i)
 end function;
 
 
-// Returns an associate array of p : [n_1, n_2, ..]
+// Returns an associate array of p : [n_1, n_2, ..] as strings
 function GetAllpn()
 	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
 	p_list := Split(p_list, "\n");
@@ -62,6 +62,19 @@ function GetAllpn()
 		all_list[p] := n_list;
 	end for;
 	return all_list;
+end function;
+
+
+// Return associate array p:[n_1,...] as integers
+function GetAllpnIntegers()
+	pn := GetAllpn();
+	p_ints := [StringToInteger(x) : x in Keys(pn)];
+	pn_int := AssociativeArray(p_ints);
+	for p in Keys(pn) do 
+		n_ints := [StringToInteger(x) : x in pn[p]];
+		pn_int[StringToInteger(p)] := n_ints;
+	end for;
+	return(pn_int);
 end function;
 
 
@@ -199,6 +212,22 @@ intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> S
 end intrinsic;
 
 
+intrinsic AllSmallFusionSystemsRecords(S::Grp: almost_reduced := true) -> SeqEnum
+	{Given a group S return all small fusion systems over S}
+	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystemRecord(#S,i) : i in indices];
+	return(FS);
+end intrinsic;
+
+
+intrinsic AllSmallFusionSystemsRecords(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
+	{Return all small fusion systems on a p-group of S_order}
+	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystemRecord(S_order,i) : i in indices];
+	return(FS);
+end intrinsic;
+
+
 intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
 	{Given S_order return a list of all groups which have a small fusion system}
 	grps := [];
@@ -231,7 +260,28 @@ end intrinsic
 
 
 
-
+intrinsic NumberSmallFusionSystemsWithAttribute(attribute::MonStgElt) -> RngIntElt, SeqEnum
+	{Returns the number of SmallFusionSystems which have attribute assigned}
+	pn := GetAllpn();
+	indices := [];
+	for pp in Keys(pn) do 
+		for nn in pn[pp] do 
+			p := StringToInteger(pp);
+			n := StringToInteger(nn);
+			for i in [1..NumberSmallFusionSystems(p^n : almost_reduced := false)] do 
+				R := SmallFusionSystemRecord(p^n, i);
+				try
+					if assigned R``attribute then
+						Append(~indices, <p,n,i>);
+					end if;
+				catch e
+					continue;
+				end try;
+			end for;
+		end for;
+	end for;
+	return #indices, indices;
+end intrinsic;
 
 
 
@@ -314,7 +364,7 @@ end intrinsic;
 intrinsic AddAllGroupFusionSystems(G::Grp) 
 	{Given a group G add every group fusion system it yields}
 	bounds := [
-		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9],
 		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
 		[5,3], [5,4], [5,5], [5,6], [5,7],
 		[7,3], [7,4], [7,5]
@@ -472,7 +522,7 @@ end intrinsic;
 
 
 
-intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPerfect := true, id_list := [])
+intrinsic AddAllFusionSystems(order::RngIntElt : resume := 1, OpTriv := true, pPerfect := true, id_list := [])
     {Add all fusion systems over a group of given order}
     if resume eq 1 and id_list eq [] then
     	UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
@@ -481,7 +531,7 @@ intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPe
     if id_list eq [] then
     	id_list := [resume..NumberOfSmallGroups(order)];
     end if;
-
+    print "hey";
     for i in id_list do
         m := Sprintf("Starting adding all fusion systems over SmallGroup(%o, %o)", order, i);
         UpdateLog(m);
