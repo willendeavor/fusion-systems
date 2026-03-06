@@ -1,6 +1,6 @@
 ## Documentation: `small-fusion-systems.m`
 
-### Overview v.2.5.1
+### Overview v.2.8.1
 
 This file contains commands for accessing specifically the SmallFusionSystem database, fusion-records.m contains commands for generally saving a fusion system record and maintaining the database. The following table lists the orders that are currently available, whether they include fusion systems that do not have trivial core and are not perfect and whether all possible direct products that can be built from these fusion systems have been added (of course in theory for example all 2^3 x 2^3 should already be in the database), note as well that the core and focal subgroup are only really interesting to run once the non pPerfect and non OpTriv have been added.
 
@@ -39,15 +39,15 @@ A basic overview of how the fusion systems are stored is that each FS_i file con
 
 #### SmallFusionSystem
 
-`SmallFusionSystem(S_order::RngIntElt, i::RngIntElt) -> FusionSystem`  
+`SmallFusionSystem(order::RngIntElt, i::RngIntElt :load_group := false) -> FusionSystem` 
 
-Loads the *i-th* small fusion system on a group of order `S_order`.
+Loads the *i-th* small fusion system on a group of order `S_order`, load_group determines if the fusion_group is assigned or only fusion_group_name.
 
 ---
 
 #### SmallFusionSystemRecord
 
-`SmallFusionSystemRecord(S_order::RngIntElt, i::RngIntElt) -> Rec`  
+`SmallFusionSystemRecord(order::RngIntElt, i::RngIntElt: load_group := false) -> Rec`
 
 Returns only the FusionRecord (not the fusion system) for the specified small fusion system.
 
@@ -117,17 +117,19 @@ Adds all small fusion systems (including those without trivial core or p-perfect
 
 #### NumberSmallFusionSystems (order version)
 
-`NumberSmallFusionSystems(S_order::RngIntElt : almost_reduced := false) -> RngIntElt`  
+`NumberSmallFusionSystems(S_order::RngIntElt : almost_reduced := true) -> RngIntElt, SeqEnum`  
 
-Returns the number of fusion systems stored in the database on groups of order `S_order`.
+Returns the number of fusion systems stored in the database on groups of order `S_order` and that are almost reduced by default, in which case the indices are returned.
 
 ---
 
 #### NumberSmallFusionSystems (group version)
 
-`NumberSmallFusionSystems(S::Grp : almost_reduced := false) -> RngIntElt, SeqEnum`  
+`NumberSmallFusionSystems(S::Grp : almost_reduced := true) -> RngIntElt, SeqEnum`  
 
 Returns the count and list of indices of fusion systems whose Sylow p-subgroup is isomorphic to `S`.
+
+
 
 ---
 
