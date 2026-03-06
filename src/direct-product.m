@@ -250,7 +250,7 @@ end intrinsic;
 
 
 
-intrinsic FindExamples() -> SeqEnum
+intrinsic FindExamples() -> SeqEnum, BoolElt
 	{temp}
 	X := ExtraSpecialGroup(3,1);
 	S := DirectProduct(X,X);
@@ -263,9 +263,23 @@ intrinsic FindExamples() -> SeqEnum
 			or (#GetOneSidedEssentials(F, S_factors, 2) eq #F`essentials - 1) then 
 			Append(~examples, F);
 			print "Found one";
+		else 
+			continue;
 		end if;
+		print "Testing for strong closure";
+		pairs := AllSplittings(S);
+		flag := false;
+		for pair in pairs do 
+			if IsStronglyClosed(F, pair[1]) and IsStronglyClosed(F, pair[2]) then
+				print "Fusion system splits";
+				flag := true;
+			end if;
+		end for;
+		if flag eq false then 
+			printf "Conjecture has failed for SFS%o \n", IdentifyFusionSystem(F);
+		end if; 
 	end for;
-	return examples;
+	return examples, flag;
 end intrinsic;
 
 

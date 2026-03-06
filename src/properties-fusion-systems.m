@@ -50,27 +50,27 @@ end intrinsic;
 
 intrinsic FCoreTest(S::Grp,Essentials::SeqEnum, AutF::Assoc)->Bool, Grp
     {Test is F core is trivial and returns FCore}
-    F:= S; FC:= sub<S|>; AA:=Append(Essentials,S);
-    for x in Essentials do F := F meet x; end for;
+    F:= S; 
+    FC:= sub<S|>; 
+    AA:=Append(Essentials,S);
+    for x in Essentials do 
+        F := F meet x; 
+    end for;
     SF:=[x`subgroup:x in  NormalSubgroups(F)];
     SF:= Reverse(SF);
-
-      
-
     for x in SF do 
      if IsNormal(S,x) eq false then continue x; end if;
         for E in AA do
             for y in Generators (AutF[E]) do
                 for xx in Generators(x) do
-                    if y(xx) in x eq false   then 
-                    continue x; end if;
+                    if y(xx) in x eq false then 
+                        continue x; 
+                    end if;
                 end for;
             end for;
         end for;
         FC:= sub<S|x>; break;
      end for;
-     
-     
     return #FC eq 1, FC;
 end intrinsic;
 
@@ -80,7 +80,7 @@ intrinsic FocalSubgroupTest(B::Grp,S::Grp, Essentials::SeqEnum,AutF::Assoc)->Boo
     {Tests if S eq Focal subgroup in potential system};
     Foc:=sub<S|{(s,b):s in Generators(S),  b in Generators(B)}>;
     for e in Essentials do  
-    Foc:= sub<S|Foc, {x^-1*aa(x): x in e, aa in Generators(AutF[e])}>;
+        Foc:= sub<S|Foc, {x^-1*aa(x): x in e, aa in Generators(AutF[e])}>;
     end for;
     return Foc eq S, Foc;
 end intrinsic;
@@ -101,8 +101,6 @@ intrinsic Core(F::FusionSystem)->Grp
     end for;
     SF:=[x`subgroup:x in  NormalSubgroups(FF)];
     SF:= Reverse(SF);
-
-      
     AutF:= F`AutF;
     for x in SF do 
      if IsNormal(F`group,x) eq false then continue x; end if;
@@ -151,11 +149,9 @@ end intrinsic;
 
 intrinsic FusionGraph(F::FusionSystem)->GrphUnd, Assoc
     {Returns the labeled fusion graph}
-
-    if assigned(F`fusiongraph)  then return F`fusiongraph,F`maps; end if;
-
-
-
+    if assigned(F`fusiongraph) then 
+        return F`fusiongraph, F`maps; 
+    end if;
     Essentials := F`essentials;
     SS:= F`subgroups;
     S:= F`group;
@@ -163,16 +159,14 @@ intrinsic FusionGraph(F::FusionSystem)->GrphUnd, Assoc
     Gamma := Graph<#SS|>;
     SSxSS:= [[n,m]:n in [1..#SS],m in [1..#SS]];
     Maps:=AssociativeArray(SSxSS);
-
-
-
     for E in Essentials do 
-            if E eq S then continue E; end if; 
-        
+        if E eq S then 
+            continue E; 
+        end if; 
         NBE := Normalizer(B,E);
-            SubsE := Subgroups(NBE:OrderDividing:= #E);
-            SSSE:={x`subgroup:x in SubsE|x`subgroup subset E};
-            while #SSSE ne 0 do
+        SubsE := Subgroups(NBE:OrderDividing:= #E);
+        SSSE:={x`subgroup:x in SubsE|x`subgroup subset E};
+        while #SSSE ne 0 do
             Q:= Rep(SSSE);
             for X in SS do
                 a,h:= IsConjugate(B,X,Q); 
@@ -202,7 +196,7 @@ intrinsic FusionGraph(F::FusionSystem)->GrphUnd, Assoc
                 end if;
              end for;
              SSSE := SSSE diff Set(Orb);
-            end while;
+        end while;
     end for;
     return  Gamma, Maps;
 end intrinsic;
@@ -212,10 +206,10 @@ end intrinsic;
 intrinsic FusionGraphSCentrics(F::FusionSystem)->GrphUnd, Assoc
     {Returns the labeled fusion graph on S centrics}
 
-    if assigned(F`fusiongraph)  then return F`fusiongraph,F`maps; end if;
-
+    if assigned(F`fusiongraph) then 
+        return F`fusiongraph,F`maps; 
+    end if;
     Essentials := F`essentials; 
-
     S:= F`group;
     B:=F`borel;
     MakeAllSubgroups(F);
@@ -524,7 +518,9 @@ end intrinsic;
 
 intrinsic IsGroupFusionSystem(F::FusionSystem)->Bool
     {Return true if F is constructed from G }
-    if assigned(F`grpsystem) then return true; end if;
+    if assigned(F`grpsystem) or assigned(F`fusion_group_name) then 
+        return true; 
+    end if;
     return false; 
 end intrinsic;
 
