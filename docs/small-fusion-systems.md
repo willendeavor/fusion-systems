@@ -7,7 +7,7 @@ This file contains commands for accessing specifically the SmallFusionSystem dat
 Also note that as detailed in [#92](https://github.com/willendeavor/fusion-systems/issues/92) running AllFusionSystems(S:OpTriv := false, pPerfect := false) does not quite return all fusion systems, in particular if S is abelian then it returns with no fusion systems. I will work on fixing this but it is important to note that while the list of almost_reduced fusion systems is complete it is unlikely that the list of ALL saturated fusion systems will be ever complete. I would like to fix this so if subsystems and direct products are added then we can recognise them quickly by just checking the library.
 
 | $p$ | $n$ | Almost Reduced FS (Total) | Grouped by iso class | Added non-almost-reduced              | Added direct products | Added core and focal subgroup |
-|-----|-----|---------------------------|----------------------|---------------------------------------|-----------------------|-------------------------------|
+| --- | --- | ------------------------- | -------------------- | ------------------------------------- | --------------------- | ----------------------------- |
 | 2   | 3   | 1 (2)                     | +Y                   | Y                                     | 2^3, 2^4, 2^5 (2,15)  | Y                             |
 |     | 4   | 2 (7)                     | +Y                   | Y                                     |                       | Y                             |
 |     | 5   | 3 (37)                    | +Y                   | Y                                     |                       | Y                             |
@@ -17,7 +17,7 @@ Also note that as detailed in [#92](https://github.com/willendeavor/fusion-syste
 | 3   | 3   | 4 (6)                     | +Y                   | Y                                     | 3^3, 3^4              | Y                             |
 |     | 4   | 15 (28)                   | +Y                   | Y                                     |                       | Y                             |
 |     | 5   | 16 (194)                  | +Y                   | Y                                     |                       | Y                             |
-|     | 6   | 74* (255)                 |                      | + Up to SmallGroup(3^6, 452)          |                       |   Y                           |
+|     | 6   | 74* (255)                 |                      | + Up to SmallGroup(3^6, 452)          |                       | Y                             |
 |     | 7   | 88 (?)                    |                      |                                       |                       | + Y                           |
 |     | 8   | 1 (1)                     |                      |                                       |                       | + Y                           |
 | 5   | 3   | 3 (6)                     | +Y                   | Y                                     | 5^3, 5^4 (1,30)       | Y                             |
@@ -31,6 +31,7 @@ Also note that as detailed in [#92](https://github.com/willendeavor/fusion-syste
 ---
 
 ### Storing Fusion Systems
+
 A basic overview of how the fusion systems are stored is that each FS_i file contains an intrinsic that is attached when loaded. This intrinsic does not return a fusion system but rather a record of the format `FusionRecord` (details included in [fusion-records](https://github.com/willendeavor/fusion-systems/blob/main/docs/fusion-records.md)). This format is determined by a function when saving a new fusion record but for backwards compatibility each intrinsic actually contains the definition of the FusionRecord as of when the file was created. Therefore even if the format has since between updated and extended there is no issues with loading fusion systems saved using an older version of code.
 
 ### Intrinsics
@@ -66,12 +67,10 @@ Returns `<|S|, index>` or `<0,0>` if not in the database.
 
 #### AddSmallFusionSystem
 
-`AddSmallFusionSystem(F::FusionSystem)`  
+`AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum`  
 
-Checks whether `F` is already stored.  
+Checks whether `F` is already stored.  If it is return false and the identifying pair $(|S|, i)$
 If not writes it to the SmallFusionSystems database in the next open index.
-
----
 
 #### AddSmallFusionSystems
 
@@ -79,7 +78,7 @@ If not writes it to the SmallFusionSystems database in the next open index.
 
 Calls `AddSmallFusionSystem` on every fusion system in the given list.
 
-
+---
 
 #### AllSmallFusionSystems (group version)
 
@@ -99,17 +98,39 @@ Returns all small fusion systems over groups of order `S_order`. If `almost_redu
 
 #### AddAllFusionSystems (order version)
 
-`AddAllFusionSystems(order::RngIntElt: resume := 1)`  
+`AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPerfect := true, id_list := [])`  
 
-Adds all small fusion systems (including those without trivial core or p-perfect) over groups of order `order` to the library by using `AllFusionSystems`. The options resume can be used to start adding groups from SmallGroups(order, i) upwards.
-
----
+Adds all small fusion systems (including those without trivial core or p-perfect) over groups of order `order` to the library by using `AllFusionSystems`. The option resume can be used to start adding groups from SmallGroups(order, i) upwards. If wanting to add only fusion systems over certain small groups then id_list can be provided e.g. id_list := [1,3] will only add all fusion systems over the groups SmallGroup(order,1) and SmallGroup(order,3)
 
 #### AddAllFusionSystems (group version)
 
 `AddAllFusionSystems(S::Grp)`  
 
 Adds all small fusion systems (including those without trivial core or p-perfect) over the group `S` to the library by using `AllFusionSystems`.
+
+#### AddAllGroupFusionSystems
+
+`AddAllGroupFusionSystems(G::Grp)`
+
+Given a group $G$ add $\mathcal{F}_S(G)$ for each $S \in \mathrm{Syl}_p(G)$ and $p$ dividing $|G|$ (within certain bounds of $p^n$)
+
+#### AddAllSimpleGroupFusionSystems
+
+`AddAllSimpleGroupFusionSystems(resume::RngIntElt : skips := false)`
+
+Iterates through the simple groups database starting from SimpleGroup(resume) and calls AddAllGroupFusionSystems on them. Skips can be used to skip groups such as "PSL(2,q)" for q large
+
+#### AddAllOuterAutomorphismGroupFusionSystems
+
+`AddAllOuterAutomorphismGroupFusionSystems(G::Grp)`
+
+Given a group $G$ adds all fusion systems $\mathcal{F}_S(H)$ where $G \leq H \leq \mathrm{Aut}(G)$
+
+#### AddAllGroupFusionSystemsLieType
+
+`AddAllGroupFusionSystemsLieType(min_order, max_order)`
+
+Adds all $\mathcal{F}_S(G)$ where $G$ is a group of Lie type, lie_added.info is used to track which ones have already been added
 
 ---
 
@@ -128,8 +149,6 @@ Returns the number of fusion systems stored in the database on groups of order `
 `NumberSmallFusionSystems(S::Grp : almost_reduced := true) -> RngIntElt, SeqEnum`  
 
 Returns the count and list of indices of fusion systems whose Sylow p-subgroup is isomorphic to `S`.
-
-
 
 ---
 
@@ -179,19 +198,14 @@ Calls UpdateSmallFusionSystemAttributes on every small fusion system over a grou
 
 Checks that every file in the SmallFusionSystems database successfully returns a fusion system. Resume should be a list [p,n,i] such that fusion systems from then on are verified.
 
-
 #### CheckDuplicatesSmallFusionSystem
 
 `CheckDuplicatesSmallFusionSystem(order::RngIntElt: resume := 1) -> SeqEnum`
 
 Checks if there are duplicate isomorphic fusion systems over groups of the given order, resume allows you to start checking from SmallFusionSystem(order, i). Returns a list of duplicates if there are any.
 
-
 #### AddGroupFusionSysten
 
 `AddGroupFusionSystem(F::FusionSystem : overwrite := false)`
 
 Given a group fusion system checks if it is in the database already and if so add the group to a fusion systems record. Otherwise add it to the database. If a fusion system already has a group attached then does nothing unless overwrite is set to true.
-
-
-

@@ -565,7 +565,9 @@ intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume :
 		for j in range do  
 			F_1 := SmallFusionSystem(order_1, i);
 			F_2 := SmallFusionSystem(order_2, j);
-			printf "Calculating direct product of (%o, %o) and (%o, %o)", order_1,i, order_2, j;
+			message := Sprintf("Calculating direct product of (%o, %o) and (%o, %o)", order_1,i, order_2, j);
+			print message;
+			UpdateLog(message);
 			F := FusionDirectProduct(F_1, F_2);
 			F`factors := [<order_1, i>, <order_2, j>];
 			F`indecomposable := false;
