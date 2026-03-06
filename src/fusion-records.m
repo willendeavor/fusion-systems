@@ -220,6 +220,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 
     // Optional info
     optional := GetOptionalArgs();
+    group_flag := false;
     // If no optionals defined closed records assignment
     if forall{x : x in optional | not assigned R``x} then 
     	fprintf F, ">;\n";
@@ -254,7 +255,6 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	end for;
 
     	// Deal with fusion_group separately
-    	group_flag := false;
     	if "fusion_group" in options then
     		// Pop fusion_group so we don't print it later
     		options := [x : x in options | not x eq "fusion_group"];
