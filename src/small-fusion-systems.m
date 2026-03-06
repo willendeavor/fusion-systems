@@ -105,9 +105,9 @@ end intrinsic;
 
 
 
-intrinsic SmallFusionSystemRecord(order::RngIntElt, i::RngIntElt) -> Rec 
+intrinsic SmallFusionSystemRecord(order::RngIntElt, i::RngIntElt: load_group := false) -> Rec 
 	{Return the record only for a small fusion system}
-	return LoadFusionSystemRecord(GetSmallFusionSystemFilePath(order, i));
+	return LoadFusionSystemRecord(GetSmallFusionSystemFilePath(order, i):load_group := load_group);
 end intrinsic;
 
 
@@ -188,7 +188,7 @@ intrinsic NumberGroupFusionSystems(order::RngIntElt) -> RngIntElt, SeqEnum
 	indices := [];
 	for i in [1..NumberSmallFusionSystems(order: almost_reduced:=false)] do  
 		R := SmallFusionSystemRecord(order,i);
-		if assigned R`fusion_group or assigned R`fusion_group_name then 
+		if assigned R`fusion_group_name then 
 			Append(~indices, i);
 		end if;
 	end for;
