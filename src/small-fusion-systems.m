@@ -554,13 +554,21 @@ end intrinsic;
 
 
 
-intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume := [1,1])
+intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume := [1,1], almost_reduced := false)
 	{Create all direct products of all small fs starting at SFS(order_1, resume[1]) and SFS(order_2, resume[2])}
-	for i in [resume[1]..NumberSmallFusionSystems(order_1: almost_reduced := false)] do 
+	m,indices := NumberSmallFusionSystems(order_1:almost_reduced := almost_reduced);
+	factors_1 := [x : x in indices | x ge resume[1]];
+
+	for i in factors_1 do 
 		if order_1 eq order_2 then
-			range := [i..NumberSmallFusionSystems(order_1:almost_reduced := false)];
+			range := [x : x in indices | x ge i];
 		else
-			range := [resume[2]..NumberSmallFusionSystems(order_2:almost_reduced := false)];
+			m, indices := NumberSmallFusionSystems(order_2 : almost_reduced := almost_reduced);
+			if i eq resume[1] then
+				range := [x : x in indices | x ge resume[2]];
+			else
+				range := indices;
+			end if;
 		end if;
 		for j in range do  
 			F_1 := SmallFusionSystem(order_1, i);
