@@ -312,7 +312,14 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 		A := sub<AE | gens>;
 		Append(~Autos, A);
 	end for;
-	F := CreateFusionSystem(Autos);
+	if IsAbelian(S) and assigned R`fusion_group_name then
+		G := Group(R`fusion_group_name);
+		F := GroupFusionSystem(G,FactoredOrder(S)[1][1]);
+		_, StoBorel := IsIsomorphic(S, F`group);
+	else
+		F := CreateFusionSystem(Autos);
+		StoBorel := F`borelmap;
+	end if;
 	// If we can assign the optionals then do so
 	optional := GetOptionalArgs();
 	for x in optional do 
@@ -320,7 +327,7 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 			if assigned R``x then
 				// If want a subgroup of S we need to transport it to the Borel group
 				if ISA(Type(R``x), Grp) and not x eq "fusion_group" and R``x subset S then
-					F``x := F`borelmap(R``x);
+					F``x := StoBorel(R``x);
 				else
 					F``x := R``x;
 				end if;
