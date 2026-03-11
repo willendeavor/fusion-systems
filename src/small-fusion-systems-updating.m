@@ -132,29 +132,23 @@ intrinsic UpdateSmallFusionSystem(order::RngIntElt, i::RngIntElt)
 	filename := GetSmallFusionSystemFilePath(order,i);
 	UpdateFusionRecord(filename);
 	message := Sprintf("Updated SmallFusionSystem(%o, %o)", order, i);
-	print message cat "\n";
+	print message;
 	UpdateLog(message);
 end intrinsic;
 
 
 
-intrinsic UpdateAllSmallFusionSystems()
+intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
 	{Update every single file in the SmallFusionSystems database}
-	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
-	p_list := Split(p_list, "\n");
-	for p in p_list do 
-		path := Sprintf("data/SmallFusionSystems/%o", p);
-		n_list := Pipe("ls " cat path, "");
-		n_list := Split(n_list, "\n");
-		for n in n_list do 
-			n_path := path cat Sprintf("/%o/", n);
-			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
-			// Get only file names with correct extension
-			F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
-			for i in F_list do 
-				filename := n_path cat i;
-				UpdateFusionRecord(filename);
-				printf "Updated %o \n", i;
+	pn := GetAllpnIntegers();
+	for p in Keys(pn) do 
+		for n in pn[p] do 
+			if [p,n] in skips then
+				continue;
+			end if;
+			m := NumberSmallFusionSystems(p^n : almost_reduced := false);
+			for i in [1..m] do 
+				UpdateSmallFusionSystem(p^n, i);
 			end for;
 		end for;
 	end for;
