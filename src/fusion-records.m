@@ -313,7 +313,11 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 		Append(~Autos, A);
 	end for;
 	if IsAbelian(S) and assigned R`fusion_group_name then
-		G := Group(R`fusion_group_name);
+		try
+			G := Group(R`fusion_group_name);
+		catch e
+			G := SimpleGroup(R`fusion_group_name);
+		end try;
 		F := GroupFusionSystem(G,FactoredOrder(S)[1][1]);
 		_, StoBorel := IsIsomorphic(S, F`group);
 	else
