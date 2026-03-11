@@ -148,7 +148,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 	{Outputs a fusion record to a file}
     R := FusionToRecord(FS);
     F := Open(filename, "w");
-    fprintf F, "intrinsic FusionRecordTemp() -> Rec \n {} \n";
+    fprintf F, "intrinsic FusionRecordTemp(load_group) -> Rec \n {} \n";
     fprintf F, "
     FusionRecord := recformat<
 		p : RngIntElt,
@@ -220,6 +220,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 
     // Optional info
     optional := GetOptionalArgs();
+    group_flag := false;
     // If no optionals defined closed records assignment
     if forall{x : x in optional | not assigned R``x} then 
     	fprintf F, ">;\n";
@@ -252,6 +253,13 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     			info[i] := R``i;
     		end if;
     	end for;
+
+    	// Deal with fusion_group separately
+    	if "fusion_group" in options then
+    		// Pop fusion_group so we don't print it later
+    		options := [x : x in options | not x eq "fusion_group"];
+    		group_flag := true;
+   		end if;
     	for i in [1..#options -1] do 
     		x := options[i];
     		fprintf F, "%o := %o, \n", x, info[x];
@@ -259,7 +267,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	// Save last one so trailing comma is not added
     	fprintf F, "%o := %o >; \n", options[#options], info[options[#options]];
     end if;
-
+    if group_flag then
+    	fprintf F, "if load_group then R`fusion_group := %o; end if;", info["fusion_group"];
+    end if;
     fprintf F, "return R; \n";
     fprintf F, "end intrinsic;";
     delete F;
@@ -272,16 +282,20 @@ intrinsic FusionRecordTemp() -> Rec
 end intrinsic;
 
 
-intrinsic LoadFusionSystemRecord(filename:: MonStgElt) -> Rec 
+intrinsic LoadFusionSystemRecord(filename:: MonStgElt: load_group := false) -> Rec 
 	{Loads a fusion system record given the file path}
 	Attach(filename);
-	R := FusionRecordTemp();
+	try
+		R := FusionRecordTemp(load_group);
+	catch e
+		R := FusionRecordTemp();
+	end try;
 	Detach(filename);
 	return R;
 end intrinsic;
 
 
-intrinsic LoadFusionSystem(R::Rec : load_group := false) -> FusionSystem
+intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	S := R`S;
 	PS := PowerGroup(S);
@@ -298,7 +312,18 @@ intrinsic LoadFusionSystem(R::Rec : load_group := false) -> FusionSystem
 		A := sub<AE | gens>;
 		Append(~Autos, A);
 	end for;
-	F := CreateFusionSystem(Autos);
+	if IsAbelian(S) and assigned R`fusion_group_name then
+		try
+			G := Group(R`fusion_group_name);
+		catch e
+			G := SimpleGroup(R`fusion_group_name);
+		end try;
+		F := GroupFusionSystem(G,FactoredOrder(S)[1][1]);
+		_, StoBorel := IsIsomorphic(S, F`group);
+	else
+		F := CreateFusionSystem(Autos);
+		StoBorel := F`borelmap;
+	end if;
 	// If we can assign the optionals then do so
 	optional := GetOptionalArgs();
 	for x in optional do 
@@ -306,11 +331,7 @@ intrinsic LoadFusionSystem(R::Rec : load_group := false) -> FusionSystem
 			if assigned R``x then
 				// If want a subgroup of S we need to transport it to the Borel group
 				if ISA(Type(R``x), Grp) and not x eq "fusion_group" and R``x subset S then
-					F``x := F`borelmap(R``x);
-				elif x eq "fusion_group" then
-					if load_group then
-						F``x := R``x;
-					end if;
+					F``x := StoBorel(R``x);
 				else
 					F``x := R``x;
 				end if;
@@ -324,15 +345,15 @@ end intrinsic;
 
 intrinsic LoadFusionSystem(filename::MonStgElt: load_group := false) -> FusionSystem
 	{Creates a fusion system from a database entry}
-	R := LoadFusionSystemRecord(filename);
-	return(LoadFusionSystem(R: load_group:=load_group));
+	R := LoadFusionSystemRecord(filename: load_group := load_group);
+	return(LoadFusionSystem(R));
 end intrinsic;
 
 
 
 intrinsic UpdateFusionRecord(filename::MonStgElt)
 	{Given filename rewrite the record to reflect any changes made}
-	F := LoadFusionSystem(filename);
+	F := LoadFusionSystem(filename: load_group := true);
 	WriteFusionRecord(filename, F);
 end intrinsic;
 

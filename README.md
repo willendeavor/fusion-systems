@@ -18,7 +18,7 @@ For the most recent code clone the main branch, extract the data.zip to the root
 and run `AttachSpec("spec")` from the root directory `fusion-systems/`, otherwise the releases should be fairly stable and tested and the code can be downloaded there. Importantly the SmallFusionSystems functionality references paths from the root directory, at some point I will add the option to set a directory but for now MAGMA must be run from the root directory. Note as well this uses OS commands that may or may not be specific to the OS.
 
 
-## Usage and an example (v.1.0.0)
+## Usage and an example (v.2.7.2)
 
 The main functionality of this package is to create fusion systems, to this end a `FusionSystem` type is defined and various attributes along with it. By Alperin's fusion theorem a fusion system is determined by its essential subgroups and their automorphism groups along with the automorphism group of the underlying $p$-group, indeed this is how the fusion systems are created. 
 ### The `FusionSystem` type
@@ -29,10 +29,13 @@ F := GroupFusionSystem(SL(3,3),3);
 We expect $\mathcal{F}$ to have 2 classes of essential subgroups, all of the form $3 \times 3$ and the automiser of each essential subgroup should be $`\mathrm{GL}_{2}(3)`$. We also should have that $`\mathrm{Out}_\mathcal{F}(S) \cong (p-1)^2`$ and indeed by calling the implicit printing function we find
 ```
 > F;
-Fusion System with 2 F-classes of essential subgroups
-They have orders: [ 9, 9 ]Out_F(E)  have orders: [ 48, 48 ]
-Out_F(S) has order  4
-This is a group fusion system
+Saturated fusion system F over a p-group S of order 3^3
+S is SmallGroup(27, 3) and isomorphic to He3
+F has 2 classes of essential subgroups
+The orders of the essential subgroups are [ 9, 9 ]
+The orders of the Out_F(E) are [ 48, 48 ]
+The order of Out_F(S) is 4
+F is isomorphic to the group fusion system of PSL(3,3)
 ```
 Let's check the essentials in more detail, the attribute `essentials` should be a list of all essential subgroups.
 ```
@@ -60,16 +63,19 @@ Now let us look at their automorphisms, these are stored in the attribute `essen
 > GroupName(EA[2]);
 GL(2,3)
 ```
-Lastly notice that printing `F` also showed that it is a group fusion system $`\mathcal{F}_S(G)`$, there is an attribute `grpsystem` that stores the group $G$.
+Lastly notice that printing `F` also showed that it is a group fusion system $`\mathcal{F}_S(G)`$, there is an attribute `fusion_group` that stores the group $G$ while `fusion_group_name` stores just the GroupName.
 
 ### Creating fusion systems
 In order to create a fusion system we need an _automiser sequence_, this is a list of automorphism groups, the first must be $\mathrm{Aut}_\mathcal{F}(S)$. Let us use `F` to create the fusion system again and check it is isomorphic to the one we created using the `GroupFusionSystem` function.
 ```
 > FF := CreateFusionSystem(EA);
 > FF;
-Fusion System with 2 F-classes of essential subgroups
-They have orders: [ 9, 9 ]Out_F(E)  have orders: [ 48, 48 ]
-Out_F(S) has order  4
+Fusion system F over a p-group S of order 3^3
+S is SmallGroup(27, 3) and isomorphic to He3
+F has 2 classes of essential subgroups
+The orders of the essential subgroups are [ 9, 9 ]
+The orders of the Out_F(E) are [ 48, 48 ]
+The order of Out_F(S) is 4
 > IsIsomorphic(FF,F);
 true
 ```
@@ -120,10 +126,87 @@ In order to produce the list including those with $O_p(\mathcal{F}) \neq 1$ or $
 ``` 
 
 ### SmallFusionSystems
-As of v2.0.0 the best way to save and load fusion systems is using the commands `WriteFusionRecord(file)` and `LoadFusionSystem(file)`. Included now is the library SmallFusionSystems, details of its use can be found in the documentation but in essence `SmallFusionSystem(order, i)` returns the ith small fusion systems over a group of order `order` and `AllSmallFusionSystems(order)` or `AllSmallFusionSystems(S)` will return all fusion systems over a group of order `order` or over `S` respectively. Currently all the fusion systems saved in https://github.com/chris1961parker/Fusion-Systems have been added and over time more will be added. There is a command `AddSmallFusionSystem(F)` that will check if a fusion system is already in the library and if not add it. As of right now (v2.1.1) there is not a particularly robust management or maintenance of the library but I plan to add this.
+As of v2.0.0 the best way to save and load fusion systems is using the commands `WriteFusionRecord(file)` and `LoadFusionSystem(file)`. Included now is the library SmallFusionSystems, details of its use can be found in the documentation but in essence `SmallFusionSystem(order, i)` returns the ith small fusion systems over a group of order `order` and `AllSmallFusionSystems(order)` or `AllSmallFusionSystems(S)` will return all fusion systems over a group of order `order` or over `S` respectively. Currently all the fusion systems saved in https://github.com/chris1961parker/Fusion-Systems have been added and over time more will be added. There is a command `AddSmallFusionSystem(F)` that will check if a fusion system is already in the library and if not add it. As of right now (v2.7.2) there is not a particularly robust management or maintenance of the library but I plan to add this.
 
+Here are some examples of useful functions. First let us call a fusion system almost reduced if $O_p(\mathcal{F}) = 1$ and $O^p(\mathcal{F}) = \mathcal{F}$. Due to the large number of fusion systems which are not almost reduced (and in any case are not particularly interesting) by default any function that returns a collection of fusion systems will only return almost reduced ones. However this can be controlled by the optional argument `almost_reduced`.
 
+First let us return to our example `F`, this fusion system (should) already in the library and we can check its id by running the following
+```
+> IdentifyFusionSystem(F);
+Input fusion system is small fusion system <27, 1>
+<27, 1>
+```
+This fusion system can therefore be retrieved by `SmallFusionSystem(27,1)`. We know that this is a group fusion system but the library will only know this if it is told i.e. just because a fusion system does not say it is a group fusion system it certainly does not mean it is exotic (hopefully exotic will be its own attribute one day). In this case however it has been saved (and indeed has been for most small groups of Lie type and almost simple groups). When loading the fusion system by default the group is not loaded, only the name, this is due to the disparity in speed in loading a group fusion system vs loading the entire group. This can be rectified by the argument `load_group`:
+```
+> SF := SmallFusionSystem(27,1);
+> SF`fusion_group;
 
+>> SF`fusion_group;
+     ^
+Runtime error in `: Attribute 'fusion_group' for this structure is valid but not
+assigned
+
+> SF`fusion_group_name;
+PSL(3,3)
+
+> SF := SmallFusionSystem(27,1: load_group := true);
+> SF`fusion_group;
+Permutation group acting on a set of cardinality 13
+Order = 5616 = 2^4 * 3^3 * 13
+    (1, 10, 4)(6, 9, 7)(8, 12, 13)
+    (1, 3, 2)(4, 9, 5)(7, 8, 12)(10, 13, 11)
+>
+```
+Since loading fusion systems can be slow there is a way of accessing all the pertinent information without actually loading it, this is done by the `SmallFusionSystemRecord(order,i)` command, this returns a record with a bunch of attributes that gives a near enough complete picture of the fusion system.
+Other attributes can be stored such as the core, focal subgroup, if the fusion system is indecomposable etc. These can be updated using the relevant commands but of course hopefully in complete datasets this won't be necessary, likewise we will not demonstrate how to add fusion systems to the dataset.
+Finally we look at return complete lists. Often we are interested in a fusion system over a particular $p$-group and we can return all the fusion systems supported on some $S$ as follows:
+```
+> AllSmallFusionSystems(S);
+[
+    F is SmallFusionSystem(27, 1)
+    Fusion system F over a p-group S of order 3^3
+    S is SmallGroup(27, 3) and isomorphic to He3
+    F has 2 classes of essential subgroups
+    The orders of the essential subgroups are [ 9, 9 ]
+    The orders of the Out_F(E) are [ 48, 48 ]
+    The order of Out_F(S) is 4
+    F is isomorphic to the group fusion system of PSL(3,3),
+    F is SmallFusionSystem(27, 2)
+    Fusion system F over a p-group S of order 3^3
+    S is SmallGroup(27, 3) and isomorphic to He3
+    F has 2 classes of essential subgroups
+    The orders of the essential subgroups are [ 9, 9 ]
+    The orders of the Out_F(E) are [ 48, 48 ]
+    The order of Out_F(S) is 8,
+    F is SmallFusionSystem(27, 3)
+    Fusion system F over a p-group S of order 3^3
+    S is SmallGroup(27, 3) and isomorphic to He3
+    F has 1 classes of essential subgroups
+    The orders of the essential subgroups are [ 9 ]
+    The orders of the Out_F(E) are [ 48 ]
+    The order of Out_F(S) is 8
+    F is isomorphic to the group fusion system of PSL(3,3).C2,
+    F is SmallFusionSystem(27, 4)
+    Fusion system F over a p-group S of order 3^3
+    S is SmallGroup(27, 3) and isomorphic to He3
+    F has 1 classes of essential subgroups
+    The orders of the essential subgroups are [ 9 ]
+    The orders of the Out_F(E) are [ 48 ]
+    The order of Out_F(S) is 16
+]
+
+> #AllSmallFusionSystems(S:almost_reduced := false);
+8
+> #AllSmallFusionSystems(S);
+4
+```
+We can also use `AllSmallFusionSystems(order)` to obtain all those over a group of order `order`. If we want to count or obtain the indices of these we can use `NumberSmallFusionSystems`:
+```
+> NumberSmallFusionSystems(3^3:almost_reduced := false);
+10 [ 1 .. 10 ]
+> NumberSmallFusionSystems(S);
+4 [ 1, 2, 3, 4 ]
+```
 
 
 ### Saving fusion systems (legacy)

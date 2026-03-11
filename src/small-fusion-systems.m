@@ -37,6 +37,7 @@ function GetSmallFusionSystemFileName(order, i)
 	return filename;
 end function;
 
+
 // Returns the full file path
 function GetSmallFusionSystemFilePath(order, i)
 	p := Factorisation(order)[1][1];
@@ -47,7 +48,7 @@ function GetSmallFusionSystemFilePath(order, i)
 end function;
 
 
-// Returns an associate array of p : [n_1, n_2, ..]
+// Returns an associate array of p : [n_1, n_2, ..] as strings
 function GetAllpn()
 	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
 	p_list := Split(p_list, "\n");
@@ -62,6 +63,20 @@ function GetAllpn()
 	end for;
 	return all_list;
 end function;
+
+
+// Return associate array p:[n_1,...] as integers
+function GetAllpnIntegers()
+	pn := GetAllpn();
+	p_ints := [StringToInteger(x) : x in Keys(pn)];
+	pn_int := AssociativeArray(p_ints);
+	for p in Keys(pn) do 
+		n_ints := [StringToInteger(x) : x in pn[p]];
+		pn_int[StringToInteger(p)] := n_ints;
+	end for;
+	return(pn_int);
+end function;
+
 
 procedure AddToVerificationQueue(order,i)
 	filename := "data/verification_queue.log";
@@ -83,14 +98,16 @@ end procedure;
 intrinsic SmallFusionSystem(order::RngIntElt, i::RngIntElt :load_group := false) -> FusionSystem
 	{Return the i-th fusion system on a group of given order}
 	// Recall that loading the fusion system record does not load the fusion system
-	return LoadFusionSystem(GetSmallFusionSystemFilePath(order, i) :load_group := load_group);
+	F := LoadFusionSystem(GetSmallFusionSystemFilePath(order, i) :load_group := load_group);
+	F`small_id := <order, i>;
+	return F;
 end intrinsic;
 
 
 
-intrinsic SmallFusionSystemRecord(order::RngIntElt, i::RngIntElt) -> Rec 
+intrinsic SmallFusionSystemRecord(order::RngIntElt, i::RngIntElt: load_group := false) -> Rec 
 	{Return the record only for a small fusion system}
-	return LoadFusionSystemRecord(GetSmallFusionSystemFilePath(order, i));
+	return LoadFusionSystemRecord(GetSmallFusionSystemFilePath(order, i):load_group := load_group);
 end intrinsic;
 
 
@@ -171,13 +188,44 @@ intrinsic NumberGroupFusionSystems(order::RngIntElt) -> RngIntElt, SeqEnum
 	indices := [];
 	for i in [1..NumberSmallFusionSystems(order: almost_reduced:=false)] do  
 		R := SmallFusionSystemRecord(order,i);
-		if assigned R`fusion_group or assigned R`fusion_group_name then 
+		if assigned R`fusion_group_name then 
 			Append(~indices, i);
 		end if;
 	end for;
 	return #indices, indices;
 	end intrinsic;
 
+
+intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := true) -> SeqEnum
+	{Given a group S return all small fusion systems over S}
+	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystem(#S,i) : i in indices];
+	return(FS);
+end intrinsic;
+
+
+intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
+	{Return all small fusion systems on a p-group of S_order}
+	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystem(S_order,i) : i in indices];
+	return(FS);
+end intrinsic;
+
+
+intrinsic AllSmallFusionSystemsRecords(S::Grp: almost_reduced := true) -> SeqEnum
+	{Given a group S return all small fusion systems over S}
+	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystemRecord(#S,i) : i in indices];
+	return(FS);
+end intrinsic;
+
+
+intrinsic AllSmallFusionSystemsRecords(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
+	{Return all small fusion systems on a p-group of S_order}
+	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
+	FS := [SmallFusionSystemRecord(S_order,i) : i in indices];
+	return(FS);
+end intrinsic;
 
 
 intrinsic AllSmallFusionSystemsGroups(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
@@ -212,7 +260,28 @@ end intrinsic
 
 
 
-
+intrinsic NumberSmallFusionSystemsWithAttribute(attribute::MonStgElt) -> RngIntElt, SeqEnum
+	{Returns the number of SmallFusionSystems which have attribute assigned}
+	pn := GetAllpn();
+	indices := [];
+	for pp in Keys(pn) do 
+		for nn in pn[pp] do 
+			p := StringToInteger(pp);
+			n := StringToInteger(nn);
+			for i in [1..NumberSmallFusionSystems(p^n : almost_reduced := false)] do 
+				R := SmallFusionSystemRecord(p^n, i);
+				try
+					if assigned R``attribute then
+						Append(~indices, <p,n,i>);
+					end if;
+				catch e
+					continue;
+				end try;
+			end for;
+		end for;
+	end for;
+	return #indices, indices;
+end intrinsic;
 
 
 
@@ -265,23 +334,6 @@ intrinsic AddSmallFusionSystems(FS::SeqEnum)
 end intrinsic;
 
 
-intrinsic AllSmallFusionSystems(S::Grp: almost_reduced := true) -> SeqEnum
-	{Given a group S return all small fusion systems over S}
-	m, indices := NumberSmallFusionSystems(S:almost_reduced := almost_reduced);
-	FS := [LoadFusionSystem(SmallFusionSystemRecord(#S, i)) : i in indices];
-	return(FS);
-end intrinsic;
-
-
-intrinsic AllSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -> SeqEnum
-	{Return all small fusion systems on a p-group of S_order}
-	m, indices := NumberSmallFusionSystems(S_order:almost_reduced := almost_reduced);
-	FS := [SmallFusionSystem(S_order,i) : i in indices];
-	return(FS);
-end intrinsic;
-
-
-
 intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 	{Given a group fusion system find it in the SmallFusionSystem library and add the fusion_group}
 	require assigned F`fusion_group : "F is not a group fusion system (or at least it is not assigned)";
@@ -298,8 +350,10 @@ intrinsic AddGroupFusionSystem(F::FusionSystem : overwrite := false)
 			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["fusion_group"] : fusion_group := G);
 			message := Sprintf("Added fusion_group to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
 			UpdateLog(message);
-		elif assigned R`fusion_group and not assigned R`fusion_group_name then
-			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["fusion_group_name"]);
+		elif not assigned R`fusion_group_name then 
+			UpdateSmallFusionSystemAttributes(pair[1], pair[2], ["fusion_group"] : fusion_group := G);
+			message := Sprintf("Added fusion_group_name to SmallFusionSystem(%o, %o)", pair[1], pair[2]);
+			UpdateLog(message);
 		else
 			printf "SmallFusionSystem(%o, %o) already has group %o attached \n", pair[1], pair[2], R`fusion_group_name;
 		end if;
@@ -310,10 +364,10 @@ end intrinsic;
 intrinsic AddAllGroupFusionSystems(G::Grp) 
 	{Given a group G add every group fusion system it yields}
 	bounds := [
-		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9],
 		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
 		[5,3], [5,4], [5,5], [5,6], [5,7],
-		[7,3], [7,4], [7,5], [7,6]
+		[7,3], [7,4], [7,5]
 		];
 	divisors := FactoredOrder(G);
 	for factor in divisors do 
@@ -322,6 +376,7 @@ intrinsic AddAllGroupFusionSystems(G::Grp)
 		if [p,n] in bounds then 
 			printf "Making the fusion system over (p,n) = (%o,%o) \n", p,n;
 			F := GroupFusionSystem(G,p);
+			print "made";
 			AddGroupFusionSystem(F);
 		end if; 
 	end for;
@@ -354,21 +409,97 @@ intrinsic AddAllSimpleGroupFusionSystems(resume::RngIntElt: skips := false)
 end intrinsic;
 
 
+
+
+function GetAlmostSimpleGroups(S)
+	// Given S simple get all the almost simple groups S < G < Aut(S)
+	MakeAutos(S);
+	I := sub<S`autoperm | {S`autopermmap(x) : x in Generators(Inn(S))}>;
+	OutS, pi := S`autoperm/I;
+	GroupName(OutS);
+	CC := SubgroupClasses(OutS);
+	subs := [Inverse(pi)(C`subgroup) : C in CC];
+	return subs;
+end function;
+
+
+
+
+
+intrinsic AddAllOuterAutomorphismGroupFusionSystems(G::Grp)
+	{Add all group fusion systems of H where G < H < Aut(G)}
+	almost_simples := GetAlmostSimpleGroups(G);
+	almost_simples;
+	for H in almost_simples do 
+		GroupName(H);
+		AddAllGroupFusionSystems(H);
+	end for;
+end intrinsic;
+
+
+
+intrinsic AddAllAlmostSimpleGroupFusionSystems(resume::RngIntElt: skips := false)
+	{Add every possible group fusion system from almost simple groups}
+	for i in [resume..NumberOfSimpleGroups()] do 
+		printf "Adding SimpleGroupId(%o) \n", i;
+		try
+			G := SimpleGroup(SimpleGroupId(i));
+			name := GroupName(G);
+			print name;
+			if "PSL(2," in name
+					or "2A(2," in name and skips then
+				continue;
+			end if;
+			message := Sprintf("Making all fusion systems over Almost Simple groups of SimpleGroup(%o): %o", i, name);
+			print message;
+			UpdateLog(message);
+		catch e 
+			message := Sprintf("Could not load SimpleGroupId(%o)", i);
+			print message;
+			ErrorLog(message);
+			continue;
+		end try;
+		almost_simples := GetAlmostSimpleGroups(G);
+		for H in almost_simples do 
+			printf "Doing it for %o", GroupName(H);
+			AddAllGroupFusionSystems(H);
+		end for;
+	end for;
+end intrinsic;
+
+
+
+
+
+
 intrinsic AddAllGroupFusionSystemsLieType(min_order, max_order)
 	{Adds all group fusion systems from groups of lie type of bounded order}
 	bounds := [
 		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
 		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
 		[5,3], [5,4], [5,5], [5,6], [5,7],
-		[7,3], [7,4], [7,5], [7,6]
+		[7,3], [7,4], [7,5]
 		];
-	ns := [2,3,4,5,6];
+	qs := [x : x in [1..100] | #Factorisation(x) eq 1];
+	ns := [2,3,4,5];
 	lies := ["B", "C", "D", "E", "F", "G", "2A", "2B", "2C", "2D", "2E", "2F", "2G", "3D"];
-	for lie in lies do 
-		for bound in bounds do  
-			for n in ns do 
-				q := bound[1]^bound[2];
+	for n in ns do 
+		for q in qs do  
+			for lie in lies do 
+				completed_log := Open("data/lie_added.info", "r");
+				lines := [];
+				while true do
+				    line := Gets(completed_log); 
+				    if IsEof(line) then
+				        break;
+				    end if;
+				    Append(~lines, line);
+				end while;
+				delete completed_log;
 				name := lie cat Sprintf("(%o, %o)", n,q);
+				if name in lines then
+					continue;
+				end if;
 				try 				
 					G := SimpleGroup(name);
 				catch e 
@@ -381,6 +512,9 @@ intrinsic AddAllGroupFusionSystemsLieType(min_order, max_order)
 				print(message);
 				UpdateLog(message);
 				AddAllGroupFusionSystems(G);
+				completed_log := Open("data/lie_added.info", "a");
+				fprintf completed_log, "%o\n", name;
+				delete completed_log;
 			end for;
 		end for;
 	end for;
@@ -388,7 +522,7 @@ end intrinsic;
 
 
 
-intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPerfect := true, id_list := [])
+intrinsic AddAllFusionSystems(order::RngIntElt : resume := 1, OpTriv := true, pPerfect := true, id_list := [])
     {Add all fusion systems over a group of given order}
     if resume eq 1 and id_list eq [] then
     	UpdateLog(Sprintf("Attempting to add all fusion systems of order %o", order));
@@ -397,7 +531,7 @@ intrinsic AddAllFusionSystems(order::RngIntElt: resume := 1, OpTriv := true, pPe
     if id_list eq [] then
     	id_list := [resume..NumberOfSmallGroups(order)];
     end if;
-
+    print "hey";
     for i in id_list do
         m := Sprintf("Starting adding all fusion systems over SmallGroup(%o, %o)", order, i);
         UpdateLog(m);
@@ -420,18 +554,28 @@ end intrinsic;
 
 
 
-intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume := [1,1])
+intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume := [1,1], almost_reduced := false)
 	{Create all direct products of all small fs starting at SFS(order_1, resume[1]) and SFS(order_2, resume[2])}
-	for i in [resume[1]..NumberSmallFusionSystems(order_1: almost_reduced := false)] do 
+	m,indices := NumberSmallFusionSystems(order_1:almost_reduced := almost_reduced);
+	factors_1 := [x : x in indices | x ge resume[1]];
+
+	for i in factors_1 do 
 		if order_1 eq order_2 then
-			range := [i..NumberSmallFusionSystems(order_1:almost_reduced := false)];
+			range := [x : x in indices | x ge i];
 		else
-			range := [resume[2]..NumberSmallFusionSystems(order_2:almost_reduced := false)];
+			m, indices := NumberSmallFusionSystems(order_2 : almost_reduced := almost_reduced);
+			if i eq resume[1] then
+				range := [x : x in indices | x ge resume[2]];
+			else
+				range := indices;
+			end if;
 		end if;
 		for j in range do  
 			F_1 := SmallFusionSystem(order_1, i);
 			F_2 := SmallFusionSystem(order_2, j);
-			printf "Calculating direct product of (%o, %o) and (%o, %o)", order_1,i, order_2, j;
+			message := Sprintf("Calculating direct product of (%o, %o) and (%o, %o)", order_1,i, order_2, j);
+			print message;
+			UpdateLog(message);
 			F := FusionDirectProduct(F_1, F_2);
 			F`factors := [<order_1, i>, <order_2, j>];
 			F`indecomposable := false;

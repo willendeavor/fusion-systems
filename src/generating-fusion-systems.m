@@ -252,6 +252,7 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
     F`borelmap := phiB;
     F`essentialautos:= [];
     F`essentials:=[phiB(Group(Autos[i])):i in [1..#Autos]];
+
     for x in F`essentials do 
         MakeAutos(x); 
     end for;
@@ -261,6 +262,8 @@ intrinsic CreateFusionSystem(Autos::SeqEnum) -> FusionSystem
         XX:=sub<x`autogrp|[InvphiB*w*phiB:w in Generators(Autos[ix])]>; 
         Append(~F`essentialautos,XX); 
     end for;
+    
+
     
     F`AutF:= AssociativeArray();
     for x in F`essentials do 
@@ -345,8 +348,9 @@ intrinsic  GroupFusionSystem(G::Grp,S::Grp)->FusionSystem
 
     F:=CreateFusionSystem(EEAA);
      
-    F`grpsystem:=G;
+    // F`grpsystem:=G;
     F`fusion_group := G;
+    F`fusion_group_name := GroupName(G);
     F`saturated := true;
     return F;
 end intrinsic

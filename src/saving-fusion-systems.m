@@ -14,6 +14,11 @@ intrinsic Print(F::FusionSystem)
 		S_name := <0,0>;
 	end try;
  
+	if assigned F`small_id then
+		printf "F is SmallFusionSystem(%o, %o) \n", #S, F`small_id[2];
+	end if; 
+
+
 	if assigned F`saturated and F`saturated eq true then
 		printf "Saturated fusion system F over a p-group S of order %o^%o \n", FactoredOrder(S)[1][1], FactoredOrder(S)[1][2]; 
 	else

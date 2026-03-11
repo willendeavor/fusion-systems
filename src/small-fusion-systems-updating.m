@@ -1,4 +1,4 @@
-import "small-fusion-systems.m" : ErrorLog, UpdateLog, AddToVerificationQueue, 
+import "small-fusion-systems.m" : ErrorLog, UpdateLog, AddToVerificationQueue, GetAllpnIntegers,
 									GetAllpn, GetSmallFusionSystemFilePath, GetSmallFusionSystemFileName;
 
 
@@ -28,13 +28,20 @@ intrinsic UpdateSmallFusionSystems(S_order::RngIntElt)
 end intrinsic;
 
 
-
 function NeedsUpdate(R, options, overwrite)
 	if overwrite then
 		return true;
+	elif options eq ["fusion_group_name"] and not assigned R`fusion_group_name then 
+		return assigned R`fusion_group;
 	else
 		return exists{x : x in options | not assigned R``x};
 	end if;
+end function;
+
+
+function GetAttributeTotals(options)
+	attributes := ["fusion_group", "fusion_group_name", "core", "focal_subgroup", "core_trivial", "pPerfect", "factors", "indecomposable"];
+	return [NumberSmallFusionSystemsWithAttribute(x) : x in attributes | not x in options];
 end function;
 
 
@@ -47,8 +54,16 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		printf "Record (%o,%o) does not need updating \n", order, i;
 		return;
 	end if;
-	// Else here comes the (potentially) expensive calculations
-	F := SmallFusionSystem(order, i);
+	// Checks to ensure attributes are not lost
+	print "here";
+	initial_totals := GetAttributeTotals(options);
+	print "done";
+	// Else here comes the expensive calculations
+	if "fusion_group_name" in options then
+		F := SmallFusionSystem(order, i: load_group := true);
+	else
+		F := SmallFusionSystem(order, i: load_group := true);
+	end if;
 	if "core" in options or "core_trivial" in options then 
 		F`core_trivial, F`core := Core(F);
 	end if;
@@ -60,17 +75,21 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		F`fusion_group := fusion_group;
 		F`fusion_group_name := GroupName(fusion_group);
 	end if;
-	if "fusion_group_name" in options and assigned F`fusion_group then
-		F`fusion_group_name := GroupName(fusion_group);
+	if "fusion_group_name" in options and assigned F`fusion_group then 
+		F`fusion_group_name := GroupName(F`fusion_group);
 	end if;
 	if "factors" in options and not factors eq [] then
 		F`factors := factors;
 		F`indecomposable := false;
 	end if;
+
 	WriteFusionRecord(GetSmallFusionSystemFilePath(order, i), F);
 	AddToVerificationQueue(order,i);
 	message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
 	UpdateLog(message);
+	if not initial_totals eq GetAttributeTotals(options) then
+		print "Error: Attributes have been lost";
+	end if; 
 end intrinsic;
 
 
@@ -113,32 +132,67 @@ intrinsic UpdateSmallFusionSystem(order::RngIntElt, i::RngIntElt)
 	filename := GetSmallFusionSystemFilePath(order,i);
 	UpdateFusionRecord(filename);
 	message := Sprintf("Updated SmallFusionSystem(%o, %o)", order, i);
-	print message cat "\n";
+	print message;
 	UpdateLog(message);
 end intrinsic;
 
 
-intrinsic UpdateAllSmallFusionSystems()
+
+intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
 	{Update every single file in the SmallFusionSystems database}
-	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
-	p_list := Split(p_list, "\n");
-	for p in p_list do 
-		path := Sprintf("data/SmallFusionSystems/%o", p);
-		n_list := Pipe("ls " cat path, "");
-		n_list := Split(n_list, "\n");
-		for n in n_list do 
-			n_path := path cat Sprintf("/%o/", n);
-			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
-			// Get only file names with correct extension
-			F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
-			for i in F_list do 
-				filename := n_path cat i;
-				UpdateFusionRecord(filename);
-				printf "Updated %o \n", i;
+	pn := GetAllpnIntegers();
+	for p in Keys(pn) do 
+		for n in pn[p] do 
+			if [p,n] in skips then
+				continue;
+			end if;
+			m := NumberSmallFusionSystems(p^n : almost_reduced := false);
+			for i in [1..m] do 
+				UpdateSmallFusionSystem(p^n, i);
 			end for;
 		end for;
 	end for;
 	UpdateLog("Updated all SmallFusionSystems");
+end intrinsic;
+
+
+intrinsic UpdateDirectProductOfGroupFusionSystems(order::RngIntElt, i::RngIntElt)
+	{If fusion system is decomposable and both factors are group fusion systems then update fusion_group}
+	R := SmallFusionSystemRecord(order,i);
+	try
+		factors := R`factors;
+	catch e 
+		print "Fusion system is not decomposable";
+		return;
+	end try;
+	R_1 := SmallFusionSystemRecord(factors[1][1], factors[1][2]);
+	R_2 := SmallFusionSystemRecord(factors[2][1], factors[2][2]);
+	try
+		if assigned R_1`fusion_group and assigned R_2`fusion_group then
+			G_1 := R_1`fusion_group;
+			G_2 := R_2`fusion_group;
+			UpdateSmallFusionSystemAttribute(order,i,"fusion_group" : fusion_group := DirectProduct(G_1, G_2));
+		end if;
+	catch e 
+		print "One factor is not a group fusion systems";
+	end try;
+end intrinsic;
+
+
+
+intrinsic UpdateAllDirectProductOfGroupFusionSystems()
+	{Finds all decomposable fusion systems which are a product of realisable groups and updates}
+	pn := GetAllpnIntegers();
+	for p in Keys(pn) do 
+		for n in pn[p] do 
+			for i in [1..NumberSmallFusionSystems(p^n:almost_reduced := false)] do  
+				UpdateDirectProductOfGroupFusionSystems(p^n, i);
+			end for;
+			message := Sprintf("Updated fusion_group for decomposables for (p,n) = (%o, %o)", p, n);
+			UpdateLog(message);
+		end for;
+	end for;
+
 end intrinsic;
 
 
@@ -271,10 +325,21 @@ intrinsic MaintainSmallFusionSystems()
 			// Check that core_trivial or pPerfect has been assigned to all or none, partially assigned implies something has gone wrong
 			flags_op := {};
 			flags_pperf := {};
+			flags_name := {};
 			for i in [1..m] do 
 				F := SmallFusionSystemRecord(pp^nn,i);
 				Include(~flags_op, assigned F`core_trivial);
 				Include(~flags_pperf, assigned F`pPerfect);
+				if assigned F`fusion_group and not assigned F`fusion_group_name then
+					message := Sprintf("Advisory: fusion_group_name missing from (%o,%o)", pp^nn, i);
+					print message cat "\n";
+					ErrorLog(message);
+				end if;
+				if assigned F`fusion_group_name and not assigned F`fusion_group then
+					message := Sprintf("Advisory: fusion_group missing from (%o,%o)", pp^nn, i);
+					print message cat "\n";
+					ErrorLog(message);
+				end if;
 			end for;
 			if #flags_op gt 1 or #flags_pperf gt 1 then
 				message := Sprintf("Error: Partially assigned core_trivial or pPerfect in p_%o/n_%o, you should update these attributes for all FS", p,n);
