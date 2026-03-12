@@ -425,6 +425,7 @@ intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false, recal
 	if IsIndecomposable(F`group) then  
 		print "S is indecomposable";
 		return true;
+	end if;
 	if assigned F`indecomposable and not recalculate then
 		return F`indecomposable;
 	end if;

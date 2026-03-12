@@ -141,6 +141,7 @@ end intrinsic;
 intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
 	{Update every single file in the SmallFusionSystems database}
 	pn := GetAllpnIntegers();
+	skips := [[2,x] : x in [3..10]] cat [[3,x] : x in [3..10]] cat [[5,x] : x in [3..5]];
 	for p in Keys(pn) do 
 		for n in pn[p] do 
 			if [p,n] in skips then

@@ -21,8 +21,6 @@ end procedure;
 
 
 
-
-
 // Get Borel candidates if AutSp is soluble
 function SolubleBorelCandidates(AutSp, p, OutFSOrders)
     PAut, tt:= PCGroup(AutSp); 
@@ -50,6 +48,7 @@ function SolubleBorelCandidates(AutSp, p, OutFSOrders)
 end function;
 
 
+
 // Get Borel candidates if AutSp is insoluble
 function InsolubleBorelCandidates(AutSp, InnSp, p, m, OutFSOrders)
     if OutFSOrders eq [] then 
@@ -69,6 +68,7 @@ function InsolubleBorelCandidates(AutSp, InnSp, p, m, OutFSOrders)
 end function;
 
 
+
 // Generate Borel candidates
 function BorelCandidates(AutSp, InnSp, p, m, OutFSOrders)
     if IsSoluble(AutSp) then
@@ -77,6 +77,7 @@ function BorelCandidates(AutSp, InnSp, p, m, OutFSOrders)
         return InsolubleBorelCandidates(AutSp, InnSp, p, m, OutFSOrders);
     end if;
 end function;
+
 
 
 // Given a Borel group B = S:C transport everything to it where phi:S -> T is an isomorphism and T is the image of S in B
@@ -99,6 +100,7 @@ function BuildBorelPair(B,T, phi, ProtoEssentialAutClasses)
     end for;
     return BB;
 end function;
+
 
 
 // Calculates all pairs (B,T) where B is a borel group and T is the image of S in B
@@ -142,6 +144,7 @@ function ComputerAllBorelPairs(S, p, OutFSOrders, ProtoEssentialAutClasses)
     end if;
     return BorelsandS;
 end function;
+
 
 
 function ExpandProtoEssentials(B,S, ProtoEssentialAutClasses, S_centrics)

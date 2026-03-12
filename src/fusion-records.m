@@ -128,8 +128,9 @@ function FusionToRecord(FS)
 end function;
 
 
-function WriteFusionYAML(filename, R)
-	F := Open(filename cat ".yaml");
+function RecordToJSON(filename, R)
+	F := Open(filename cat ".json", "w");
+	
 end function;
 
 
@@ -314,9 +315,13 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	end for;
 	if IsAbelian(S) and assigned R`fusion_group_name then
 		try
-			G := Group(R`fusion_group_name);
-		catch e
 			G := SimpleGroup(R`fusion_group_name);
+		catch e
+			try 
+				G := Group(R`fusion_group_name);
+			catch e 
+				G := R`fusion_group;
+			end try;
 		end try;
 		F := GroupFusionSystem(G,FactoredOrder(S)[1][1]);
 		_, StoBorel := IsIsomorphic(S, F`group);
