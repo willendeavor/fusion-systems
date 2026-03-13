@@ -221,7 +221,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     fprintf F, "S_order := %o,\n", R`S_order;
     fprintf F, "S_name := \"%o\",\n", R`S_name;
     fprintf F, "S_small_group_id := %o,\n", R`S_small_group_id;
-
+    fprintf F, "borel := B, \n";
     // Essentials
     fprintf F, "EssentialData := EssentialData";
 
@@ -243,8 +243,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     		// Deal with groups
     		if ISA(Type(R``i), Grp) then
     			// If subgroup of S then we save it as a subgroup construction
-    			if ISA(Type(R``i), GrpPC) and R``i subset S then 
-    				info[i] := SubgroupToString(S,R``i);
+    			if ISA(Type(R``i), GrpPC) and R``i subset R`S then 
     				info[i] := SubgroupToString(R`S,R``i);
     			// Otherwise it must be the fusion_group and we save it how MAGMA likes			
     			else
