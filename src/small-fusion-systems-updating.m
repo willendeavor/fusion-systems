@@ -137,6 +137,39 @@ intrinsic UpdateSmallFusionSystem(order::RngIntElt, i::RngIntElt)
 end intrinsic;
 
 
+// Given a string "x : y" return [x,y]
+function LineToPair(line)
+	return [StringToInteger(x) : x in Split(line, ":")];
+end function;
+
+
+procedure DeleteLine(order,i)
+	txt := Read("data/to_update.info");
+	lines := [l : l in Split(txt, "\n") | l ne ""];
+	j := 1;
+	found := false;
+	while not found do
+		l := lines[j];
+		pair := LineToPair(l);
+		if [order, i] eq pair then
+			found := true;
+			to_delete := j;
+		end if;
+		j := j + 1;
+	end while;
+	// Rewrite file
+	F := Open("data/to_update.info", "w");
+	for j in [1..#lines] do 
+		if j eq to_delete then
+			continue;
+		end if;
+		fprintf F, "%o \n", lines[j];
+	end for;
+	delete F;
+end procedure;
+
+
+
 intrinsic UpdateSmallFusionSystemToNew(order::RngIntElt, i::RngIntElt)
 	{Updates a small fusion system to reflect any changes in record format}
 	filename := GetSmallFusionSystemFilePath(order,i);
@@ -144,10 +177,30 @@ intrinsic UpdateSmallFusionSystemToNew(order::RngIntElt, i::RngIntElt)
 	message := Sprintf("Updated SmallFusionSystem(%o, %o)", order, i);
 	try 
 		dummy := LoadFusionSystemNew(SmallFusionSystemRecord(order,i));
+		DeleteLine(order,i);
+		print message;
 	catch e
 		printf "Error : (%o, %o)", order, i;
+	end try;
 end intrinsic;
 
+
+
+
+intrinsic UpdateToNew()
+	{}
+	txt := Read("data/to_update.info");
+	skips := Read("data/slow.info");
+	lines := [LineToPair(l) : l in Split(txt, "\n") | l ne ""];
+	skip := [LineToPair(l) : l in Split(skips, "\n") | l ne ""];
+	for pair in lines do 
+		if pair in skip then
+			printf "Skipping %o \n", pair;
+			continue;
+		end if;
+		UpdateSmallFusionSystemToNew(pair[1], pair[2]);
+	end for;
+end intrinsic;
 
 
 intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
