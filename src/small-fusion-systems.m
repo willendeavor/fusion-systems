@@ -594,6 +594,28 @@ end intrinsic;
 
 
 
+intrinsic CreateList()
+{}
+	F := Open("data/to_update.info", "a");
+	pn := GetAllpnIntegers();
+	for p in Keys(pn) do
+		for n in pn[p] do
+			m, indices := NumberSmallFusionSystems(p^n : almost_reduced := false);
+			for i in [1..m] do  
+				fprintf F, "%o : %o \n", p^n, i;
+			end for;
+		end for;
+	end for;
+	delete F;
+end intrinsic;
+
+
+
+
+
+
+
+
 
 
 

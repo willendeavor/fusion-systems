@@ -137,6 +137,18 @@ intrinsic UpdateSmallFusionSystem(order::RngIntElt, i::RngIntElt)
 end intrinsic;
 
 
+intrinsic UpdateSmallFusionSystemToNew(order::RngIntElt, i::RngIntElt)
+	{Updates a small fusion system to reflect any changes in record format}
+	filename := GetSmallFusionSystemFilePath(order,i);
+	UpdateFusionRecord(filename);
+	message := Sprintf("Updated SmallFusionSystem(%o, %o)", order, i);
+	try 
+		dummy := LoadFusionSystemNew(SmallFusionSystemRecord(order,i));
+	catch e
+		printf "Error : (%o, %o)", order, i;
+end intrinsic;
+
+
 
 intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
 	{Update every single file in the SmallFusionSystems database}
