@@ -145,10 +145,13 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -
 		return 0, [];
 	end try;
     filelist := Split(files, "\n");
-    count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and Split(s, ".")[2] eq "m"];
+    fs_files := [s: s in filelist | Split(s, "_")[1] eq "FS" and Split(s, ".")[2] eq "m"];
+    indices := [Split(s, ".m")[1] : s in fs_files];
+    all_indices := [StringToInteger(Split(s, "_")[4]) : s in indices];
+    print all_indices;
     if almost_reduced then
     	indices := [];
-    	for i in [1..count] do  
+    	for i in all_indices do  
     		R := SmallFusionSystemRecord(S_order, i);
     		if not assigned R`core_trivial or not assigned R`pPerfect then
     			continue;
@@ -159,8 +162,7 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -
     	end for;
     	return #indices, indices;
     end if;
-
-    return count, [1..count];
+    return #all_indices, all_indices;
 end intrinsic;
 
 
@@ -268,7 +270,8 @@ intrinsic NumberSmallFusionSystemsWithAttribute(attribute::MonStgElt) -> RngIntE
 		for nn in pn[pp] do 
 			p := StringToInteger(pp);
 			n := StringToInteger(nn);
-			for i in [1..NumberSmallFusionSystems(p^n : almost_reduced := false)] do 
+			m, indices := NumberSmallFusionSystems(p^n : almost_reduced := false);
+			for i in indices do 
 				R := SmallFusionSystemRecord(p^n, i);
 				try
 					if assigned R``attribute then
@@ -314,7 +317,8 @@ intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
 	n := FactoredOrder(S)[1][2];
 	filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
 	System(Sprintf("mkdir -p %o", filepath));
-	i := NumberSmallFusionSystems(#S:almost_reduced := false) + 1;
+	m, indices := NumberSmallFusionSystems(#S:almost_reduced := false) + 1;
+	i := Minimum(SequenceToSet(indices) diff {1..m + 1});
 	// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
 	filename := GetSmallFusionSystemFilePath(p^n, i);
 	WriteFusionRecord(filename, F);
@@ -593,7 +597,7 @@ end intrinsic;
 
 
 
-
+/*
 intrinsic CreateList()
 {}
 	F := Open("data/to_update.info", "a");
@@ -608,7 +612,7 @@ intrinsic CreateList()
 	end for;
 	delete F;
 end intrinsic;
-
+*/
 
 
 

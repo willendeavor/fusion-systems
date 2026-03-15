@@ -69,9 +69,9 @@ function FusionToRecord(FS)
     for i in [1..#FS`essentials] do
     	AutFE := FS`essentialautos[i];
         E := Group(AutFE);
-        R := {S!w:w in PCGenerators(E)};
+        R := [S!w:w in PCGenerators(E)];
 	    E:=sub<S|R>;
-	    E_gens := SetToSequence(PCGenerators(E));
+	    E_gens := [g : g in PCGenerators(E)];
 	    image_gens := [];
 	    for alpha in Generators(AutFE) do 
 	    	pairs := [<g, E!alpha(g)> : g in E_gens];
@@ -296,7 +296,6 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt: load_group := false) -> R
 	try
 		R := FusionRecordTemp(load_group);
 	catch e
-		print e;
 		R := FusionRecordTemp();
 	end try;
 	Detach(filename);
@@ -304,13 +303,13 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt: load_group := false) -> R
 end intrinsic;
 
 
-intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
+// Older version of loading but kept for backwards compatibility
+intrinsic LoadFusionSystemOld(R::Rec) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	S := R`S;
-	PS := PowerGroup(S);
 	Autos := [];
 	for E_rec in R`EssentialData do 
-		E := PS!E_rec`E;
+		E := E_rec`E;
 		AE := AutomorphismGroup(E);
 		A := sub<AE | >;
 		gens := [];
@@ -355,18 +354,18 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 end intrinsic;
 
 
-intrinsic LoadFusionSystemNew(R::Rec) -> FusionSystem
+// New version that avoids call to CreateFusionSystem
+intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	F := New(FusionSystem);
 	S := R`S;
 	F`prime := FactoredOrder(S)[1][1];
-	PS := PowerGroup(S);
 	F`group := S;
 	F`borel := R`borel;
 	F`essentials := [];
 	F`essentialautos := [];
 	for E_rec in R`EssentialData do 
-		E := PS!E_rec`E;
+		E := E_rec`E;
 		Append(~F`essentials, E);
 		AE := AutomorphismGroup(E);
 		A := sub<AE | >;
@@ -400,7 +399,13 @@ end intrinsic;
 intrinsic LoadFusionSystem(filename::MonStgElt: load_group := false) -> FusionSystem
 	{Creates a fusion system from a database entry}
 	R := LoadFusionSystemRecord(filename: load_group := load_group);
-	return(LoadFusionSystem(R));
+	try 
+		F := LoadFusionSystem(R);
+	catch e 
+		print "Using legacy loading";
+		F := LoadFusionSystemOld(R);
+	end try;
+	return F;
 end intrinsic;
 
 
