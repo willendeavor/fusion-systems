@@ -292,8 +292,8 @@ end intrinsic;
 
 
 
-function AllSplittings(S)
-	// Returns the list of factorisations of a group into a direct product of two groups or false if group is indecomposable
+intrinsic AllSplittings(S) -> SeqEnum
+	{Determines all possible decompositions of a group as a product of two factors}
 	p := FactoredOrder(S)[1];
 	n := FactoredOrder(S)[1][2];
 	Ns := NormalSubgroups(S);
@@ -308,29 +308,9 @@ function AllSplittings(S)
 		end for;
 	end for;
 	return pairs;
-end function;
-
-
-
-function GetOneSidedEssentials(F, S_factors, i)
-	S_i := S_factors[i];
-	S_i_star := sub<F`group | [S_factors[j] : j in [x : x in [1..#S_factors] | x ne i]]>;
-	essentials_i := [];
-	for j in [2..#F`essentials] do 
-		if S_i_star subset F`essentials[j] then
-			Append(~essentials_i, j);
-		end if;
-	end for;
-	return essentials_i;
-end function;
-
-
-intrinsic OneSidedFusionSystem(F::FusionSystem, S_factors::SeqEnum, i::RngIntElt) -> FusionSystem
-	{Creates F_i^bullet = <Aut_F(S), Aut_F(E) | E = S_i^* x E_i>}
-	aut_seq_i := [F`essentialautos[j] : j in GetOneSidedEssentials(F, S_factors, i)];
-	aut_seq := [F`essentialautos[1]] cat aut_seq_i;
-	return CreateFusionSystem(aut_seq);
 end intrinsic;
+
+
 
 
 
@@ -420,7 +400,10 @@ intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return
 end intrinsic;
 
 
-intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false, recalculate := false) -> Bool, SeqEnum
+
+
+intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false, 
+							recalculate := false, strong_check:= false) -> Bool, SeqEnum
 	{Determine if F splits as F_1 x F_2}
 	if IsIndecomposable(F`group) then  
 		print "S is indecomposable";
@@ -437,8 +420,16 @@ intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false, recal
 	end if;
 
 	for pair in pairs do 
-		decomposable, decomp := FusionSystemDecomposition(F, pair: return_decomposition := return_decomposition);
+		decomposable, decomp := FusionSystemDecomposition(F, pair: 
+									return_decomposition := return_decomposition);
 		if decomposable then
+			if strong_check then 
+				if IsIsomorphic(F, FusionDirectProduct(decomp)) then
+					print "Passed strong check";
+				else
+					print "Did not pass strong check";
+				end if;
+			end if;
 			if return_decomposition then 
 				return not decomposable, decomp;
 			else

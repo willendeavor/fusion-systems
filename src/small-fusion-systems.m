@@ -148,7 +148,6 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -
     fs_files := [s: s in filelist | Split(s, "_")[1] eq "FS" and Split(s, ".")[2] eq "m"];
     indices := [Split(s, ".m")[1] : s in fs_files];
     all_indices := [StringToInteger(Split(s, "_")[4]) : s in indices];
-    print all_indices;
     if almost_reduced then
     	indices := [];
     	for i in all_indices do  
@@ -317,8 +316,9 @@ intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
 	n := FactoredOrder(S)[1][2];
 	filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
 	System(Sprintf("mkdir -p %o", filepath));
-	m, indices := NumberSmallFusionSystems(#S:almost_reduced := false) + 1;
-	i := Minimum(SequenceToSet(indices) diff {1..m + 1});
+	m, indices := NumberSmallFusionSystems(#S:almost_reduced := false);
+	// Get the next available indice, accounting for gaps
+	i := Minimum({1..m + 1} diff SequenceToSet(indices));
 	// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
 	filename := GetSmallFusionSystemFilePath(p^n, i);
 	WriteFusionRecord(filename, F);
