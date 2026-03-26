@@ -368,7 +368,7 @@ end intrinsic;
 intrinsic AddAllGroupFusionSystems(G::Grp) 
 	{Given a group G add every group fusion system it yields}
 	bounds := [
-		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9],
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
 		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
 		[5,3], [5,4], [5,5], [5,6], [5,7],
 		[7,3], [7,4], [7,5]
