@@ -287,6 +287,24 @@ end intrinsic;
 
 
 
+intrinsic CalculateAllIndecomposableSFS(order::RngIntElt: almost_reduced := true) -> RngIntElt, SeqEnum
+	{Calculates all indecomposable fusion systems on a group of given order}
+	m, indices := NumberSmallFusionSystems(order);
+	indecomposables := [];
+	for i in indices do 
+		F := SmallFusionSystem(order,i);
+		if IsIndecomposable(F: strong_check := true) then
+			printf "SmallFusionSystem(%o, %o) is indecomposable \n", order, i;
+			Append(~indecomposables, i);
+		end if;
+	end for;
+	printf "Of the %o fusion systems %o are decomposable", m, m - #indecomposables;
+	return #indecomposables, indecomposables;
+end intrinsic;
+
+
+
+
 
 ////////////////////////////// Adding fusion systems /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

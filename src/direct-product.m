@@ -52,7 +52,7 @@ end function;
 
 
 
-
+// Unfinished
 intrinsic TransportDirectProductGroup(D::DirectProductGroup, phi::Map) -> DirectProductGroup
 	{Given a DirectProductGroup D and a phi: D -> G remake phi(D) in G}
 	G := New(DirectProductGroup);
@@ -267,7 +267,7 @@ end intrinsic;
 
 
 
-intrinsic AllSplittings(S) -> SeqEnum
+intrinsic AllSplittings(S::Grp) -> SeqEnum
 	{Determines all possible decompositions of a group as a product of two factors}
 	p := FactoredOrder(S)[1];
 	n := FactoredOrder(S)[1][2];
@@ -301,7 +301,6 @@ intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return
 
 	for S_i in S_factors do 
 		if not IsStronglyClosed(F, S_i) then
-			printf "The %o-th factor is not strongly closed \n", Index(S_factors, S_i);
 			return false,_;
 		end if;
 	end for;
@@ -345,29 +344,34 @@ end intrinsic;
 intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false, 
 							recalculate := false, strong_check:= false) -> Bool, SeqEnum
 	{Determine if F splits as F_1 x F_2}
-	if IsIndecomposable(F`group) then  
-		print "S is indecomposable";
-		return true;
-	end if;
+
 	if assigned F`indecomposable and not recalculate then
 		return F`indecomposable;
 	end if;
 
 	pairs := AllSplittings(F`group);
 	if pairs eq [] then 
-		print "S in indecomposable";
+		print "S is indecomposable";
 		return true;
 	end if;
 
 	for pair in pairs do 
-		decomposable, decomp := FusionSystemDecomposition(F, pair: 
+		if strong_check then
+			decomposable, decomp := FusionSystemDecomposition(F, pair: 
+									return_decomposition := true);
+		else
+			decomposable, decomp := FusionSystemDecomposition(F, pair: 
 									return_decomposition := return_decomposition);
+		end if;
+		
 		if decomposable then
 			if strong_check then 
 				if IsIsomorphic(F, FusionDirectProduct(decomp)) then
 					print "Passed strong check";
+					return false;
 				else
 					print "Did not pass strong check";
+					return true;
 				end if;
 			end if;
 			if return_decomposition then 
@@ -379,4 +383,5 @@ intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false,
 	end for;
 	return true;
 end intrinsic;
+
 

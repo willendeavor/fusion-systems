@@ -82,6 +82,13 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		F`factors := factors;
 		F`indecomposable := false;
 	end if;
+	if "indecomposable" in options then
+		// IsIndecomposable may yield false negatives so can only confirm indecomposable
+		flag := IsIndecomposable(F);
+		if flag then
+			F`indecomposable := true;
+		end if;
+	end if;
 
 	WriteFusionRecord(GetSmallFusionSystemFilePath(order, i), F);
 	AddToVerificationQueue(order,i);
@@ -218,6 +225,7 @@ intrinsic UpdateToNew()
 end intrinsic;
 
 
+
 intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
 	{Update every single file in the SmallFusionSystems database}
 	pn := GetAllpnIntegers();
@@ -235,6 +243,7 @@ intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
 	end for;
 	UpdateLog("Updated all SmallFusionSystems");
 end intrinsic;
+
 
 
 intrinsic UpdateDirectProductOfGroupFusionSystems(order::RngIntElt, i::RngIntElt)
