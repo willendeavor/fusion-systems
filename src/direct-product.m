@@ -129,6 +129,7 @@ intrinsic AutDirectProduct(A_1::GrpAuto, A_2::GrpAuto : Overgroup := false) -> G
 end intrinsic;
 
 
+
 // This is now uneccessary since we recursively calculate the fusion systems but keeping it just in case
 intrinsic AutDirectProduct(A_list::SeqEnum[GrpAuto] : Overgroup := false) -> GrpAuto 
 	{Given a list of groups A_i < Aut(G_i) return the embedding of A_1 ... A_n < Aut(G_1...G_n)}
@@ -232,7 +233,29 @@ end intrinsic;
 
 
 
-
+intrinsic TestOneSidedSplitsConjecture(order::RngIntElt)
+	{test}
+	m, indices := NumberSmallFusionSystems(order : almost_reduced := false);
+	for i in indices do
+		R := SmallFusionSystemRecord(order,i);
+		if IsIndecomposableGroup(R`S) then
+			continue;
+		else
+			F := SmallFusionSystem(order,i);
+			indecomp, factors := IsIndecomposableGroup(F`group);
+			if #GetOneSidedEssentials(F, factors, 1) eq #F`essentials - 1 then
+				if IsIndecomposable(OneSidedFusionSystem(F, factors, 1)) then
+					printf "%o is counterexample", i;
+				end if;
+			elif #GetOneSidedEssentials(F, factors, 2) eq #F`essentials - 1 then
+				if IsIndecomposable(OneSidedFusionSystem(F, factors, 2)) then
+					printf "%o is counterexample", i;
+				end if;
+			end if;
+		end if;
+	end for;
+	
+end intrinsic;
 
 
 
@@ -249,8 +272,8 @@ Ideas: Start with just for a reduced fusion systems
 
 
 
-intrinsic GroupDecomposition(G::Grp) -> BoolElt, SeqEnum
-	{Determines if a group is indecomposable into two factors}
+intrinsic IsIndecomposableGroup(G::Grp) -> BoolElt, SeqEnum
+	{Determines if a group is indecomposable into two factors by brute force}
 	Ns := NormalSubgroups(G);
 	all_normal := [r`subgroup : r in Ns | #(r`subgroup) ne 1 and #(r`subgroup) ne #G ];
 	for G_1 in all_normal do 
@@ -261,7 +284,7 @@ intrinsic GroupDecomposition(G::Grp) -> BoolElt, SeqEnum
 			end if;
 		end for;
 	end for;
-	return true;
+	return true,_ ;
 end intrinsic;
 
 
