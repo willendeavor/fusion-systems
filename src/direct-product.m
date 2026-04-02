@@ -284,7 +284,7 @@ intrinsic IsIndecomposableGroup(G::Grp) -> BoolElt, SeqEnum
 			end if;
 		end for;
 	end for;
-	return true,_ ;
+	return true;
 end intrinsic;
 
 

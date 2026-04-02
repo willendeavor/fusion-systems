@@ -264,7 +264,7 @@ end intrinsic
 intrinsic NumberSmallFusionSystemsWithAttribute(attribute::MonStgElt) -> RngIntElt, SeqEnum
 	{Returns the number of SmallFusionSystems which have attribute assigned}
 	pn := GetAllpn();
-	indices := [];
+	sfs := [];
 	for pp in Keys(pn) do 
 		for nn in pn[pp] do 
 			p := StringToInteger(pp);
@@ -274,7 +274,7 @@ intrinsic NumberSmallFusionSystemsWithAttribute(attribute::MonStgElt) -> RngIntE
 				R := SmallFusionSystemRecord(p^n, i);
 				try
 					if assigned R``attribute then
-						Append(~indices, <p,n,i>);
+						Append(~sfs, <p,n,i>);
 					end if;
 				catch e
 					continue;
@@ -282,7 +282,7 @@ intrinsic NumberSmallFusionSystemsWithAttribute(attribute::MonStgElt) -> RngIntE
 			end for;
 		end for;
 	end for;
-	return #indices, indices;
+	return #sfs, sfs;
 end intrinsic;
 
 
