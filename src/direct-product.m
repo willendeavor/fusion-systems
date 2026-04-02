@@ -52,7 +52,7 @@ end function;
 
 
 
-
+// Unfinished
 intrinsic TransportDirectProductGroup(D::DirectProductGroup, phi::Map) -> DirectProductGroup
 	{Given a DirectProductGroup D and a phi: D -> G remake phi(D) in G}
 	G := New(DirectProductGroup);
@@ -129,6 +129,7 @@ intrinsic AutDirectProduct(A_1::GrpAuto, A_2::GrpAuto : Overgroup := false) -> G
 end intrinsic;
 
 
+
 // This is now uneccessary since we recursively calculate the fusion systems but keeping it just in case
 intrinsic AutDirectProduct(A_list::SeqEnum[GrpAuto] : Overgroup := false) -> GrpAuto 
 	{Given a list of groups A_i < Aut(G_i) return the embedding of A_1 ... A_n < Aut(G_1...G_n)}
@@ -180,6 +181,7 @@ intrinsic FusionDirectProduct(F_1::FusionSystem, F_2:: FusionSystem) -> FusionSy
 end intrinsic;
 
 
+
 intrinsic FusionDirectProduct(F_factors::SeqEnum[FusionSystem]) -> FusionSystem
 	{Given a list of fusion systems calculate their direct product}
 	if #F_factors eq 1 then
@@ -196,6 +198,7 @@ intrinsic FusionDirectProduct(F_factors::SeqEnum[FusionSystem]) -> FusionSystem
 	end for;
 	return F;
 end intrinsic;
+
 
 
 // Obtain the indices of the essentials of the form E_i x S_i^*
@@ -230,34 +233,29 @@ end intrinsic;
 
 
 
-function TestSaturationConjecture(F, S_factors)
-	for i in [1..#S_factors] do 
-		F_i := OneSidedFusionSystem(F, S_factors, i);
-		print "hey";
-		if IsSaturated(F_i) then
-			print "F_i is saturated and furthermore...";
-			print S_factors[i] subset F_i`group;
-			if IsStronglyClosed(F_i, S_factors[i]) then 
-				print "S_i is strongly closed";
-			else 
-				print "S_i is not strongly closed";
+intrinsic TestOneSidedSplitsConjecture(order::RngIntElt)
+	{test}
+	m, indices := NumberSmallFusionSystems(order : almost_reduced := false);
+	for i in indices do
+		R := SmallFusionSystemRecord(order,i);
+		if IsIndecomposableGroup(R`S) then
+			continue;
+		else
+			F := SmallFusionSystem(order,i);
+			indecomp, factors := IsIndecomposableGroup(F`group);
+			if #GetOneSidedEssentials(F, factors, 1) eq #F`essentials - 1 then
+				if IsIndecomposable(OneSidedFusionSystem(F, factors, 1)) then
+					printf "%o is counterexample", i;
+				end if;
+			elif #GetOneSidedEssentials(F, factors, 2) eq #F`essentials - 1 then
+				if IsIndecomposable(OneSidedFusionSystem(F, factors, 2)) then
+					printf "%o is counterexample", i;
+				end if;
 			end if;
-		else 
-			print "F_i is not saturated";
 		end if;
 	end for;
-	return true;
-end function;
-
-
-intrinsic TestSaturationConjecture(F::FusionSystem) -> BoolElt
-	{tests if F_i^bullet is saturated}
-	S := F`group;
-	pairs := AllSplittings(S);
-	for pair in pairs do 
-		TestSaturationConjecture(F,pair);
-	end for;
-end intrinsic
+	
+end intrinsic;
 
 
 
@@ -274,8 +272,8 @@ Ideas: Start with just for a reduced fusion systems
 
 
 
-intrinsic GroupDecomposition(G::Grp) -> BoolElt, SeqEnum
-	{Determines if a group is indecomposable into two factors}
+intrinsic IsIndecomposableGroup(G::Grp) -> BoolElt, SeqEnum
+	{Determines if a group is indecomposable into two factors by brute force}
 	Ns := NormalSubgroups(G);
 	all_normal := [r`subgroup : r in Ns | #(r`subgroup) ne 1 and #(r`subgroup) ne #G ];
 	for G_1 in all_normal do 
@@ -292,8 +290,8 @@ end intrinsic;
 
 
 
-function AllSplittings(S)
-	// Returns the list of factorisations of a group into a direct product of two groups or false if group is indecomposable
+intrinsic AllSplittings(S::Grp) -> SeqEnum
+	{Determines all possible decompositions of a group as a product of two factors}
 	p := FactoredOrder(S)[1];
 	n := FactoredOrder(S)[1][2];
 	Ns := NormalSubgroups(S);
@@ -308,63 +306,8 @@ function AllSplittings(S)
 		end for;
 	end for;
 	return pairs;
-end function;
-
-
-
-function GetOneSidedEssentials(F, S_factors, i)
-	S_i := S_factors[i];
-	S_i_star := sub<F`group | [S_factors[j] : j in [x : x in [1..#S_factors] | x ne i]]>;
-	essentials_i := [];
-	for j in [2..#F`essentials] do 
-		if S_i_star subset F`essentials[j] then
-			Append(~essentials_i, j);
-		end if;
-	end for;
-	return essentials_i;
-end function;
-
-
-intrinsic OneSidedFusionSystem(F::FusionSystem, S_factors::SeqEnum, i::RngIntElt) -> FusionSystem
-	{Creates F_i^bullet = <Aut_F(S), Aut_F(E) | E = S_i^* x E_i>}
-	aut_seq_i := [F`essentialautos[j] : j in GetOneSidedEssentials(F, S_factors, i)];
-	aut_seq := [F`essentialautos[1]] cat aut_seq_i;
-	return CreateFusionSystem(aut_seq);
 end intrinsic;
 
-
-
-intrinsic FindExamples() -> SeqEnum, BoolElt
-	{temp}
-	X := ExtraSpecialGroup(3,1);
-	S := DirectProduct(X,X);
-	FS := AllSmallFusionSystems(S: almost_reduced := false);
-	examples := [];
-	for F in FS do 
-		S := F`group;
-		dummy, S_factors := GroupDecomposition(S);
-		if (#GetOneSidedEssentials(F, S_factors, 1) eq #F`essentials - 1) 
-			or (#GetOneSidedEssentials(F, S_factors, 2) eq #F`essentials - 1) then 
-			Append(~examples, F);
-			print "Found one";
-		else 
-			continue;
-		end if;
-		print "Testing for strong closure";
-		pairs := AllSplittings(S);
-		flag := false;
-		for pair in pairs do 
-			if IsStronglyClosed(F, pair[1]) and IsStronglyClosed(F, pair[2]) then
-				print "Fusion system splits";
-				flag := true;
-			end if;
-		end for;
-		if flag eq false then 
-			printf "Conjecture has failed for SFS%o \n", IdentifyFusionSystem(F);
-		end if; 
-	end for;
-	return examples, flag;
-end intrinsic;
 
 
 
@@ -381,7 +324,6 @@ intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return
 
 	for S_i in S_factors do 
 		if not IsStronglyClosed(F, S_i) then
-			printf "The %o-th factor is not strongly closed \n", Index(S_factors, S_i);
 			return false,_;
 		end if;
 	end for;
@@ -420,24 +362,41 @@ intrinsic FusionSystemDecomposition(F::FusionSystem, S_factors::SeqEnum : return
 end intrinsic;
 
 
-intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false, recalculate := false) -> Bool, SeqEnum
+
+
+intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false, 
+							recalculate := false, strong_check:= false) -> Bool, SeqEnum
 	{Determine if F splits as F_1 x F_2}
-	if IsIndecomposable(F`group) then  
-		print "S is indecomposable";
-		return true;
+
 	if assigned F`indecomposable and not recalculate then
 		return F`indecomposable;
 	end if;
 
 	pairs := AllSplittings(F`group);
 	if pairs eq [] then 
-		print "S in indecomposable";
+		print "S is indecomposable";
 		return true;
 	end if;
 
 	for pair in pairs do 
-		decomposable, decomp := FusionSystemDecomposition(F, pair: return_decomposition := return_decomposition);
+		if strong_check then
+			decomposable, decomp := FusionSystemDecomposition(F, pair: 
+									return_decomposition := true);
+		else
+			decomposable, decomp := FusionSystemDecomposition(F, pair: 
+									return_decomposition := return_decomposition);
+		end if;
+		
 		if decomposable then
+			if strong_check then 
+				if IsIsomorphic(F, FusionDirectProduct(decomp)) then
+					print "Passed strong check";
+					return false;
+				else
+					print "Did not pass strong check";
+					return true;
+				end if;
+			end if;
 			if return_decomposition then 
 				return not decomposable, decomp;
 			else
@@ -447,4 +406,5 @@ intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false, recal
 	end for;
 	return true;
 end intrinsic;
+
 

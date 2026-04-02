@@ -145,10 +145,12 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -
 		return 0, [];
 	end try;
     filelist := Split(files, "\n");
-    count := #[s : s in filelist | Split(s, "_")[1] eq "FS" and Split(s, ".")[2] eq "m"];
+    fs_files := [s: s in filelist | Split(s, "_")[1] eq "FS" and Split(s, ".")[2] eq "m"];
+    indices := [Split(s, ".m")[1] : s in fs_files];
+    all_indices := [StringToInteger(Split(s, "_")[4]) : s in indices];
     if almost_reduced then
     	indices := [];
-    	for i in [1..count] do  
+    	for i in all_indices do  
     		R := SmallFusionSystemRecord(S_order, i);
     		if not assigned R`core_trivial or not assigned R`pPerfect then
     			continue;
@@ -159,8 +161,7 @@ intrinsic NumberSmallFusionSystems(S_order::RngIntElt: almost_reduced := true) -
     	end for;
     	return #indices, indices;
     end if;
-
-    return count, [1..count];
+    return #all_indices, all_indices;
 end intrinsic;
 
 
@@ -263,16 +264,17 @@ end intrinsic
 intrinsic NumberSmallFusionSystemsWithAttribute(attribute::MonStgElt) -> RngIntElt, SeqEnum
 	{Returns the number of SmallFusionSystems which have attribute assigned}
 	pn := GetAllpn();
-	indices := [];
+	sfs := [];
 	for pp in Keys(pn) do 
 		for nn in pn[pp] do 
 			p := StringToInteger(pp);
 			n := StringToInteger(nn);
-			for i in [1..NumberSmallFusionSystems(p^n : almost_reduced := false)] do 
+			m, indices := NumberSmallFusionSystems(p^n : almost_reduced := false);
+			for i in indices do 
 				R := SmallFusionSystemRecord(p^n, i);
 				try
 					if assigned R``attribute then
-						Append(~indices, <p,n,i>);
+						Append(~sfs, <p,n,i>);
 					end if;
 				catch e
 					continue;
@@ -280,8 +282,26 @@ intrinsic NumberSmallFusionSystemsWithAttribute(attribute::MonStgElt) -> RngIntE
 			end for;
 		end for;
 	end for;
-	return #indices, indices;
+	return #sfs, sfs;
 end intrinsic;
+
+
+
+intrinsic CalculateAllIndecomposableSFS(order::RngIntElt: almost_reduced := true) -> RngIntElt, SeqEnum
+	{Calculates all indecomposable fusion systems on a group of given order}
+	m, indices := NumberSmallFusionSystems(order);
+	indecomposables := [];
+	for i in indices do 
+		F := SmallFusionSystem(order,i);
+		if IsIndecomposable(F: strong_check := true) then
+			printf "SmallFusionSystem(%o, %o) is indecomposable \n", order, i;
+			Append(~indecomposables, i);
+		end if;
+	end for;
+	printf "Of the %o fusion systems %o are decomposable", m, m - #indecomposables;
+	return #indecomposables, indecomposables;
+end intrinsic;
+
 
 
 
@@ -314,7 +334,9 @@ intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
 	n := FactoredOrder(S)[1][2];
 	filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
 	System(Sprintf("mkdir -p %o", filepath));
-	i := NumberSmallFusionSystems(#S:almost_reduced := false) + 1;
+	m, indices := NumberSmallFusionSystems(#S:almost_reduced := false);
+	// Get the next available indice, accounting for gaps
+	i := Minimum({1..m + 1} diff SequenceToSet(indices));
 	// filename := Sprintf("data/SmallFusionSystems/p_%o/n_%o/FS_%o", p, n, NumberSmallFusionSystems(#S) + 1);
 	filename := GetSmallFusionSystemFilePath(p^n, i);
 	WriteFusionRecord(filename, F);
@@ -364,7 +386,7 @@ end intrinsic;
 intrinsic AddAllGroupFusionSystems(G::Grp) 
 	{Given a group G add every group fusion system it yields}
 	bounds := [
-		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9],
+		[2,3], [2,4], [2,5], [2,6], [2,7], [2,8], [2,9], [2,10],
 		[3,3], [3,4], [3,5], [3,6], [3,7], [3,8],
 		[5,3], [5,4], [5,5], [5,6], [5,7],
 		[7,3], [7,4], [7,5]
@@ -588,6 +610,28 @@ intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume :
 		end for;
 	end for;
 end intrinsic;
+
+
+
+
+
+/*
+intrinsic CreateList()
+{}
+	F := Open("data/to_update.info", "a");
+	pn := GetAllpnIntegers();
+	for p in Keys(pn) do
+		for n in pn[p] do
+			m, indices := NumberSmallFusionSystems(p^n : almost_reduced := false);
+			for i in [1..m] do  
+				fprintf F, "%o : %o \n", p^n, i;
+			end for;
+		end for;
+	end for;
+	delete F;
+end intrinsic;
+*/
+
 
 
 

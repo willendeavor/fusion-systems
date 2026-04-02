@@ -45,6 +45,7 @@ end intrinsic;
 
 function CalculateAutFES(S,E, AutFS, AutFE)
 	p := GetPrime(S);
+	MakeAutos(E);
 	permmap := E`autopermmap;
 	// Calculate N_\Aut_\F(S)(E)
 	N_AutFS := sub<AutFS | {alpha : alpha in Generators(AutFS) | alpha(E) eq E}>;

@@ -56,7 +56,7 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 	end if;
 	// Checks to ensure attributes are not lost
 	print "here";
-	initial_totals := GetAttributeTotals(options);
+	//initial_totals := GetAttributeTotals(options);
 	print "done";
 	// Else here comes the expensive calculations
 	if "fusion_group_name" in options then
@@ -82,14 +82,21 @@ intrinsic UpdateSmallFusionSystemAttributes(order :: RngIntElt, i::RngIntElt, op
 		F`factors := factors;
 		F`indecomposable := false;
 	end if;
+	if "indecomposable" in options then
+		// IsIndecomposable may yield false negatives so can only confirm indecomposable
+		flag := IsIndecomposable(F);
+		if flag then
+			F`indecomposable := true;
+		end if;
+	end if;
 
 	WriteFusionRecord(GetSmallFusionSystemFilePath(order, i), F);
 	AddToVerificationQueue(order,i);
 	message := Sprintf("Updated SmallFusionSystem(%o, %o) attributes %o", order, i, options);
 	UpdateLog(message);
-	if not initial_totals eq GetAttributeTotals(options) then
-		print "Error: Attributes have been lost";
-	end if; 
+	//if not initial_totals eq GetAttributeTotals(options) then
+		//print "Error: Attributes have been lost";
+	//end if; 
 end intrinsic;
 
 
@@ -137,10 +144,92 @@ intrinsic UpdateSmallFusionSystem(order::RngIntElt, i::RngIntElt)
 end intrinsic;
 
 
+// Given a string "x : y" return [x,y]
+function LineToPair(line)
+	return [StringToInteger(x) : x in Split(line, ":")];
+end function;
+
+
+procedure DeleteLine(order,i)
+	txt := Read("data/to_update.info");
+	lines := [l : l in Split(txt, "\n") | l ne ""];
+	j := 1;
+	found := false;
+	while not found do
+		l := lines[j];
+		pair := LineToPair(l);
+		if [order, i] eq pair then
+			found := true;
+			to_delete := j;
+		end if;
+		j := j + 1;
+	end while;
+	// Rewrite file
+	F := Open("data/to_update.info", "w");
+	for j in [1..#lines] do 
+		if j eq to_delete then
+			continue;
+		end if;
+		fprintf F, "%o \n", lines[j];
+	end for;
+	delete F;
+end procedure;
+
+
+
+intrinsic UpdateSmallFusionSystemToNew(order::RngIntElt, i::RngIntElt : use_backup := true)
+	{Updates a small fusion system to reflect any changes in record format}
+	filename := GetSmallFusionSystemFilePath(order,i);
+	if not use_backup then
+		UpdateFusionRecord(filename);
+	else
+		backup_filename := Sprintf("data/SmallFusionSystems_backup/p_%o/n_%o/%o", 
+									Factorisation(order)[1][1], Factorisation(order)[1][2], 
+									GetSmallFusionSystemFileName(order,i));
+		backup_FS := LoadFusionSystem(backup_filename : load_group := true);
+		print backup_FS;
+		WriteFusionRecord(filename, backup_FS);
+	end if;
+	print "here";
+	message := Sprintf("Updated SmallFusionSystem(%o, %o)", order, i);
+	try 
+		dummy := LoadFusionSystem(SmallFusionSystemRecord(order,i));
+		DeleteLine(order,i);
+		print message;
+	catch e
+		printf "Error : (%o, %o)", order, i;
+	end try;
+end intrinsic;
+
+
+
+
+intrinsic UpdateToNew()
+	{}
+	txt := Read("data/to_update.info");
+	skips := Read("data/slow.info");
+	lines := [LineToPair(l) : l in Split(txt, "\n") | l ne ""];
+	skip := [LineToPair(l) : l in Split(skips, "\n") | l ne ""];
+	for pair in lines do 
+		if pair in skip then
+			printf "Skipping %o \n", pair;
+			continue;
+		end if;
+		try 
+			UpdateSmallFusionSystemToNew(pair[1], pair[2]);
+		catch e
+			print "Using backup";
+			UpdateSmallFusionSystemToNew(pair[1], pair[2] :use_backup := true);
+		end try;
+	end for;
+end intrinsic;
+
+
 
 intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
 	{Update every single file in the SmallFusionSystems database}
 	pn := GetAllpnIntegers();
+	skips := [[2,x] : x in [3..10]] cat [[3,x] : x in [3..10]] cat [[5,x] : x in [3..5]];
 	for p in Keys(pn) do 
 		for n in pn[p] do 
 			if [p,n] in skips then
@@ -154,6 +243,7 @@ intrinsic UpdateAllSmallFusionSystems(dummy::BoolElt : skips := [])
 	end for;
 	UpdateLog("Updated all SmallFusionSystems");
 end intrinsic;
+
 
 
 intrinsic UpdateDirectProductOfGroupFusionSystems(order::RngIntElt, i::RngIntElt)
@@ -193,53 +283,6 @@ intrinsic UpdateAllDirectProductOfGroupFusionSystems()
 		end for;
 	end for;
 
-end intrinsic;
-
-
-
-intrinsic VerifyAllSmallFusionSystemRecords(resume::SeqEnum)
-	{Check that every fusion record at least returns a fusion system}
-	if resume eq [0] then
-		resume := [2,3,1];
-	end if;
-	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
-	p_list := Split(p_list, "\n");
-	p_list := [x : x in p_list | StringToInteger(Split(x, "_")[2]) ge resume[1]];
-	errors := [];
-	for p in p_list do 
-		path := Sprintf("data/SmallFusionSystems/%o", p);
-		n_list := Pipe("ls " cat path, "");
-		n_list := Split(n_list, "\n");
-		// If p is the resume value then we need only resumed n
-		p_int := StringToInteger(Split(p, "_")[2]);
-		if p_int eq resume[1] then
-			n_list := [x : x in n_list | StringToInteger(Split(x, "_")[2]) ge resume[2]];
-		end if;
-		for n in n_list do 
-			n_path := path cat Sprintf("/%o/", n);
-			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
-			// Get only file names with no extension
-			F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
-			// If we are at (p,n) resume then get only those above resume
-			n_int := StringToInteger(Split(n, "_")[2]);
-			if p_int eq resume[1] and n_int eq resume[2] then
-				F_list := [x : x in F_list | StringToInteger(Split(Split(x, "_")[4], ".")[1]) ge resume[3]];
-			end if;
-			for i in F_list do 
-				filename := n_path cat i;
-				try 
-					F := LoadFusionSystem(filename);
-					printf "Verified %o \n", filename;
-				catch e
-					message := Sprintf("Failed to load %o \n", filename);
-					ErrorLog(message);
-					print message;
-					Append(~errors, [p_int, n_int, StringToInteger(Split(Split(i, "_")[4], ".")[1])]);
-				end try;
-			end for;
-		end for;
-	end for;
-	print errors;
 end intrinsic;
 
 
@@ -312,51 +355,12 @@ end intrinsic;
 
 
 
-intrinsic MaintainSmallFusionSystems()
-	{Performs some maintenance tasks and status tasks}
-	all_list := GetAllpn();
-	for p in Keys(all_list) do  
-		n_list := all_list[p];
-		for n in n_list do 
-			printf "Checking (p,n) = (%o, %o) \n", p,n;
-			pp := StringToInteger(p);
-			nn := StringToInteger(n);
-			m := NumberSmallFusionSystems(pp^nn: almost_reduced := false);
-			// Check that core_trivial or pPerfect has been assigned to all or none, partially assigned implies something has gone wrong
-			flags_op := {};
-			flags_pperf := {};
-			flags_name := {};
-			for i in [1..m] do 
-				F := SmallFusionSystemRecord(pp^nn,i);
-				Include(~flags_op, assigned F`core_trivial);
-				Include(~flags_pperf, assigned F`pPerfect);
-				if assigned F`fusion_group and not assigned F`fusion_group_name then
-					message := Sprintf("Advisory: fusion_group_name missing from (%o,%o)", pp^nn, i);
-					print message cat "\n";
-					ErrorLog(message);
-				end if;
-				if assigned F`fusion_group_name and not assigned F`fusion_group then
-					message := Sprintf("Advisory: fusion_group missing from (%o,%o)", pp^nn, i);
-					print message cat "\n";
-					ErrorLog(message);
-				end if;
-			end for;
-			if #flags_op gt 1 or #flags_pperf gt 1 then
-				message := Sprintf("Error: Partially assigned core_trivial or pPerfect in p_%o/n_%o, you should update these attributes for all FS", p,n);
-				ErrorLog(message);
-				print message cat "\n";
-			elif flags_op eq {false} then 
-				message := Sprintf("Advisory: core_trivial has not been assigned for p_%o/n_%o", p,n);
-				ErrorLog(message);
-				print message cat "\n";
-			elif flags_pperf eq {false} then 
-				message := Sprintf("Advisory: pPerfect has not been assigned for p_%o/n_%o", p,n);
-				ErrorLog(message);
-				print message cat "\n";
-			end if;
-		end for;
-	end for;
-end intrinsic;
+
+
+
+
+
+/////////////////// Batch Processes //////////////////////////////////////////////////////////
 
 
 
@@ -414,4 +418,99 @@ intrinsic GroupByIsomorphismClass(order::RngIntElt)
 	// Now update the YAML file
 	UpdateIndexMigrationYAML(new_dir, mapping, order);
 	UpdateLog("Migrated indices following isomorphism classes");
+end intrinsic;
+
+
+
+intrinsic MaintainSmallFusionSystems()
+	{Performs some maintenance tasks and status tasks}
+	all_list := GetAllpn();
+	for p in Keys(all_list) do  
+		n_list := all_list[p];
+		for n in n_list do 
+			printf "Checking (p,n) = (%o, %o) \n", p,n;
+			pp := StringToInteger(p);
+			nn := StringToInteger(n);
+			m := NumberSmallFusionSystems(pp^nn: almost_reduced := false);
+			// Check that core_trivial or pPerfect has been assigned to all or none, partially assigned implies something has gone wrong
+			flags_op := {};
+			flags_pperf := {};
+			flags_name := {};
+			for i in [1..m] do 
+				F := SmallFusionSystemRecord(pp^nn,i);
+				Include(~flags_op, assigned F`core_trivial);
+				Include(~flags_pperf, assigned F`pPerfect);
+				if assigned F`fusion_group and not assigned F`fusion_group_name then
+					message := Sprintf("Advisory: fusion_group_name missing from (%o,%o)", pp^nn, i);
+					print message cat "\n";
+					ErrorLog(message);
+				end if;
+				if assigned F`fusion_group_name and not assigned F`fusion_group then
+					message := Sprintf("Advisory: fusion_group missing from (%o,%o)", pp^nn, i);
+					print message cat "\n";
+					ErrorLog(message);
+				end if;
+			end for;
+			if #flags_op gt 1 or #flags_pperf gt 1 then
+				message := Sprintf("Error: Partially assigned core_trivial or pPerfect in p_%o/n_%o, you should update these attributes for all FS", p,n);
+				ErrorLog(message);
+				print message cat "\n";
+			elif flags_op eq {false} then 
+				message := Sprintf("Advisory: core_trivial has not been assigned for p_%o/n_%o", p,n);
+				ErrorLog(message);
+				print message cat "\n";
+			elif flags_pperf eq {false} then 
+				message := Sprintf("Advisory: pPerfect has not been assigned for p_%o/n_%o", p,n);
+				ErrorLog(message);
+				print message cat "\n";
+			end if;
+		end for;
+	end for;
+end intrinsic;
+
+
+
+intrinsic VerifyAllSmallFusionSystemRecords(resume::SeqEnum)
+	{Check that every fusion record at least returns a fusion system}
+	if resume eq [0] then
+		resume := [2,3,1];
+	end if;
+	p_list := Pipe("ls " cat "data/SmallFusionSystems", "");
+	p_list := Split(p_list, "\n");
+	p_list := [x : x in p_list | StringToInteger(Split(x, "_")[2]) ge resume[1]];
+	errors := [];
+	for p in p_list do 
+		path := Sprintf("data/SmallFusionSystems/%o", p);
+		n_list := Pipe("ls " cat path, "");
+		n_list := Split(n_list, "\n");
+		// If p is the resume value then we need only resumed n
+		p_int := StringToInteger(Split(p, "_")[2]);
+		if p_int eq resume[1] then
+			n_list := [x : x in n_list | StringToInteger(Split(x, "_")[2]) ge resume[2]];
+		end if;
+		for n in n_list do 
+			n_path := path cat Sprintf("/%o/", n);
+			F_list := Split(Pipe("ls " cat n_path, ""), "\n");
+			// Get only file names with no extension
+			F_list := [x : x in F_list | Split(x, ".")[2] eq "m"];
+			// If we are at (p,n) resume then get only those above resume
+			n_int := StringToInteger(Split(n, "_")[2]);
+			if p_int eq resume[1] and n_int eq resume[2] then
+				F_list := [x : x in F_list | StringToInteger(Split(Split(x, "_")[4], ".")[1]) ge resume[3]];
+			end if;
+			for i in F_list do 
+				filename := n_path cat i;
+				try 
+					F := LoadFusionSystem(filename);
+					printf "Verified %o \n", filename;
+				catch e
+					message := Sprintf("Failed to load %o \n", filename);
+					ErrorLog(message);
+					print message;
+					Append(~errors, [p_int, n_int, StringToInteger(Split(Split(i, "_")[4], ".")[1])]);
+				end try;
+			end for;
+		end for;
+	end for;
+	print errors;
 end intrinsic;

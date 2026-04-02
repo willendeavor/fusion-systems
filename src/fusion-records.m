@@ -34,7 +34,8 @@ function FusionToRecord(FS)
 		S : Grp, 
 		S_order: RngIntElt,
 		S_name : MonStgElt,
-		S_small_group_id : Tup, 
+		S_small_group_id : Tup,
+		borel : Grp, 
 		EssentialData : SeqEnum,
 		core: Grp, 
 		core_trivial : BoolElt,
@@ -54,7 +55,8 @@ function FusionToRecord(FS)
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>;
-	S := PCGroup(FS`group);
+
+	S := FS`group;
 	p := FactoredOrder(S)[1][1];
 	S_order := #S;
 	S_name := GroupName(S);
@@ -67,9 +69,9 @@ function FusionToRecord(FS)
     for i in [1..#FS`essentials] do
     	AutFE := FS`essentialautos[i];
         E := Group(AutFE);
-        R := {S!w:w in PCGenerators(E)};
+        R := [S!w:w in PCGenerators(E)];
 	    E:=sub<S|R>;
-	    E_gens := SetToSequence(PCGenerators(E));
+	    E_gens := [g : g in PCGenerators(E)];
 	    image_gens := [];
 	    for alpha in Generators(AutFE) do 
 	    	pairs := [<g, E!alpha(g)> : g in E_gens];
@@ -93,6 +95,7 @@ function FusionToRecord(FS)
         S_order          := S_order,
         S_name           := S_name,
         S_small_group_id := S_small_group_id,
+        borel := FS`borel,
         EssentialData    := EssentialSeq
     >;
 
@@ -128,8 +131,9 @@ function FusionToRecord(FS)
 end function;
 
 
-function WriteFusionYAML(filename, R)
-	F := Open(filename cat ".yaml");
+function RecordToJSON(filename, R)
+	F := Open(filename cat ".json", "w");
+
 end function;
 
 
@@ -156,6 +160,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		S_order: RngIntElt,
 		S_name : MonStgElt,
 		S_small_group_id : Tup, 
+		borel : Grp,
 		EssentialData : SeqEnum,
 		core: Grp, 
 		core_trivial : BoolElt,
@@ -175,15 +180,18 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
 		AutFE_name : MonStgElt,
 		AutFE_gens : SeqEnum
 		>; \n";
-    S := R`S;
-    // Print S as a PCGroup with generators that can be loaded
+    // Print S and the borel as a PCGroup with generators that can be loaded
+    B := R`borel;
     fprintf F, "\n";
-    fprintf F, "  S :=";
+    fprintf F, "B :=";
     delete F;
-    PrintFileMagma(filename, S);
+    PrintFileMagma(filename, R`borel);
     F := Open(filename, "a");
     fprintf F, "; \n";
     fprintf F, "";
+    rel := {B!w:w in PCGenerators(R`S)};
+	S_string := Sprintf("sub<B | %o>", rel);
+    fprintf F, "S := %o; \n", S_string;
     // Need to create the essential records before assigning then
     fprintf F, "EssentialData := [];\n";
     for i in [1..#R`EssentialData] do
@@ -192,9 +200,9 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     	A := ER`AutFE_gens;
     	// We have to define E outside of the record otherwise we lost subgroup information
     	fprintf F, "\n";
-    	fprintf F, "E := %o; \n", SubgroupToString(S,E);
+    	fprintf F, "E := %o; \n", SubgroupToString(R`S,E);
         fprintf F, "ER := rec< EssentialRecord |\n";
-   		fprintf F, "E := %o, \n", SubgroupToString(S,E);
+   		fprintf F, "E := %o, \n", SubgroupToString(R`S,E);
    		fprintf F, "E_order := %o, \n", ER`E_order;
    		fprintf F, "E_name := \"%o\", \n", ER`E_name;
    		fprintf F, "AutFE_order := %o, \n", ER`AutFE_order;
@@ -213,7 +221,7 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     fprintf F, "S_order := %o,\n", R`S_order;
     fprintf F, "S_name := \"%o\",\n", R`S_name;
     fprintf F, "S_small_group_id := %o,\n", R`S_small_group_id;
-
+    fprintf F, "borel := B, \n";
     // Essentials
     fprintf F, "EssentialData := EssentialData";
 
@@ -235,8 +243,8 @@ intrinsic WriteFusionRecord(filename::MonStgElt, FS::FusionSystem)
     		// Deal with groups
     		if ISA(Type(R``i), Grp) then
     			// If subgroup of S then we save it as a subgroup construction
-    			if ISA(Type(R``i), GrpPC) and R``i subset S then 
-    				info[i] := SubgroupToString(S,R``i);
+    			if ISA(Type(R``i), GrpPC) and R``i subset R`S then 
+    				info[i] := SubgroupToString(R`S,R``i);
     			// Otherwise it must be the fusion_group and we save it how MAGMA likes			
     			else
     				// We want it as a string so create a temp file
@@ -295,13 +303,13 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt: load_group := false) -> R
 end intrinsic;
 
 
-intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
+// Older version of loading but kept for backwards compatibility
+intrinsic LoadFusionSystemOld(R::Rec) -> FusionSystem
 	{Creates a fusion system from a fusion system record}
 	S := R`S;
-	PS := PowerGroup(S);
 	Autos := [];
 	for E_rec in R`EssentialData do 
-		E := PS!E_rec`E;
+		E := E_rec`E;
 		AE := AutomorphismGroup(E);
 		A := sub<AE | >;
 		gens := [];
@@ -314,9 +322,13 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	end for;
 	if IsAbelian(S) and assigned R`fusion_group_name then
 		try
-			G := Group(R`fusion_group_name);
-		catch e
 			G := SimpleGroup(R`fusion_group_name);
+		catch e
+			try 
+				G := Group(R`fusion_group_name);
+			catch e 
+				G := R`fusion_group;
+			end try;
 		end try;
 		F := GroupFusionSystem(G,FactoredOrder(S)[1][1]);
 		_, StoBorel := IsIsomorphic(S, F`group);
@@ -342,11 +354,58 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 end intrinsic;
 
 
+// New version that avoids call to CreateFusionSystem
+intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
+	{Creates a fusion system from a fusion system record}
+	F := New(FusionSystem);
+	S := R`S;
+	F`prime := FactoredOrder(S)[1][1];
+	F`group := S;
+	F`borel := R`borel;
+	F`essentials := [];
+	F`essentialautos := [];
+	for E_rec in R`EssentialData do 
+		E := E_rec`E;
+		Append(~F`essentials, E);
+		AE := AutomorphismGroup(E);
+		A := sub<AE | >;
+		gens := [];
+		for alpha in E_rec`AutFE_gens do
+			phi := AE!hom<E -> E | alpha>;
+			Append(~gens, phi);
+		end for;
+		A := sub<AE | gens>;
+		Append(~F`essentialautos, A);
+	end for;
+
+	F`AutF:= AssociativeArray();
+    for x in F`essentials do 
+       F`AutF[x] := F`essentialautos[Index(F`essentials,x)]; 
+    end for; 
+
+	// If we can assign the optionals then do so
+	optional := GetOptionalArgs();
+	for x in optional do 
+		if x in GetAttributes(FusionSystem) and x in Names(R) then
+			if assigned R``x then
+				F``x := R``x;
+			end if; 
+		end if;
+	end for;
+	return F;
+end intrinsic;
+
 
 intrinsic LoadFusionSystem(filename::MonStgElt: load_group := false) -> FusionSystem
 	{Creates a fusion system from a database entry}
 	R := LoadFusionSystemRecord(filename: load_group := load_group);
-	return(LoadFusionSystem(R));
+	try 
+		F := LoadFusionSystem(R);
+	catch e 
+		print "Using legacy loading";
+		F := LoadFusionSystemOld(R);
+	end try;
+	return F;
 end intrinsic;
 
 
