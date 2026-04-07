@@ -367,7 +367,8 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 	for E_rec in R`EssentialData do 
 		E := E_rec`E;
 		Append(~F`essentials, E);
-		AE := AutomorphismGroup(E);
+		MakeAutos(E);
+		AE := E`autogrp;
 		A := sub<AE | >;
 		gens := [];
 		for alpha in E_rec`AutFE_gens do

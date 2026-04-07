@@ -304,6 +304,21 @@ end intrinsic;
 
 
 
+intrinsic NumberReducedSmallFusionSystems(order::RngIntElt) -> RngIntElt, SeqEnum
+	{returns all reduced fusion systems (assuming the residual calculation is correct)}
+	m, indices := NumberSmallFusionSystems(order);
+	reduced := [];
+	for i in indices do 
+		F := SmallFusionSystem(order,i);
+		if IsResidual(F) then
+			Append(~reduced, i);
+		end if;
+	end for;
+	return #reduced, reduced;
+end intrinsic;
+
+
+
 
 
 ////////////////////////////// Adding fusion systems /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -583,7 +598,12 @@ intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume :
 
 	for i in factors_1 do 
 		if order_1 eq order_2 then
-			range := [x : x in indices | x ge i];
+			if i eq resume[1] then
+				range := [x : x in indices | x ge resume[2]];
+			else
+				range := [x : x in indices | x ge i];
+			end if;
+			
 		else
 			m, indices := NumberSmallFusionSystems(order_2 : almost_reduced := almost_reduced);
 			if i eq resume[1] then

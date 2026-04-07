@@ -74,7 +74,6 @@ intrinsic CalculateAutSResidual(F::FusionSystem) -> Grp
 		Append(~AutFES_list, AutFES);
 	end for;
 	AutF0S := sub<AutFS | AutFES_list, Inn(S)>;
-	print #AutF0S/#Inn(S);
 	return AutF0S;
 end intrinsic;
 

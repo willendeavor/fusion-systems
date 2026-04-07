@@ -41,7 +41,7 @@ end intrinsic;
 
 
 
-intrinsic ConjugacyClass(F::FusionSystem,P:Grp)-> SetEnum
+intrinsic ConjugacyClass(F::FusionSystem,P::Grp)-> SetEnum
    {Determines the F-conjugacy class of a subgroup}
     MakeAllSubgroups(F);
    SS:= F`subgroups;S:= F`group;

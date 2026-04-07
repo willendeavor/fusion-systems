@@ -232,6 +232,40 @@ intrinsic OneSidedFusionSystem(F::FusionSystem, S_factors::SeqEnum, i ::RngIntEl
 end intrinsic;
 
 
+intrinsic IsEssentiallySplit(F::FusionSystem) -> BoolElt
+	{Returns if a fusion system is essentially-split i.e. every essential is S_i^* E_i}
+	S := F`group;
+	if IsIndecomposableGroup(S) then
+		print "S is an indecomposable group";
+	end if;
+	_, factors := IsIndecomposableGroup(S);
+	if (#GetOneSidedEssentials(F, factors, 1) 
+		+ #GetOneSidedEssentials(F, factors, 2)) eq #F`essentials - 1 then
+		return true;
+	else
+		return false;
+	end if;
+end intrinsic;
+
+
+intrinsic BaseFusionSystem(F::FusionSystem) -> FusionSystem
+	{Given a fusion system on a direct product return the fusion system with no permutations}
+	S := F`group;
+	MakeAutos(S);
+	factors := IndecomposableFactors(S);
+	fixes := [AutomorphismNormalizer(F`essentialautos[1], DerivedSubgroup(H)) : H in factors];
+	fixesp := [S`autopermmap(H) : H in fixes];
+	print [FactoredOrder(H) : H in fixesp];
+	AutBS := fixesp[1];
+	for i in [2..#fixesp] do  
+		AutBS := AutBS meet fixesp[i];  
+	end for;
+	AutBS := SubInvMap(S`autopermmap, F`essentialautos[1], AutBS);
+	print FactoredOrder(F`essentialautos[1]), FactoredOrder(AutBS);
+end intrinsic;
+
+
+
 
 intrinsic TestOneSidedSplitsConjecture(order::RngIntElt)
 	{test}
@@ -259,19 +293,6 @@ end intrinsic;
 
 
 
-//////// Is Indecomposable //////////////////////////////////
-
-/*
-Ideas: Start with just for a reduced fusion systems
-(1): Decompose S as a direct product of p-groups S_1 x ... x S_n, each of order at least p^3 (otherwise not reduced)
-(1a): Do this recursively, 
-(2): For each candidate of the i-th factor, find one that is strongly closed in F, repeat for all i
-(3): Since O^{p'}(F) = F it must now split so just need to calculate the factor fusion systems either as F|_{S_i} or a different
-*/
-
-
-
-
 intrinsic IsIndecomposableGroup(G::Grp) -> BoolElt, SeqEnum
 	{Determines if a group is indecomposable into two factors by brute force}
 	Ns := NormalSubgroups(G);
@@ -284,9 +305,22 @@ intrinsic IsIndecomposableGroup(G::Grp) -> BoolElt, SeqEnum
 			end if;
 		end for;
 	end for;
-	return true;
+	return true,_;
 end intrinsic;
 
+
+
+intrinsic IndecomposableFactors(G::Grp) -> SeqEnum
+	{Return a sequence of indecomposable direct factors of G}
+    is_indec, factors := IsIndecomposableGroup(G);
+    if is_indec then
+        return [G];
+    else
+        A := factors[1];
+        B := factors[2];
+        return IndecomposableFactors(A) cat IndecomposableFactors(B);
+    end if;
+end intrinsic;
 
 
 
@@ -408,3 +442,39 @@ intrinsic IsIndecomposable(F::FusionSystem: return_decomposition := false,
 end intrinsic;
 
 
+
+
+
+
+
+intrinsic FindExamples() -> SeqEnum, BoolElt
+	{temp}
+	X := ExtraSpecialGroup(3,1);
+	S := DirectProduct(X,X);
+	FS := AllSmallFusionSystems(S: almost_reduced := false);
+	examples := [];
+	for F in FS do 
+		S := F`group;
+		dummy, S_factors := IsIndecomposableGroup(S);
+		if (#GetOneSidedEssentials(F, S_factors, 1) eq #F`essentials - 1) 
+			or (#GetOneSidedEssentials(F, S_factors, 2) eq #F`essentials - 1) then 
+			Append(~examples, F);
+			print "Found one";
+		else 
+			continue;
+		end if;
+		print "Testing for strong closure";
+		pairs := AllSplittings(S);
+		flag := false;
+		for pair in pairs do 
+			if IsStronglyClosed(F, pair[1]) and IsStronglyClosed(F, pair[2]) then
+				print "Fusion system splits";
+				flag := true;
+			end if;
+		end for;
+		if flag eq false then 
+			printf "Conjecture has failed for SFS%o \n", IdentifyFusionSystem(F);
+		end if; 
+	end for;
+	return examples, flag;
+end intrinsic;
