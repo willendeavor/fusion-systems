@@ -248,20 +248,64 @@ intrinsic IsEssentiallySplit(F::FusionSystem) -> BoolElt
 end intrinsic;
 
 
+// Calculates Aut^B_F(S) = \bigcap_i N_Aut_\F(S)(\gamma_2(S_i))
+function CalculateBaseAutFS(F, factors, S)
+	fixes := [AutomorphismNormalizer(F`essentialautos[1], DerivedSubgroup(H)) : H in factors];
+	fixesp := [SubMap(S`autopermmap, S`autoperm, H) : H in fixes];
+	AutBS := fixesp[1];
+	for i in [2..#fixesp] do  
+		AutBS := AutBS meet fixesp[i];  
+	end for;
+	AutBS := SubInvMap(S`autopermmap, S`autogrp, AutBS);
+	return AutBS;
+end function;
+
+
+// Given A \leq AutFS return a transversal of A in AutFS
+function GetAutCosets(S, AutFS, A)
+	phi := S`autopermmap;
+	AutFSp := SubMap(phi, S`autoperm, AutFS);
+	Ap := SubMap(phi, S`autoperm, A);
+	reps := Transversal(AutFSp, Ap);
+	return [Inverse(phi)(x) : x in reps];
+end function;
+
+// Conjugates Aut_F(E) to Aut_F(E^phi) where phi in Aut_F(S)
+function ConjugateAutoGroup(S, E, AutFE, phi)
+	Ephi := SubMap(phi, S, E);
+	MakeAutos(Ephi);
+	AutFEphi := sub<Ephi`autogrp | >;
+	for psi in Generators(AutFE) do 
+		// Ephi --phi^{-1}--> E --psi--> E ---phi--> E^phi
+		psix := Ephi`autogrp!hom<Ephi -> Ephi | y :-> phi(psi(Inverse(phi)(y)))>;
+		AutFEphi := sub<Ephi`autogrp | AutFEphi, psix>;
+	end for;
+	return AutFEphi;
+end function;
+
+
 intrinsic BaseFusionSystem(F::FusionSystem) -> FusionSystem
 	{Given a fusion system on a direct product return the fusion system with no permutations}
 	S := F`group;
 	MakeAutos(S);
 	factors := IndecomposableFactors(S);
-	fixes := [AutomorphismNormalizer(F`essentialautos[1], DerivedSubgroup(H)) : H in factors];
-	fixesp := [S`autopermmap(H) : H in fixes];
-	print [FactoredOrder(H) : H in fixesp];
-	AutBS := fixesp[1];
-	for i in [2..#fixesp] do  
-		AutBS := AutBS meet fixesp[i];  
-	end for;
-	AutBS := SubInvMap(S`autopermmap, F`essentialautos[1], AutBS);
-	print FactoredOrder(F`essentialautos[1]), FactoredOrder(AutBS);
+	AutBS := CalculateBaseAutFS(F, factors, S);
+	// If AutBS < AutS then we need to split the F-conjugacy classes
+	if not #AutBS eq #F`essentialautos[1] then
+		aut_seq := [];
+		swap_autos := GetAutCosets(S, F`essentialautos[1], AutBS);
+		// For each Aut_\F(E) add Aut_\F(E^varphi) where varphi swaps some factor
+		for i in [2..#F`essentialautos] do  
+			E := F`essentials[i];
+			for x in swap_autos do 
+				Append(~aut_seq, ConjugateAutoGroup(S, E, F`essentialautos[i], x));
+			end for;
+		end for;
+	else 
+		aut_seq := [F`essentialautos[i] : i in [2..#F`essentialautos]];
+	end if;
+	auts := [AutBS] cat aut_seq;
+	return CreateFusionSystem(auts);
 end intrinsic;
 
 
