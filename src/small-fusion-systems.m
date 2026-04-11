@@ -329,22 +329,23 @@ intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
 	S := F`group;
 	m, indices := NumberSmallFusionSystems(S:almost_reduced := false);
 	// Compare records only for a drastic improvement in speed in certain cases
-	WriteFusionRecord("temp_candidate.m", F);
-	R := LoadFusionSystemRecord("temp_candidate.m");
+	temp_name := Sprintf("temp_candidate_%o_%o.m", Random(10^12), Cputime());
+	WriteFusionRecord(temp_name, F);
+	R := LoadFusionSystemRecord(temp_name);
 	for i in indices do 
 		R_i := SmallFusionSystemRecord(#S, i);
 		printf "Checking if F is isomorphic to fusion system %o \n", i;
 		if IsIsomorphicFusionRecords(R_i, R: preloaded := F) then
 			delete R;
-			System("rm temp_*");
+			com := Sprintf("rm %o", temp_name);
+			System(com);
 			print "Fusion system is already in database \n";
 			return false, [#S, i];
 			break;
 		end if;
 	end for;
-	delete R;
-	System("rm temp_*");
-
+	com := Sprintf("rm %o", temp_name);
+	System(com);
 	p := FactoredOrder(S)[1][1];
 	n := FactoredOrder(S)[1][2];
 	filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
