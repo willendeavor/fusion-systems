@@ -54,7 +54,7 @@ function InsolubleBorelCandidates(AutSp, InnSp, p, m, OutFSOrders)
     if OutFSOrders eq [] then 
         OutFSOrders:= [1..m]; 
     end if;
-    SubsAutS := Subgroups(AutSp:OrderDividing:=m);   
+    SubsAutS := Subgroups(AutSp : OrderDividing := m);   
     // First get subgroups with correct p'-index
     BCand := [
         sub<AutSp|x`subgroup,InnSp>
@@ -113,13 +113,15 @@ function ComputerAllBorelPairs(S, p, OutFSOrders, ProtoEssentialAutClasses)
     InnSp:= SubMap(map,AutSp, InnS);
     pVal:= Valuation(#AutSp,p); 
     m:= #AutSp/p^pVal;
+    m := Integers()!m;
     BorelsandS:=[];
     // m ne 1 then the Borel is not S and we need candidates
     if m ne 1  then
         BCand := BorelCandidates(AutSp, InnSp, p, m, OutFSOrders);
         for CC in BCand do
             if not IsSoluble(CC) then 
-                error "Execution failed: The Borel group is not soluble";
+                print "Execution failed: The Borel group is not soluble";
+                return [];
             end if;
             // Get the Borel candidate as a subgroup of Aut(S)
             f:=hom<CC->AutS|g:->Inverse(map) (g)>;

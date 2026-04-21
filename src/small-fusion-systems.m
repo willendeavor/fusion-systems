@@ -304,6 +304,21 @@ end intrinsic;
 
 
 
+intrinsic NumberReducedSmallFusionSystems(order::RngIntElt) -> RngIntElt, SeqEnum
+	{returns all reduced fusion systems (assuming the residual calculation is correct)}
+	m, indices := NumberSmallFusionSystems(order);
+	reduced := [];
+	for i in indices do 
+		F := SmallFusionSystem(order,i);
+		if IsResidual(F) then
+			Append(~reduced, i);
+		end if;
+	end for;
+	return #reduced, reduced;
+end intrinsic;
+
+
+
 
 
 ////////////////////////////// Adding fusion systems /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -314,22 +329,24 @@ intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
 	S := F`group;
 	m, indices := NumberSmallFusionSystems(S:almost_reduced := false);
 	// Compare records only for a drastic improvement in speed in certain cases
-	WriteFusionRecord("temp_candidate.m", F);
-	R := LoadFusionSystemRecord("temp_candidate.m");
+	temp_name := Sprintf("temp_candidate_%o_%o", Random(10^12), Cputime());
+	temp_file := Sprintf("%o.m", temp_name);
+	WriteFusionRecord(temp_name, F);
+	R := LoadFusionSystemRecord(temp_name);
 	for i in indices do 
 		R_i := SmallFusionSystemRecord(#S, i);
 		printf "Checking if F is isomorphic to fusion system %o \n", i;
 		if IsIsomorphicFusionRecords(R_i, R: preloaded := F) then
 			delete R;
-			System("rm temp_*");
+			com := Sprintf("rm %o.*", temp_name);
+			System(com);
 			print "Fusion system is already in database \n";
 			return false, [#S, i];
 			break;
 		end if;
 	end for;
-	delete R;
-	System("rm temp_*");
-
+	com := Sprintf("rm %o", temp_name);
+	System(com);
 	p := FactoredOrder(S)[1][1];
 	n := FactoredOrder(S)[1][2];
 	filepath := Sprintf("data/SmallFusionSystems/p_%o/n_%o", p, n);
@@ -583,7 +600,12 @@ intrinsic AddAllDirectProducts(order_1::RngIntElt, order_2::RngIntElt : resume :
 
 	for i in factors_1 do 
 		if order_1 eq order_2 then
-			range := [x : x in indices | x ge i];
+			if i eq resume[1] then
+				range := [x : x in indices | x ge resume[2]];
+			else
+				range := [x : x in indices | x ge i];
+			end if;
+			
 		else
 			m, indices := NumberSmallFusionSystems(order_2 : almost_reduced := almost_reduced);
 			if i eq resume[1] then

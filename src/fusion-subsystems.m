@@ -49,7 +49,7 @@ function CalculateAutFES(S,E, AutFS, AutFE)
 	permmap := E`autopermmap;
 	// Calculate N_\Aut_\F(S)(E)
 	N_AutFS := sub<AutFS | {alpha : alpha in Generators(AutFS) | alpha(E) eq E}>;
-	Opprime := pprimeResidual(permmap(AutFE), p);
+	Opprime := pprimeResidual(SubMap(permmap, E`autoperm, AutFE), p);
 	AutFES_gens := [];
 	for alpha in Generators(N_AutFS) do 
 		// Determine if \alpha|_E in O^{p'}(Aut_\F(E))
@@ -74,7 +74,6 @@ intrinsic CalculateAutSResidual(F::FusionSystem) -> Grp
 		Append(~AutFES_list, AutFES);
 	end for;
 	AutF0S := sub<AutFS | AutFES_list, Inn(S)>;
-	print #AutF0S/#Inn(S);
 	return AutF0S;
 end intrinsic;
 
