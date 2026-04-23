@@ -296,6 +296,7 @@ intrinsic LoadFusionSystemRecord(filename:: MonStgElt: load_group := false) -> R
 	try
 		R := FusionRecordTemp(load_group);
 	catch e
+		print e;
 		R := FusionRecordTemp();
 	end try;
 	Detach(filename);

@@ -173,7 +173,9 @@ intrinsic FusionDirectProduct(F_1::FusionSystem, F_2:: FusionSystem) -> FusionSy
 		end for;
 	end for;
 	F := CreateFusionSystem(aut_seq);
-	F`factors := F_factors;
+	if assigned F_1`small_id and F_2`small_id then
+		F`factors := [F_1`small_id, F_2`small_id];
+	end if;
 	// Move the factors to the borel so they are subgroups of F`group
 	S_factors_new := [F`borelmap(Image(S`embed[i])) : i in [1..#S`factors]];
 	F`directproductgrp := MakeDirectProductGroup(S_factors_new);

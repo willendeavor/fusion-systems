@@ -331,8 +331,8 @@ intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
 	// Compare records only for a drastic improvement in speed in certain cases
 	temp_name := Sprintf("temp_candidate_%o_%o", Random(10^12), Cputime());
 	temp_file := Sprintf("%o.m", temp_name);
-	WriteFusionRecord(temp_name, F);
-	R := LoadFusionSystemRecord(temp_name);
+	WriteFusionRecord(temp_file, F);
+	R := LoadFusionSystemRecord(temp_file);
 	for i in indices do 
 		R_i := SmallFusionSystemRecord(#S, i);
 		printf "Checking if F is isomorphic to fusion system %o \n", i;
