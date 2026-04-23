@@ -173,6 +173,7 @@ intrinsic NumberSmallFusionSystems(S::Grp: almost_reduced := true) -> RngIntElt,
 	indices := [];
 	m, all_indices := NumberSmallFusionSystems(#S: almost_reduced := almost_reduced);
 	for i in all_indices do 
+		print i;
 		R := SmallFusionSystemRecord(#S, i);
 		if IsIsomorphic(S, R`S) then 
 			Append(~indices, i);
@@ -328,11 +329,13 @@ intrinsic AddSmallFusionSystem(F::FusionSystem) -> BoolElt, SeqEnum
 	{Given a fusion system check if it is already in the database, otherwise add it, returns whether a new one has been added}
 	S := F`group;
 	m, indices := NumberSmallFusionSystems(S:almost_reduced := false);
+	print "heyo";
 	// Compare records only for a drastic improvement in speed in certain cases
 	temp_name := Sprintf("temp_candidate_%o_%o", Random(10^12), Cputime());
 	temp_file := Sprintf("%o.m", temp_name);
-	WriteFusionRecord(temp_name, F);
-	R := LoadFusionSystemRecord(temp_name);
+	print temp_file;
+	WriteFusionRecord(temp_file, F);
+	R := LoadFusionSystemRecord(temp_file);
 	for i in indices do 
 		R_i := SmallFusionSystemRecord(#S, i);
 		printf "Checking if F is isomorphic to fusion system %o \n", i;

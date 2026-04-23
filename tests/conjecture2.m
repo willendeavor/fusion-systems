@@ -1,3 +1,5 @@
+from 
+
 // Tests if there is a subgroup P of \gamma_1(S) such that P = M \times Q where M has max class.
 function TestSubgroups(S)
 	L:= LowerCentralSeries(S);
@@ -89,7 +91,7 @@ intrinsic FindExamples() -> SeqEnum, BoolElt
 	examples := [];
 	for F in FS do 
 		S := F`group;
-		dummy, S_factors := GroupDecomposition(S);
+		dummy, S_factors := IsIndecomposableGroup(S);
 		if (#GetOneSidedEssentials(F, S_factors, 1) eq #F`essentials - 1) 
 			or (#GetOneSidedEssentials(F, S_factors, 2) eq #F`essentials - 1) then 
 			Append(~examples, F);
@@ -112,3 +114,17 @@ intrinsic FindExamples() -> SeqEnum, BoolElt
 	end for;
 	return examples, flag;
 end intrinsic;
+
+
+
+F := SmallFusionSystem(3^6, 67);
+S := F`group;
+S_factors := IndecomposableFactors(S);
+// S_1 will be C_3 wr C_3
+orders := [#G : G in S_factors];
+max, i := Maximum(orders);
+S_1 := S_factors[i];
+// S_2 will be C_3^2
+S_2 := sub<S | [G : G in S_factors | not G eq S_1]>;
+IsIndecomposable(F);
+OneSidedFusionSystem(F, [S_1, S_2], 1) eq F; 

@@ -74,7 +74,7 @@ function FusionToRecord(FS)
 	    E_gens := [g : g in PCGenerators(E)];
 	    image_gens := [];
 	    for alpha in Generators(AutFE) do 
-	    	pairs := [<g, E!alpha(g)> : g in E_gens];
+	    	pairs := [<S!g, S!(E!alpha(g))> : g in E_gens];
 	    	Append(~image_gens, pairs);
 	    end for;
         Append(~EssentialSeq,
@@ -314,7 +314,12 @@ intrinsic LoadFusionSystemOld(R::Rec) -> FusionSystem
 		A := sub<AE | >;
 		gens := [];
 		for alpha in E_rec`AutFE_gens do
-			phi := AE!hom<E -> E | alpha>;
+			try
+				alphaE := [<E!(S!pair[1]), E!(S!pair[2])> : pair in alpha];
+				phi := AE!hom<E -> E | alphaE>;
+			catch e
+				phi := AE!hom<E -> E | alpha>;
+			end try;
 			Append(~gens, phi);
 		end for;
 		A := sub<AE | gens>;
@@ -372,7 +377,13 @@ intrinsic LoadFusionSystem(R::Rec) -> FusionSystem
 		A := sub<AE | >;
 		gens := [];
 		for alpha in E_rec`AutFE_gens do
-			phi := AE!hom<E -> E | alpha>;
+			try
+				phi := AE!hom<E -> E | alpha>;
+			catch e;
+				alpha_S := [<E!(S!x[1]), E!(S!x[2])> : x in alpha];
+				print alpha_S, alpha;
+				phi := AE!hom<E -> E | alpha_S >;
+			end try;
 			Append(~gens, phi);
 		end for;
 		A := sub<AE | gens>;
@@ -403,6 +414,7 @@ intrinsic LoadFusionSystem(filename::MonStgElt: load_group := false) -> FusionSy
 	try 
 		F := LoadFusionSystem(R);
 	catch e 
+		print e;
 		print "Using legacy loading";
 		F := LoadFusionSystemOld(R);
 	end try;
